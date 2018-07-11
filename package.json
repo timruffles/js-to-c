@@ -7,13 +7,19 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsc"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Tim Ruffles <timruffles@googlemail.com>",
+  "license": "AGPL",
   "dependencies": {
-    "esparse": "0.2.2",
-    "toml": "2.3.3"
+    "esprima": "4.0.0",
+    "toml": "2.3.3",
+    "typescript": "2.9.2"
+  },
+  "devDependencies": {
+    "@types/esprima": "4.0.2",
+    "@types/estree": "0.0.39",
+    "@types/node": "10.5.2"
   }
 }
