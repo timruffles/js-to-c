@@ -1,7 +1,12 @@
 import fs from 'fs';
 import {parseScript, Syntax} from "esprima";
 import {
-    Node, Program
+    Identifier,
+    MemberExpression,
+    Node,
+    Pattern,
+    Program, VariableDeclaration,
+    VariableDeclarator
 } from 'estree';
 
 
@@ -17,10 +22,29 @@ type NodeCompilerLookup = {
  **/
 type JsFunctionBody = string;
 
-class CompileTimeState {
-    functions: JsFunctionBody[] = [];
+class InternedString {
+   constructor(public readonly id: string, public readonly value: string) {}
 }
 
+
+class CompileTimeState {
+    functions: JsFunctionBody[] = [];
+    // our intern string pool
+    interned: {[k: string]: InternedString } = {};
+    private id = 0;
+
+    internString(str: string) {
+        if(!(str in this.interned)) {
+            this.interned[str] = new InternedString(this.nextId('interned'), str);
+        }
+        return this.interned[str];
+    }
+
+    nextId(prefix: string) {
+        this.id += 1;
+        return `${prefix}_${this.id}`;
+    }
+}
 const lookup = getCompilers();
 
 if(require.main === module) {
@@ -103,8 +127,8 @@ function getCompilers(): NodeCompilerLookup {
         TryStatement: unimplemented('TryStatement'),
         UnaryExpression: unimplemented('UnaryExpression'),
         UpdateExpression: unimplemented('UpdateExpression'),
-        VariableDeclaration: unimplemented('VariableDeclaration'),
-        VariableDeclarator: unimplemented('VariableDeclarator'),
+        VariableDeclaration,
+        VariableDeclarator,
         WhileStatement: unimplemented('WhileStatement'),
         WithStatement: unimplemented('WithStatement'),
         YieldExpression: unimplemented('YieldExpression')
@@ -119,22 +143,63 @@ function Program(node: Program, state: CompileTimeState) {
 
     const body = joinNodeOutput(node.body.map(n => compile(n, state)));
 
+    const interned = compileInternedStrings(Object.values(state.interned));
+
     return `
         #include <stdio.h>
-        #include <../runtime/environments.h>
+        #include "../runtime/environments.h"
         
-        int main(int argc, char**argv) {
-            Env* global = EnvCreate();
-            userProgram(global);
-            return 0;
-        }
+        ${interned}
         
-        void userProgram(Env* global) {
+        ${joinNodeOutput(state.functions.reverse())}
+        
+        void userProgram(Env* env) {
             ${body};
         }
         
-        ${joinNodeOutput(state.functions)}
+        int main(int argc, char**argv) {
+            Env* global = envCreateRoot();
+            userProgram(global);
+            return 0;
+        }
     `
+}
+
+
+function compileInternedStrings(interned: InternedString[]): string {
+    return joinNodeOutput(interned.map(({id, value}) => (
+        `char* const ${id} = "${value}";`
+    )));
+}
+
+function VariableDeclaration(node: VariableDeclaration, state: CompileTimeState) {
+    if(node.kind !== 'var') {
+        return unimplemented(node.kind)();
+    }
+
+    return mapCompile(node.declarations, state);
+}
+
+function mapCompile(nodes: Node[], state: CompileTimeState) {
+    return joinNodeOutput(nodes.map(n => compile(n, state)));
+}
+
+function VariableDeclarator(node: VariableDeclarator, state: CompileTimeState) {
+    const target = ensureSupportedTarget(node.id);
+    if(target.type === 'Identifier') {
+        return `envDeclare(env, ${state.internString(target.name).id});`
+    } else {
+       return unimplemented('MemberExpression')();
+    }
+}
+
+type SupportedAssignmentTarget = MemberExpression | Identifier;
+function ensureSupportedTarget(node: Pattern): SupportedAssignmentTarget {
+    if(node.type === 'Identifier' || node.type === 'MemberExpression') {
+        return node
+    } else {
+        throw Error(`No support for ${node.type}`);
+    }
 }
 
 function unimplemented(node: string) {
@@ -142,3 +207,4 @@ function unimplemented(node: string) {
         return `/* unimplemented ${node} */`;
     }
 }
+

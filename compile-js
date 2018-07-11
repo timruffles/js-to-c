@@ -6,7 +6,8 @@ main() {
     local exe=$2
     local cTarget=out/$(basename $2).c
     node js-build/js-to-c.js $1 > $cTarget
-    gcc $cTarget -o $exe
+    local runtime_libs=$(find runtime -name '*.c' -not -name '*.test.c')
+    gcc $cTarget $runtime_libs -o $exe
     chmod a+x $exe
 }
 

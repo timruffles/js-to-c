@@ -2,19 +2,25 @@
 
 #include "language.h"
 
-typedef struct Env {
-   void *properties;
-   struct Env* const parent;
- } Env;
+typedef struct Env Env;
 
 /**
  * Creates a new environment with the specified parent
  */
-Env *EnvCreateRoot();
-Env *EnvCreate(Env *const parent);
-void EnvDestroy(Env*);
+Env *envCreateRoot();
 
-Env *EnvDeclare(Env, JsString name);
-Env *EnvSet(Env, JsIdentifier, JsValue value);
-Env *EnvGet(Env, JsIdentifier);
+Env *envCreate(Env *const parent);
 
+void envDestroy(Env *);
+
+void envDeclare(Env *, JsIdentifier *name);
+
+void envSet(Env *, JsIdentifier *, JsValue *value);
+
+JsValue *envGet(Env *, JsIdentifier *);
+
+
+/**
+ * Test helpers - wrapping string interning
+ */
+#define _identifierCreate(X) char X[] = #X;
