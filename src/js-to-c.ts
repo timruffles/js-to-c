@@ -5,10 +5,20 @@ import {
 } from 'estree';
 
 
-type NodeCompiler = (n: any) => string;
+type NodeCompiler = (n: any, s: CompileTimeState) => string;
 
 type NodeCompilerLookup = {
     [k in keyof typeof Syntax]: NodeCompiler
+}
+
+/**
+ * The body of a JS function, ready to be linked with correct env etc
+ * for execution
+ **/
+type JsFunctionBody = string;
+
+class CompileTimeState {
+    functions: JsFunctionBody[] = [];
 }
 
 const lookup = getCompilers();
@@ -22,11 +32,11 @@ function main() {
 
     const ast = parseScript(input);
 
-    console.log(compile(ast));
+    console.log(compile(ast, new CompileTimeState));
 }
 
-function compile(ast: Node): string {
-    return lookup[ast.type](ast);
+function compile(ast: Node, state: CompileTimeState): string {
+    return lookup[ast.type](ast, state);
 }
 
 function getCompilers(): NodeCompilerLookup {
@@ -101,14 +111,29 @@ function getCompilers(): NodeCompilerLookup {
     }
 }
 
-function Program() {
+function joinNodeOutput(srcList: string[]) {
+    return srcList.join('\n');
+}
+
+function Program(node: Program, state: CompileTimeState) {
+
+    const body = joinNodeOutput(node.body.map(n => compile(n, state)));
+
     return `
         #include <stdio.h>
+        #include <../runtime/environments.h>
         
         int main(int argc, char**argv) {
-            printf("Hello world");
+            Env* global = EnvCreate();
+            userProgram(global);
             return 0;
         }
+        
+        void userProgram(Env* global) {
+            ${body};
+        }
+        
+        ${joinNodeOutput(state.functions)}
     `
 }
 
