@@ -43,7 +43,7 @@ Env *envCreate(Env *const parent) {
 
 JsValue *envGet(Env *env, JsIdentifier *name) {
     EnvRecord *record;
-    HASH_FIND_PTR(env->properties, name, record);
+    HASH_FIND_PTR(env->properties, &name, record);
     return record == NULL
            ? getUndefined()
            : record->value;
@@ -51,7 +51,7 @@ JsValue *envGet(Env *env, JsIdentifier *name) {
 
 void envSet(Env *env, JsIdentifier *name, JsValue *value) {
     EnvRecord *record;
-    HASH_FIND_PTR(env->properties, name, record);
+    HASH_FIND_PTR(env->properties, &name, record);
     if (record == NULL) {
         throwError("Attempted to set undeclared variable");
     }
