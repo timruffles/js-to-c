@@ -1,0 +1,22 @@
+"simple object properties" = """
+var a = {
+    one: "oneVal",
+};
+console.log(a.one);
+"""
+
+"numeric object keys" = """
+var a = {
+    2: "2Val",
+};
+console.log(a[2]);
+"""
+
+"numeric object properties" = """
+var a = {
+    one: 2,
+};
+console.log(a[2]);
+"""
+
+

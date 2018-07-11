@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -euo pipefail
+
+main() {
+    local exe=$2
+    local cTarget=out/$(basename $2).c
+    node compile-js.js $1 > $cTarget
+    gcc $cTarget -o $exe
+    chmod a+x $exe
+}
+
+main $@

@@ -1,0 +1,14 @@
+'use strict';
+
+main();
+
+function main() {
+    console.log(`
+        #include <stdio.h>
+
+        int main(int argc, char **argv) {
+            printf("hello, world");
+            return 0;
+        }
+    `);
+}

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euo pipefail
+
+main() {
+    local target="${1/.js/}"
+    ./compile-js $1 $target
+    ./${target}
+}
+
+main $@
