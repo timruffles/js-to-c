@@ -5,6 +5,8 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories(. ./lib)
 
+set(EXECUTABLE_OUTPUT_PATH ./out)
+
 set(COMMON_SOURCES
         environments.c
         environments.h
