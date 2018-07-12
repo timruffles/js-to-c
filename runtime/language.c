@@ -6,7 +6,7 @@
 char UNDEFINED_TYPE[] = "undefined";
 char NULL_TYPE[] = "null";
 char BOOLEAN_TYPE[] = "boolean";
-
+char OBJECT_TYPE[] = "object";
 
 // use pointer equality to check for these values
 JsValue *const UNDEFINED = &(JsValue) {

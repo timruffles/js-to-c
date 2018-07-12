@@ -20,7 +20,4 @@ void envSet(Env *, JsIdentifier *, JsValue *value);
 JsValue *envGet(Env *, JsIdentifier *);
 
 
-/**
- * Test helpers - wrapping string interning
- */
-#define _identifierCreate(X) char X[] = #X;
+

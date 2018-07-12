@@ -7,7 +7,7 @@
 
 #define test(T) (T)(); printf("%s passed\n", #T);
 
-_identifierCreate(idOne);
+_createInternedStringForTest(idOne);
 
 void itCanCreateRootEnv() {
     Env* env = envCreateRoot();
