@@ -1,5 +1,12 @@
 #pragma once
 #include <stdbool.h>
 
-String* stringPoolAdd(char*);
-bool isEqual(String*, String*);
+#include "language.h"
+
+// our string primitive - can be boxed by toObject
+typedef struct {
+    char * const cString;
+    const double length;
+} JsString;
+
+JsValue* stringCreateFromCString(char*);

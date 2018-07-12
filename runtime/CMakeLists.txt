@@ -30,3 +30,8 @@ add_executable(objects_test
         objects.test.c
         ${COMMON_SOURCES}
 )
+
+add_executable(language_test
+        language.test.c
+        ${COMMON_SOURCES}
+)

@@ -49,10 +49,6 @@ JsValue *envGet(Env *env, JsIdentifier *name) {
            : record->value;
 }
 
-void SOME_FUNCTION() {
-    SOME_FUNCTION_VALL();
-}
-
 void envSet(Env *env, JsIdentifier *name, JsValue *value) {
     EnvRecord *record;
     HASH_FIND_PTR(env->properties, &name, record);
