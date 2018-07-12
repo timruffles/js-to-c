@@ -1,6 +1,7 @@
 import fs from 'fs';
 import {parseScript, Syntax} from "esprima";
 import {
+    CallExpression,
     Identifier,
     MemberExpression,
     Node,
@@ -26,25 +27,81 @@ class InternedString {
    constructor(public readonly id: string, public readonly value: string) {}
 }
 
+type JsIdentifier = string;
+
+class IntermediateVariableTarget {
+    readonly type: 'IntermediateVariableTarget' = 'IntermediateVariableTarget';
+    constructor(readonly id: JsIdentifier) {}
+}
+
+const ReturnTarget = {
+    type: 'ReturnTarget' as 'ReturnTarget',
+};
+
+// when an expression is being evaluated for side effects only
+const SideEffectTarget = {
+    type: 'SideEffectTarget' as 'SideEffectTarget',
+};
+
+
+/**
+ * Where are we targetting this compilation?
+ */
+type CompileTarget =
+    typeof SideEffectTarget |
+    IntermediateVariableTarget |
+    typeof ReturnTarget;
+
 
 class CompileTimeState {
+    // shared between all state objects for a given compilation
     functions: JsFunctionBody[] = [];
     // our intern string pool
     interned: {[k: string]: InternedString } = {};
-    private id = 0;
+    private counter = { id: 0 };
+
+    target: CompileTarget = SideEffectTarget;
+
+    /**
+     * When evaluating sub-expressions etc, aspects of the state
+     * changes such as target.
+     *
+     * The child state uses prototypes to access compile-wide state.
+     */
+    childState({
+        target,
+    }: {
+        target: CompileTarget,
+    }) {
+        const child = Object.create(this);
+        Object.assign(child, {
+            target,
+        });
+        return child;
+    }
 
     internString(str: string) {
         if(!(str in this.interned)) {
-            this.interned[str] = new InternedString(this.nextId('interned'), str);
+            this.interned[str] = new InternedString(this.getNextSymbol('interned'), str);
         }
         return this.interned[str];
     }
 
-    nextId(prefix: string) {
-        this.id += 1;
-        return `${prefix}_${this.id}`;
+    getSymbolForId(prefix: string, id: number) {
+        return `${prefix}_${id}`;
+    }
+
+    getNextSymbol(prefix: string) {
+        return this.getSymbolForId(prefix, this.nextId());
+    }
+
+    nextId() {
+        this.counter.id += 1;
+        return this.counter.id;
     }
 }
+
+const compileExpressionStatement: NodeCompiler = (node, state) => compile(node.expression, state);
 const lookup = getCompilers();
 
 if(require.main === module) {
@@ -63,6 +120,7 @@ function compile(ast: Node, state: CompileTimeState): string {
     return lookup[ast.type](ast, state);
 }
 
+
 function getCompilers(): NodeCompilerLookup {
     return {
         ArrayExpression: unimplemented('ArrayExpression'),
@@ -74,7 +132,7 @@ function getCompilers(): NodeCompilerLookup {
         BinaryExpression: unimplemented('BinaryExpression'),
         BlockStatement: unimplemented('BlockStatement'),
         BreakStatement: unimplemented('BreakStatement'),
-        CallExpression: unimplemented('CallExpression'),
+        CallExpression: compileCallExpression,
         CatchClause: unimplemented('CatchClause'),
         ClassBody: unimplemented('ClassBody'),
         ClassDeclaration: unimplemented('ClassDeclaration'),
@@ -88,13 +146,13 @@ function getCompilers(): NodeCompilerLookup {
         ExportDefaultDeclaration: unimplemented('ExportDefaultDeclaration'),
         ExportNamedDeclaration: unimplemented('ExportNamedDeclaration'),
         ExportSpecifier: unimplemented('ExportSpecifier'),
-        ExpressionStatement: unimplemented('ExpressionStatement'),
+        ExpressionStatement: compileExpressionStatement,
         ForInStatement: unimplemented('ForInStatement'),
         ForOfStatement: unimplemented('ForOfStatement'),
         ForStatement: unimplemented('ForStatement'),
         FunctionDeclaration: unimplemented('FunctionDeclaration'),
         FunctionExpression: unimplemented('FunctionExpression'),
-        Identifier: unimplemented('Identifier'),
+        Identifier: compileIdentifier,
         IfStatement: unimplemented('IfStatement'),
         Import: unimplemented('Import'),
         ImportDeclaration: unimplemented('ImportDeclaration'),
@@ -104,13 +162,13 @@ function getCompilers(): NodeCompilerLookup {
         LabeledStatement: unimplemented('LabeledStatement'),
         Literal: unimplemented('Literal'),
         LogicalExpression: unimplemented('LogicalExpression'),
-        MemberExpression: unimplemented('MemberExpression'),
+        MemberExpression: compileMemberExpression,
         MetaProperty: unimplemented('MetaProperty'),
         MethodDefinition: unimplemented('MethodDefinition'),
         NewExpression: unimplemented('NewExpression'),
         ObjectExpression: unimplemented('ObjectExpression'),
         ObjectPattern: unimplemented('ObjectPattern'),
-        Program,
+        Program: compileProgram,
         Property: unimplemented('Property'),
         RestElement: unimplemented('RestElement'),
         ReturnStatement: unimplemented('ReturnStatement'),
@@ -127,8 +185,8 @@ function getCompilers(): NodeCompilerLookup {
         TryStatement: unimplemented('TryStatement'),
         UnaryExpression: unimplemented('UnaryExpression'),
         UpdateExpression: unimplemented('UpdateExpression'),
-        VariableDeclaration,
-        VariableDeclarator,
+        VariableDeclaration: compileVariableDeclaration,
+        VariableDeclarator: compileVariableDeclarator,
         WhileStatement: unimplemented('WhileStatement'),
         WithStatement: unimplemented('WithStatement'),
         YieldExpression: unimplemented('YieldExpression')
@@ -139,7 +197,7 @@ function joinNodeOutput(srcList: string[]) {
     return srcList.join('\n');
 }
 
-function Program(node: Program, state: CompileTimeState) {
+function compileProgram(node: Program, state: CompileTimeState) {
 
     const body = joinNodeOutput(node.body.map(n => compile(n, state)));
 
@@ -168,11 +226,11 @@ function Program(node: Program, state: CompileTimeState) {
 
 function compileInternedStrings(interned: InternedString[]): string {
     return joinNodeOutput(interned.map(({id, value}) => (
-        `char* const ${id} = "${value}";`
+        `char ${id}[] = "${value}";`
     )));
 }
 
-function VariableDeclaration(node: VariableDeclaration, state: CompileTimeState) {
+function compileVariableDeclaration(node: VariableDeclaration, state: CompileTimeState) {
     if(node.kind !== 'var') {
         return unimplemented(node.kind)();
     }
@@ -184,13 +242,105 @@ function mapCompile(nodes: Node[], state: CompileTimeState) {
     return joinNodeOutput(nodes.map(n => compile(n, state)));
 }
 
-function VariableDeclarator(node: VariableDeclarator, state: CompileTimeState) {
+function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeState) {
     const target = ensureSupportedTarget(node.id);
     if(target.type === 'Identifier') {
         return `envDeclare(env, ${state.internString(target.name).id});`
     } else {
        return unimplemented('MemberExpression')();
     }
+}
+
+function assignToTarget(cExpression: string, target: CompileTarget) {
+    switch(target.type) {
+        case 'SideEffectTarget':
+            return cExpression;
+        case 'IntermediateVariableTarget':
+            return `JsValue* ${target.id} = (${cExpression});`;
+        case 'ReturnTarget':
+            return `return (${cExpression});`;
+    }
+}
+
+/**
+ * Examples:
+ *
+ *   f()
+ *   foo.bar()
+ *   f()()
+ *   f['x']()
+ *
+ * All come down to
+ *
+ *
+ *   callee_n = <process to evaluate callee>
+ *   env_n = <generate new env>
+ *   arg_1..n = <generate args left to right>
+ *   <target> = returned
+ */
+function compileCallExpression(node: CallExpression, state: CompileTimeState) {
+    const id = state.nextId();
+    const calleeTarget = new IntermediateVariableTarget(state.getSymbolForId('callee', id));
+    const envVar = state.getSymbolForId('env', id);
+    const argsArrayVar = state.getSymbolForId('args', id);
+
+    const calleeSrc = compile(node.callee, state.childState({
+        target: calleeTarget
+    }));
+
+    const argsWithTargets = node.arguments.map((argNode, i) => {
+        const callVar = state.getSymbolForId(`call${id}Arg`, i);
+        const target = new IntermediateVariableTarget(callVar);
+        const expression = compile(argNode, state.childState({
+            target,
+        }));
+
+        return {
+            target,
+            expression,
+        };
+    });
+
+    const argsValuesSrc = argsWithTargets
+        .map(({target}) => target.id)
+        .join(', ');
+
+    return `${calleeSrc}
+            ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
+            JsValue ${argsArrayVar}[] = {${argsValuesSrc}};
+            Env* ${envVar} = envCreateChild(
+               env, 
+               ${calleeTarget.id}->argumentNames,
+               &${argsArrayVar}
+            );
+            ${assignToTarget(`${calleeTarget.id}->fn(${envVar})`, state.target)}
+            `;
+}
+
+function compileMemberExpression(node: MemberExpression, state: CompileTimeState) {
+    const objectTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
+    const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
+
+    const objectSrc = compile(node.object, state.childState({
+        target: objectTarget,
+    }));
+    const propertySrc = compile(node.property, state.childState({
+        target: propertyTarget,
+    }));
+
+    const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
+    return `${objectSrc}
+            ${propertySrc}
+            ${resultSrc}
+    `
+}
+
+function compileIdentifier(node: Identifier, state: CompileTimeState) {
+    const interned = state.internString(node.name);
+   return assignToTarget(
+       `envGet(env, ${interned.id}) /* ${interned.value} */`,
+       state.target,
+   );
 }
 
 type SupportedAssignmentTarget = MemberExpression | Identifier;
@@ -207,4 +357,5 @@ function unimplemented(node: string) {
         return `/* unimplemented ${node} */`;
     }
 }
+
 

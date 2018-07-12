@@ -1,0 +1,15 @@
+"functions with constant expressions": """
+function meaningOfLifeSquared() {
+    return 42 * 42;
+}
+
+console.log(meaningOfLifeSquared());
+"""
+
+"simple call": """
+function add(a,b) {
+    return a + b;
+}
+
+console.log(add(a,b));
+"""

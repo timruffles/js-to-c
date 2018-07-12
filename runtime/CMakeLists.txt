@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(runtime C)
+project(JsToC)
 
 set(CMAKE_C_STANDARD 11)
 
