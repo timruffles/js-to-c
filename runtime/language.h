@@ -21,9 +21,6 @@ extern char BOOLEAN_TYPE[];
 extern char OBJECT_TYPE[];
 extern char STRING_TYPE[];
 
-extern const char TRUE_VALUE;
-extern const char FALSE_VALUE;
-
 typedef struct JsValue JsValue;
 
 // shared singleton constant values
@@ -46,8 +43,8 @@ JsValue* getFalse();
 JsValue *jsValueCreatePointer(JsValueType type, void*);
 JsValue *jsValueCreateNumber(double);
 
-double jsValueGetNumber(JsValue* value);
-void* jsValueGetPointer(JsValue* value);
+double jsValueNumber(JsValue* value);
+void* jsValuePointer(JsValue* value);
 
 
 /**

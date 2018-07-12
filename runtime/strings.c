@@ -11,6 +11,6 @@ JsValue* stringCreateFromCString(char* string) {
         .cString = string,
         .length = l,
     };
-    JsValue *val = jsValueCreate(STRING_TYPE, jsString);
+    JsValue *val = jsValueCreatePointer(STRING_TYPE, jsString);
     return val;
 }

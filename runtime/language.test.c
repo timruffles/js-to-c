@@ -7,25 +7,29 @@
 #define test(T) (T)(); printf("%s passed\n", #T);
 
 void itCanCreateNumber() {
-    JsValue* val = jsValueCreateNumber(BOOLEAN_TYPE, 42.42);
+    JsValue* val = jsValueCreateNumber(42.42);
     assert(val != NULL);
 }
 
 void itCanAccessNumberValue() {
-    JsValue* val = jsValueCreate(BOOLEAN_TYPE, 'Y');
-    uintptr_t p = jsValueGet(val);
-    char castVal = (char) jsValueGet(val);
-    printf("thing '%c' or %p\n", castVal, p);
+    JsValue* val = jsValueCreateNumber(42.42);
+    assert(jsValueNumber(val) == 42.42);
+}
 
-    char* c = &p;
-    for(uint16_t i = 0; i < 8; i++) {
-        printf("thing byte %d: %c\n", i, *(c+i));
-    }
-    assert(castVal == 'Y');
+void itCanAccessPointerValue() {
+    char a = 'Y';
+
+    // just checking if the pointers end up pointing to the right place
+    JsValue* val = jsValueCreatePointer(OBJECT_TYPE, &a);
+    char* ptr = jsValuePointer(val);
+
+    assert(*ptr == 'Y');
+    assert(ptr == &a);
 }
 
 int main() {
-    test(itCanCreateValue);
-    test(itCanAccessValue);
+    test(itCanCreateNumber);
+    test(itCanAccessNumberValue);
+    test(itCanAccessPointerValue);
 }
 

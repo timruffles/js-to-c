@@ -2,6 +2,7 @@
 
 #include "language.h"
 #include "objects.h"
+#include "exceptions.h"
 
 typedef struct {
     JsValue *property;
@@ -11,7 +12,7 @@ typedef struct {
 } PropertyDescriptor;
 
 typedef struct JsObject {
-    PropertyDescriptor* descriptors;
+    PropertyDescriptor* properties;
     JsObject* prototype;
 } JsObject;
 
@@ -20,26 +21,29 @@ typedef struct JsObject {
  */
 JsValue* objectCreatePlain() {
     JsObject *obj = calloc(sizeof(JsObject), 1);
-    JsValue *val = jsValueCreate(OBJECT_TYPE, obj);
+    JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
     return val;
 }
 
-//JsValue *objectGet(JsValue *object, JsValue *name) {
-//    PropertyDescriptor *descriptor;
-//    HASH_FIND_PTR(object->properties, &name, descriptor);
-//    return descriptor == NULL
-//           ? getUndefined()
-//           : descriptor->value;
-//}
-//
-//void objectSet(JsValue *object, JsValue *name, JsValue *value) {
-//    PropertyDescriptor *descriptor;
-//    HASH_FIND_PTR(object->properties, &name, descriptor);
-//    if (descriptor == NULL) {
-//        throwError("Attempted to set undeclared variable");
-//    }
-//    descriptor->value = value;
-//}
+JsValue *objectGet(JsValue *val, JsValue *name) {
+    JsObject* object = jsValuePointer(val);
+    PropertyDescriptor *descriptor;
+    HASH_FIND_PTR(object->properties, &name, descriptor);
+    return descriptor == NULL
+           ? getUndefined()
+           : descriptor->value;
+}
+
+JsValue * objectSet(JsValue* val, JsValue* name, JsValue* value) {
+    JsObject* object = jsValuePointer(val);
+    PropertyDescriptor *descriptor;
+    HASH_FIND_PTR(object->properties, &name, descriptor);
+    if (descriptor == NULL) {
+        throwError("Attempted to set undeclared variable");
+    }
+    descriptor->value = value;
+    return value;
+}
 
 void objectDestroy(JsValue *object) {
     free(object);
