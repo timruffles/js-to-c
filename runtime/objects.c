@@ -3,9 +3,10 @@
 #include "language.h"
 #include "objects.h"
 #include "exceptions.h"
+#include "strings.h"
 
 typedef struct {
-    JsValue *name;
+    char* name;
     JsValue *value;
 
     UT_hash_handle hh;
@@ -13,7 +14,7 @@ typedef struct {
 
 typedef struct JsObject {
     PropertyDescriptor* properties;
-    JsObject* prototype;
+    JsValue* prototype;
 } JsObject;
 
 /**
@@ -25,14 +26,22 @@ JsValue* objectCreatePlain() {
     return val;
 }
 
+JsValue* objectCreate(JsValue* prototype) {
+    JsValue *obj = objectCreatePlain();
+    ((JsObject*)jsValuePointer(obj))->prototype = prototype;
+    return obj;
+}
+
 JsValue* objectGet(JsValue *val, JsValue *name) {
     // TODO type assertion on val
     JsObject* object = jsValuePointer(val);
     PropertyDescriptor *descriptor;
-    HASH_FIND_PTR(object->properties, &name, descriptor);
+
+    JsString* nameString = stringGet(name);
+    HASH_FIND_STR(object->properties, nameString->cString, descriptor);
     return descriptor == NULL
-           ? getUndefined()
-           : descriptor->value;
+        ? getUndefined()
+        : descriptor->value;
 }
 
 PropertyDescriptor* propertyCreate() {
@@ -43,18 +52,28 @@ PropertyDescriptor* propertyCreate() {
 JsValue* objectSet(JsValue* val, JsValue* name, JsValue* value) {
     // TODO type assertion on val
     JsObject* object = jsValuePointer(val);
-    PropertyDescriptor *descriptor = propertyCreate();
-    *descriptor = (PropertyDescriptor) {
-        .name = name,
-        .value = value,
-    };
-    PropertyDescriptor* replaced;
-    HASH_REPLACE_PTR(object->properties, name, descriptor, replaced);
+
+    JsString* nameString = stringGet(name);
+    PropertyDescriptor *descriptor;
+    HASH_FIND_STR(object->properties, nameString->cString, descriptor);
+
+    if(descriptor == NULL) {
+        descriptor = propertyCreate();
+        JsString* nameString = stringGet(name);
+        descriptor->name = nameString->cString;
+        HASH_ADD_KEYPTR(
+          hh,
+          object->properties,
+          nameString->cString,
+          nameString->length,
+          descriptor
+        );
+    }
+
+    descriptor->value = value;
+
     return value;
 }
-
-
-
 
 void objectDestroy(JsValue *object) {
     free(object);

@@ -14,3 +14,8 @@ JsValue* stringCreateFromCString(char* string) {
     JsValue *val = jsValueCreatePointer(STRING_TYPE, jsString);
     return val;
 }
+
+JsString* stringGet(JsValue* value) {
+    JsString* jsString = jsValuePointer(value);
+    return jsString;
+}

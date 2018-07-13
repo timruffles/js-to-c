@@ -111,19 +111,6 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named language_test
-
-# Build rule for target.
-language_test: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 language_test
-.PHONY : language_test
-
-# fast build rule for target.
-language_test/fast:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/build
-.PHONY : language_test/fast
-
-#=============================================================================
 # Target rules for targets named objects_test
 
 # Build rule for target.
@@ -135,6 +122,32 @@ objects_test: cmake_check_build_system
 objects_test/fast:
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/build
 .PHONY : objects_test/fast
+
+#=============================================================================
+# Target rules for targets named strings_test
+
+# Build rule for target.
+strings_test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 strings_test
+.PHONY : strings_test
+
+# fast build rule for target.
+strings_test/fast:
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/build
+.PHONY : strings_test/fast
+
+#=============================================================================
+# Target rules for targets named language_test
+
+# Build rule for target.
+language_test: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 language_test
+.PHONY : language_test
+
+# fast build rule for target.
+language_test/fast:
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/build
+.PHONY : language_test/fast
 
 #=============================================================================
 # Target rules for targets named environments_test
@@ -155,8 +168,9 @@ environments.o: environments.c.o
 
 # target to build an object file
 environments.c.o:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/environments.c.o
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/environments.c.o
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/environments.c.o
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/environments.c.o
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/environments.c.o
 .PHONY : environments.c.o
 
@@ -166,8 +180,9 @@ environments.i: environments.c.i
 
 # target to preprocess a source file
 environments.c.i:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/environments.c.i
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/environments.c.i
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/environments.c.i
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/environments.c.i
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/environments.c.i
 .PHONY : environments.c.i
 
@@ -177,8 +192,9 @@ environments.s: environments.c.s
 
 # target to generate assembly for a file
 environments.c.s:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/environments.c.s
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/environments.c.s
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/environments.c.s
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/environments.c.s
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/environments.c.s
 .PHONY : environments.c.s
 
@@ -215,8 +231,9 @@ exceptions.o: exceptions.c.o
 
 # target to build an object file
 exceptions.c.o:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/exceptions.c.o
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/exceptions.c.o
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/exceptions.c.o
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/exceptions.c.o
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/exceptions.c.o
 .PHONY : exceptions.c.o
 
@@ -226,8 +243,9 @@ exceptions.i: exceptions.c.i
 
 # target to preprocess a source file
 exceptions.c.i:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/exceptions.c.i
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/exceptions.c.i
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/exceptions.c.i
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/exceptions.c.i
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/exceptions.c.i
 .PHONY : exceptions.c.i
 
@@ -237,8 +255,9 @@ exceptions.s: exceptions.c.s
 
 # target to generate assembly for a file
 exceptions.c.s:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/exceptions.c.s
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/exceptions.c.s
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/exceptions.c.s
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/exceptions.c.s
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/exceptions.c.s
 .PHONY : exceptions.c.s
 
@@ -248,8 +267,9 @@ language.o: language.c.o
 
 # target to build an object file
 language.c.o:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/language.c.o
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/language.c.o
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/language.c.o
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/language.c.o
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/language.c.o
 .PHONY : language.c.o
 
@@ -259,8 +279,9 @@ language.i: language.c.i
 
 # target to preprocess a source file
 language.c.i:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/language.c.i
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/language.c.i
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/language.c.i
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/language.c.i
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/language.c.i
 .PHONY : language.c.i
 
@@ -270,8 +291,9 @@ language.s: language.c.s
 
 # target to generate assembly for a file
 language.c.s:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/language.c.s
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/language.c.s
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/language.c.s
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/language.c.s
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/language.c.s
 .PHONY : language.c.s
 
@@ -308,8 +330,9 @@ objects.o: objects.c.o
 
 # target to build an object file
 objects.c.o:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/objects.c.o
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/objects.c.o
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/objects.c.o
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/objects.c.o
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/objects.c.o
 .PHONY : objects.c.o
 
@@ -319,8 +342,9 @@ objects.i: objects.c.i
 
 # target to preprocess a source file
 objects.c.i:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/objects.c.i
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/objects.c.i
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/objects.c.i
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/objects.c.i
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/objects.c.i
 .PHONY : objects.c.i
 
@@ -330,8 +354,9 @@ objects.s: objects.c.s
 
 # target to generate assembly for a file
 objects.c.s:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/objects.c.s
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/objects.c.s
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/objects.c.s
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/objects.c.s
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/objects.c.s
 .PHONY : objects.c.s
 
@@ -368,8 +393,9 @@ strings.o: strings.c.o
 
 # target to build an object file
 strings.c.o:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/strings.c.o
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/strings.c.o
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/strings.c.o
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/strings.c.o
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/strings.c.o
 .PHONY : strings.c.o
 
@@ -379,8 +405,9 @@ strings.i: strings.c.i
 
 # target to preprocess a source file
 strings.c.i:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/strings.c.i
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/strings.c.i
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/strings.c.i
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/strings.c.i
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/strings.c.i
 .PHONY : strings.c.i
 
@@ -390,10 +417,38 @@ strings.s: strings.c.s
 
 # target to generate assembly for a file
 strings.c.s:
-	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/strings.c.s
 	$(MAKE) -f CMakeFiles/objects_test.dir/build.make CMakeFiles/objects_test.dir/strings.c.s
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/strings.c.s
+	$(MAKE) -f CMakeFiles/language_test.dir/build.make CMakeFiles/language_test.dir/strings.c.s
 	$(MAKE) -f CMakeFiles/environments_test.dir/build.make CMakeFiles/environments_test.dir/strings.c.s
 .PHONY : strings.c.s
+
+strings.test.o: strings.test.c.o
+
+.PHONY : strings.test.o
+
+# target to build an object file
+strings.test.c.o:
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/strings.test.c.o
+.PHONY : strings.test.c.o
+
+strings.test.i: strings.test.c.i
+
+.PHONY : strings.test.i
+
+# target to preprocess a source file
+strings.test.c.i:
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/strings.test.c.i
+.PHONY : strings.test.c.i
+
+strings.test.s: strings.test.c.s
+
+.PHONY : strings.test.s
+
+# target to generate assembly for a file
+strings.test.c.s:
+	$(MAKE) -f CMakeFiles/strings_test.dir/build.make CMakeFiles/strings_test.dir/strings.test.c.s
+.PHONY : strings.test.c.s
 
 # Help Target
 help:
@@ -402,9 +457,10 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... edit_cache"
-	@echo "... language_test"
 	@echo "... objects_test"
+	@echo "... edit_cache"
+	@echo "... strings_test"
+	@echo "... language_test"
 	@echo "... environments_test"
 	@echo "... environments.o"
 	@echo "... environments.i"
@@ -430,6 +486,9 @@ help:
 	@echo "... strings.o"
 	@echo "... strings.i"
 	@echo "... strings.s"
+	@echo "... strings.test.o"
+	@echo "... strings.test.i"
+	@echo "... strings.test.s"
 .PHONY : help
 
 

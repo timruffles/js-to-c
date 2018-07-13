@@ -37,3 +37,8 @@ add_executable(language_test
         language.test.c
         ${COMMON_SOURCES}
 )
+
+add_executable(strings_test
+        strings.test.c
+        ${COMMON_SOURCES}
+)

@@ -5,11 +5,9 @@
 #include "objects.h"
 #include "language.h"
 #include "strings.h"
-
-#define test(T) printf("%s...", #T); (T)(); printf(" passed\n");
+#include "test.h"
 
 JsValue* idOne;
-
 
 void itCreatesPlainObjects() {
     JsValue* object = objectCreatePlain();
@@ -53,6 +51,13 @@ void itUpdatesPropertyValues() {
     objectDestroy(object);
 }
 
+void itCreatesObjectsWithPrototype() {
+    JsValue* prototype = objectCreatePlain();
+    JsValue* object = objectCreate(prototype);
+
+    assert(object != NULL);
+}
+
 int main() {
     idOne = stringCreateFromCString("one");
 
@@ -61,5 +66,6 @@ int main() {
     test(itAssignsProperties)
     test(itGetsPropertyValues)
     test(itUpdatesPropertyValues);
+    test(itCreatesObjectsWithPrototype);
 }
 
