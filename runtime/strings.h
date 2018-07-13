@@ -3,11 +3,9 @@
 
 #include "language.h"
 
-// our string primitive - can be boxed by toObject
-typedef struct {
-    const char * const cString;
-    const double length;
-} JsString;
+typedef struct JsString JsString;
 
 JsValue* stringCreateFromCString(char*);
 JsString* stringGet(JsValue*);
+uint64_t stringLength(JsValue*);
+char* stringGetCString(JsValue*);

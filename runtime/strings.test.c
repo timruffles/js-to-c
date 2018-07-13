@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "strings.h"
 #include "language.h"
@@ -16,12 +17,18 @@ void itCanCreateAStringFromACString() {
 void itGetsJsStringFromValue() {
     char* theContent = "Hello";
     JsValue* str = stringCreateFromCString(theContent);
-    JsString* jsStr = stringGet(str);
-    assert(strcmp(jsStr->cString, theContent) == 0);
+    assert(strcmp(stringGetCString(str), theContent) == 0);
+}
+
+void itGetsStringLength() {
+    char* theContent = "Hello";
+    JsValue* str = stringCreateFromCString(theContent);
+    assert(stringLength(str) == 5);
 }
 
 int main() {
     test(itCanCreateAStringFromACString);
     test(itGetsJsStringFromValue);
+    test(itGetsStringLength);
 }
 
