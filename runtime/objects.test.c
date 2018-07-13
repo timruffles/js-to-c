@@ -8,6 +8,9 @@
 #include "test.h"
 
 JsValue* idOne;
+JsValue* idOneB;
+JsValue* idOneC;
+JsValue* idTwo;
 
 void itCreatesPlainObjects() {
     JsValue* object = objectCreatePlain();
@@ -39,6 +42,25 @@ void itGetsPropertyValues() {
     objectDestroy(object);
 }
 
+void itLooksUpByStringValueNotIdentity() {
+    JsValue* object = objectCreatePlain();
+    objectSet(object, idOne, getTrue());
+
+    assert(objectGet(object, idOneB) == getTrue());
+    assert(objectGet(object, idOneC) == getTrue());
+
+    objectDestroy(object);
+}
+
+void itReturnsUndefinedForMissingKeys() {
+    JsValue* object = objectCreatePlain();
+    objectSet(object, idOne, getTrue());
+
+    assert(objectGet(object, idTwo) == getUndefined());
+
+    objectDestroy(object);
+}
+
 void itUpdatesPropertyValues() {
     JsValue* object = objectCreatePlain();
 
@@ -58,8 +80,32 @@ void itCreatesObjectsWithPrototype() {
     assert(object != NULL);
 }
 
+void itFindsPrototypeProperties() {
+    JsValue* prototype = objectCreatePlain();
+    objectSet(prototype, idOne, getTrue());
+    JsValue* object = objectCreate(prototype);
+
+    assert(objectGet(object, idOne) == getTrue());
+
+    assert(object != NULL);
+}
+
+void itPrefersOwnPropertiesToPrototype() {
+    JsValue* prototype = objectCreatePlain();
+    objectSet(prototype, idOne, getTrue());
+    JsValue* object = objectCreate(prototype);
+    objectSet(object, idOne, getFalse());
+
+    assert(objectGet(object, idOne) == getFalse());
+
+    assert(object != NULL);
+}
+
 int main() {
     idOne = stringCreateFromCString("one");
+    idOneB = stringCreateFromCString("one");
+    idOneC = stringCreateFromCString("one");
+    idTwo = stringCreateFromCString("two");
 
     test(itCreatesPlainObjects)
     test(itDestroysObjects)
@@ -67,5 +113,9 @@ int main() {
     test(itGetsPropertyValues)
     test(itUpdatesPropertyValues);
     test(itCreatesObjectsWithPrototype);
+    test(itFindsPrototypeProperties);
+    test(itPrefersOwnPropertiesToPrototype);
+    test(itReturnsUndefinedForMissingKeys);
+    test(itLooksUpByStringValueNotIdentity);
 }
 

@@ -34,14 +34,25 @@ JsValue* objectCreate(JsValue* prototype) {
 
 JsValue* objectGet(JsValue *val, JsValue *name) {
     // TODO type assertion on val
-    JsObject* object = jsValuePointer(val);
+    JsString* nameString = stringGet(name);
     PropertyDescriptor *descriptor;
 
-    JsString* nameString = stringGet(name);
-    HASH_FIND_STR(object->properties, nameString->cString, descriptor);
-    return descriptor == NULL
-        ? getUndefined()
-        : descriptor->value;
+    // starting with object, and going up prototype chain, find a matching
+    // property
+    JsValue* target = val;
+    while(1) {
+        JsObject* object = jsValuePointer(target);
+        HASH_FIND_STR(object->properties, nameString->cString, descriptor);
+        if(descriptor != NULL) {
+            return descriptor->value;
+        }
+
+        // go up pt chain one step, or return undefined if we're out of pts
+        target = ((JsObject*)jsValuePointer(target))->prototype;
+        if(target == NULL) {
+            return getUndefined();
+        }
+    }
 }
 
 PropertyDescriptor* propertyCreate() {
