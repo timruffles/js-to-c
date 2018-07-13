@@ -6,32 +6,32 @@
 #include "language.h"
 #include "strings.h"
 
-#define test(T) (T)(); printf("%s passed\n", #T);
+#define test(T) printf("%s...", #T); (T)(); printf(" passed\n");
 
 JsValue* idOne;
 
 
-void itCanCreatePlainObjects() {
+void itCreatesPlainObjects() {
     JsValue* object = objectCreatePlain();
     assert(object != NULL);
     free(object);
 }
 
-void itCanDestroyAnObject() {
+void itDestroysObjects() {
     JsValue* object = objectCreatePlain();
     assert(object != NULL);
     objectDestroy(object);
 }
 
 
-void itCanAssignAProperty() {
+void itAssignsProperties() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
 
     objectDestroy(object);
 }
 
-void itCanGetAVariableValue() {
+void itGetsPropertyValues() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
 
@@ -41,12 +41,25 @@ void itCanGetAVariableValue() {
     objectDestroy(object);
 }
 
+void itUpdatesPropertyValues() {
+    JsValue* object = objectCreatePlain();
+
+    objectSet(object, idOne, getTrue());
+    assert(objectGet(object, idOne) == getTrue());
+    
+    objectSet(object, idOne, getFalse());
+    assert(objectGet(object, idOne) == getFalse());
+
+    objectDestroy(object);
+}
+
 int main() {
     idOne = stringCreateFromCString("one");
 
-    test(itCanCreatePlainObjects)
-    test(itCanDestroyAnObject)
-    test(itCanAssignAProperty)
-    test(itCanGetAVariableValue)
+    test(itCreatesPlainObjects)
+    test(itDestroysObjects)
+    test(itAssignsProperties)
+    test(itGetsPropertyValues)
+    test(itUpdatesPropertyValues);
 }
 

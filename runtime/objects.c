@@ -5,7 +5,7 @@
 #include "exceptions.h"
 
 typedef struct {
-    JsValue *property;
+    JsValue *name;
     JsValue *value;
 
     UT_hash_handle hh;
@@ -25,7 +25,8 @@ JsValue* objectCreatePlain() {
     return val;
 }
 
-JsValue *objectGet(JsValue *val, JsValue *name) {
+JsValue* objectGet(JsValue *val, JsValue *name) {
+    // TODO type assertion on val
     JsObject* object = jsValuePointer(val);
     PropertyDescriptor *descriptor;
     HASH_FIND_PTR(object->properties, &name, descriptor);
@@ -34,16 +35,26 @@ JsValue *objectGet(JsValue *val, JsValue *name) {
            : descriptor->value;
 }
 
-JsValue * objectSet(JsValue* val, JsValue* name, JsValue* value) {
+PropertyDescriptor* propertyCreate() {
+    PropertyDescriptor *pd = calloc(sizeof(PropertyDescriptor), 1);
+    return pd;
+}
+
+JsValue* objectSet(JsValue* val, JsValue* name, JsValue* value) {
+    // TODO type assertion on val
     JsObject* object = jsValuePointer(val);
-    PropertyDescriptor *descriptor;
-    HASH_FIND_PTR(object->properties, &name, descriptor);
-    if (descriptor == NULL) {
-        throwError("Attempted to set undeclared variable");
-    }
-    descriptor->value = value;
+    PropertyDescriptor *descriptor = propertyCreate();
+    *descriptor = (PropertyDescriptor) {
+        .name = name,
+        .value = value,
+    };
+    PropertyDescriptor* replaced;
+    HASH_REPLACE_PTR(object->properties, name, descriptor, replaced);
     return value;
 }
+
+
+
 
 void objectDestroy(JsValue *object) {
     free(object);
