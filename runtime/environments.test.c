@@ -4,10 +4,10 @@
 
 #include "environments.h"
 #include "language.h"
+#include "test.h"
+#include "strings.h"
 
-#define test(T) (T)(); printf("%s passed\n", #T);
-
-_createInternedStringForTest(idOne);
+JsValue* idOne;
 
 void itCanCreateRootEnv() {
     Env* env = envCreateRoot();
@@ -56,6 +56,8 @@ void itCanGetAVariableValue() {
 }
 
 int main(int argc, char** argv) {
+    idOne = stringCreateFromCString("one");
+
     test(itCanCreateRootEnv);
     test(itCanDestroyAnEnv);
     test(itCanDeclareAVariable);

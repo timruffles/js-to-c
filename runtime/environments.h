@@ -2,7 +2,7 @@
 
 #include "language.h"
 
-typedef struct Env Env;
+typedef JsValue Env;
 
 /**
  * Creates a new environment with the specified parent
@@ -13,11 +13,11 @@ Env *envCreate(Env *const parent);
 
 void envDestroy(Env *);
 
-void envDeclare(Env *, JsIdentifier *name);
+void envDeclare(Env *, JsValue *name);
 
-void envSet(Env *, JsIdentifier *, JsValue *value);
+void envSet(Env *, JsValue *, JsValue *value);
 
-JsValue *envGet(Env *, JsIdentifier *);
+JsValue *envGet(Env *, JsValue *);
 
 
 

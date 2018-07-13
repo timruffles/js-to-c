@@ -45,9 +45,3 @@ JsValue *jsValueCreateNumber(double);
 
 double jsValueNumber(JsValue* value);
 void* jsValuePointer(JsValue* value);
-
-
-/**
- * Test helpers - hiding implementation of string interning
- */
-#define _createInternedStringForTest(X) char X[] = #X;

@@ -33,8 +33,15 @@ JsValue* objectCreate(JsValue* prototype) {
 }
 
 JsValue* objectGet(JsValue *val, JsValue *name) {
+    JsValue* found = objectLookup(val, name);
+    return found == NULL
+      ? getUndefined()
+      : found;
+}
+
+JsValue* objectLookup(JsValue *val, JsValue *name) {
     // TODO type assertion on val
-    JsString* nameString = stringGet(name);
+    char* cString = stringGetCString(name);
     PropertyDescriptor *descriptor;
 
     // starting with object, and going up prototype chain, find a matching
@@ -42,15 +49,15 @@ JsValue* objectGet(JsValue *val, JsValue *name) {
     JsValue* target = val;
     while(1) {
         JsObject* object = jsValuePointer(target);
-        HASH_FIND_STR(object->properties, nameString->cString, descriptor);
+        HASH_FIND_STR(object->properties, cString, descriptor);
         if(descriptor != NULL) {
             return descriptor->value;
         }
 
-        // go up pt chain one step, or return undefined if we're out of pts
+        // go up pt chain one step, or return NULL if we're out of pts
         target = ((JsObject*)jsValuePointer(target))->prototype;
         if(target == NULL) {
-            return getUndefined();
+            return NULL;
         }
     }
 }
@@ -63,20 +70,19 @@ PropertyDescriptor* propertyCreate() {
 JsValue* objectSet(JsValue* val, JsValue* name, JsValue* value) {
     // TODO type assertion on val
     JsObject* object = jsValuePointer(val);
+    char* nameString = stringGetCString(name);
 
-    JsString* nameString = stringGet(name);
     PropertyDescriptor *descriptor;
-    HASH_FIND_STR(object->properties, nameString->cString, descriptor);
+    HASH_FIND_STR(object->properties, nameString, descriptor);
 
     if(descriptor == NULL) {
         descriptor = propertyCreate();
-        JsString* nameString = stringGet(name);
-        descriptor->name = nameString->cString;
+        descriptor->name = nameString;
         HASH_ADD_KEYPTR(
           hh,
           object->properties,
-          nameString->cString,
-          nameString->length,
+          nameString,
+          stringLength(name),
           descriptor
         );
     }

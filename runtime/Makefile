@@ -4,8 +4,6 @@ source_with_headers=$(filter-out %test.c, $(all_source_including_tests))
 
 CC=clang
 
-default_target=test
-
 out/environments_test: $(source_with_headers)
 	$(CC) $(source_files) environments.test.c -o $@
 

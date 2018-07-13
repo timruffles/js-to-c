@@ -4,67 +4,36 @@
 #include "./lib/uthash.h"
 
 #include "environments.h"
+#include "objects.h"
 #include "language.h"
 #include "exceptions.h"
 
-static void *const ROOT_HAS_NO_PARENT = 0;
-
-/**
- * All of our environment identifiers are known
- * at compile time (there's no way to dynamically
- * assign a variable name), we preallocate all identifier strings and
- * use pointer comparison for equality.
- */
-typedef struct {
-    JsIdentifier *id;
-    JsValue *value;
-
-    UT_hash_handle hh;
-} EnvRecord;
-
-
-typedef struct Env {
-    EnvRecord *properties;
-    struct Env *const parent;
-} Env;
-
 Env *envCreateRoot() {
-    return envCreate(ROOT_HAS_NO_PARENT);
+    return objectCreatePlain();
 }
 
-Env *envCreate(Env *const parent) {
-    Env *env = calloc(sizeof(Env), 1);
-    *env = (Env) {
-            .properties = NULL,
-            .parent = parent
-    };
-    return env;
+Env *envCreate(Env* parent) {
+    return objectCreate(parent);
 }
 
-JsValue *envGet(Env *env, JsIdentifier *name) {
-    EnvRecord *record;
-    HASH_FIND_PTR(env->properties, &name, record);
-    return record == NULL
-           ? getUndefined()
-           : record->value;
-}
-
-void envSet(Env *env, JsIdentifier *name, JsValue *value) {
-    EnvRecord *record;
-    HASH_FIND_PTR(env->properties, &name, record);
-    if (record == NULL) {
-        throwError("Attempted to set undeclared variable");
+JsValue *envGet(Env *env, JsValue *name) {
+    JsValue* found = objectLookup(env, name);
+    if(found == NULL) {
+        throwError("Attempted to lookup undeclared variable");
     }
-    record->value = value;
+    return found;
 }
 
-void envDeclare(Env *env, JsIdentifier *name) {
-    EnvRecord *r = calloc(sizeof(EnvRecord), 1);
-    *r = (EnvRecord) {
-            .id = name,
-            .value = getUndefined(),
-    };
-    HASH_ADD_PTR(env->properties, id, r);
+void envSet(Env *env, JsValue *name, JsValue *value) {
+    JsValue* found = objectLookup(env, name);
+    if(found == NULL) {
+        throwError("Attempted to assign undeclared variable");
+    }
+    objectSet(env, name, value);
+}
+
+void envDeclare(Env *env, JsValue *name) {
+    objectSet(env, name, getUndefined());
 }
 
 void envDestroy(Env *env) {
