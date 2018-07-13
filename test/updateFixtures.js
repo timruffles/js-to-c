@@ -4,9 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const toml = require('toml');
 
+main();
+
 function main() {
     updateFixtures();
-    runTests();
 }
 
 function updateFixtures() {

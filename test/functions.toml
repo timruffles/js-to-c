@@ -1,4 +1,4 @@
-"functions with constant expressions": """
+"functions with constant expressions" = """
 function meaningOfLifeSquared() {
     return 42 * 42;
 }
@@ -6,7 +6,7 @@ function meaningOfLifeSquared() {
 console.log(meaningOfLifeSquared());
 """
 
-"simple call": """
+"simple call" = """
 function add(a,b) {
     return a + b;
 }
