@@ -50,7 +50,7 @@ JsValue *const TRUE = &(JsValue) {
 JsValue *const FALSE = &(JsValue) {
         .type = BOOLEAN_TYPE,
         .value = {
-                .boolean = TRUE_VALUE
+                .boolean = FALSE_VALUE
         }
 };
 
