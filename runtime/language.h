@@ -20,6 +20,7 @@ extern char NULL_TYPE[];
 extern char BOOLEAN_TYPE[];
 extern char OBJECT_TYPE[];
 extern char STRING_TYPE[];
+extern char FUNCTION_TYPE[];
 
 typedef struct JsValue JsValue;
 

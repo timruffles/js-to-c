@@ -4,6 +4,7 @@
 #include "objects.h"
 #include "exceptions.h"
 #include "strings.h"
+#include "functions.h"
 
 typedef struct {
     char* name;
@@ -15,6 +16,9 @@ typedef struct {
 typedef struct JsObject {
     PropertyDescriptor* properties;
     JsValue* prototype;
+
+    // can we call this - kinda like [[Call]]?
+    FunctionRecord* callInternal;
 } JsObject;
 
 /**
@@ -32,11 +36,22 @@ JsValue* objectCreate(JsValue* prototype) {
     return obj;
 }
 
+JsValue* objectCreateFunction(FunctionRecord* fr) {
+    // TODO set function pt
+    JsValue *obj = objectCreatePlain();
+    ((JsObject*)jsValuePointer(obj))->callInternal = fr;
+    return obj;
+}
+
 JsValue* objectGet(JsValue *val, JsValue *name) {
     JsValue* found = objectLookup(val, name);
     return found == NULL
       ? getUndefined()
       : found;
+}
+
+FunctionRecord* objectGetCallInternal(JsValue *val) {
+    return ((JsObject*)jsValuePointer(val))->callInternal;
 }
 
 JsValue* objectLookup(JsValue *val, JsValue *name) {
@@ -67,9 +82,9 @@ PropertyDescriptor* propertyCreate() {
     return pd;
 }
 
-JsValue* objectSet(JsValue* val, JsValue* name, JsValue* value) {
-    // TODO type assertion on val
-    JsObject* object = jsValuePointer(val);
+JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
+    // TODO type assertion on object
+    JsObject* object = jsValuePointer(objectVal);
     char* nameString = stringGetCString(name);
 
     PropertyDescriptor *descriptor;

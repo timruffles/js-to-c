@@ -11,6 +11,7 @@ char BOOLEAN_TYPE[] = "boolean";
 char OBJECT_TYPE[] = "object";
 char STRING_TYPE[] = "string";
 char NUMBER_TYPE[] = "number";
+char FUNCTION_TYPE[] = "function";
 
 // Because... why not? Not user mutable so easier to debug
 const char TRUE_VALUE = 'Y';

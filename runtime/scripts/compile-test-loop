@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -euo pipefail
+
+main() {
+  local target=$1
+  nodemon --ignore lib\
+          --ext 'c,h'\
+          --exec "make out/${target}_test && ./out/${target}_test || :"
+}
+
+main $@

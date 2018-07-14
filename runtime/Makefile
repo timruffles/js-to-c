@@ -7,7 +7,7 @@ CC=clang
 out/environments_test: $(source_with_headers)
 	$(CC) $(source_files) environments.test.c -o $@
 
-out/objects_test: $(source_with_headers)
+out/objects_test: objects.test.c $(source_with_headers)
 	$(CC) $(source_files) objects.test.c -o $@
 
 out/strings_test: $(source_with_headers)
@@ -16,6 +16,10 @@ out/strings_test: $(source_with_headers)
 out/language_test: $(source_with_headers)
 	$(CC) $(source_files) language.test.c -o $@
 
+out/functions_test: functions.test.c $(source_with_headers)
+	$(CC) $(source_files) functions.test.c -o $@
+
 test: out/environments_test out/language_test out/objects_test out/strings_test
 	for t in out/*_test; do echo TESTING $$t; ./$$t; done
+
 

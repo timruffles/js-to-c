@@ -55,6 +55,30 @@ void itCanGetAVariableValue() {
     envDestroy(env);
 }
 
+void itUsesStringValueNotIdentifyForGet() {
+    Env* env = envCreateRoot();
+
+    envDeclare(env, stringCreateFromCString("x"));
+    envSet(env, stringCreateFromCString("x"), getTrue());
+
+    assert(
+        envGet(env, stringCreateFromCString("x")) 
+        == envGet(env, stringCreateFromCString("x"))
+    );
+}
+
+void itUsesStringValueNotIdentifyForSet() {
+    Env* env = envCreateRoot();
+
+    envDeclare(env, stringCreateFromCString("x"));
+    envSet(env, stringCreateFromCString("x"), getTrue());
+    envSet(env, stringCreateFromCString("x"), getFalse());
+
+    assert(
+        envGet(env, stringCreateFromCString("x")) == getFalse()
+    );
+}
+
 int main(int argc, char** argv) {
     idOne = stringCreateFromCString("one");
 
@@ -63,5 +87,7 @@ int main(int argc, char** argv) {
     test(itCanDeclareAVariable);
     test(itReturnsUndefinedForDeclareButUndefined);
     test(itCanAssignAVariable);
+    test(itUsesStringValueNotIdentifyForGet);
+    test(itUsesStringValueNotIdentifyForSet);
 }
 
