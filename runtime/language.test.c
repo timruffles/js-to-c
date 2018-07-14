@@ -3,6 +3,8 @@
 #include <stdlib.h>
 
 #include "language.h"
+#include "objects.h"
+#include "strings.h"
 
 #define test(T) (T)(); printf("%s passed\n", #T);
 
@@ -27,9 +29,23 @@ void itCanAccessPointerValue() {
     assert(ptr == &a);
 }
 
+void itHasDefinedTrutiness() {
+    assert(isTruthy(getTrue()));
+    assert(isTruthy(stringCreateFromCString("hello")));
+    assert(isTruthy(jsValueCreateNumber(7)));
+    assert(isTruthy(objectCreatePlain()));
+
+    assert(!isTruthy(jsValueCreateNumber(0)));
+    assert(!isTruthy(getFalse()));
+    assert(!isTruthy(getUndefined()));
+    assert(!isTruthy(getNull()));
+}
+
 int main() {
     test(itCanCreateNumber);
     test(itCanAccessNumberValue);
     test(itCanAccessPointerValue);
+
+    test(itHasDefinedTrutiness);
 }
 

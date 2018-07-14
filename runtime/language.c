@@ -67,11 +67,11 @@ JsValue *const JS_NAN = &(JsValue) {
         .type = NAN_TYPE
 };
 
-JsValue *getUndefined() {
+JsValue* getUndefined() {
     return JS_UNDEFINED;
 }
 
-JsValue *getNull() {
+JsValue* getNull() {
     return JS_NULL;
 }
 
@@ -84,7 +84,6 @@ bool isNaN(JsValue* value) {
 }
 
 JsValue *getTrue() {
-
     return TRUE;
 }
 
@@ -148,12 +147,33 @@ double jsValueNumber(JsValue* val) {
 }
 
 JsBooleanValue jsValueBoolean(JsValue* val) {
+    // TODO this isn't really necessary - remove
     assert(jsValueType(val) == BOOLEAN_TYPE);
     return val->value.boolean;
 }
 
 bool isUndefined(JsValue *value) {
     return value == JS_UNDEFINED;
+}
+
+bool isTruthy(JsValue *value) {
+    if(value->type == UNDEFINED_TYPE) {
+        return false;
+    } else if(value->type == NULL_TYPE) {
+        return false;
+    } else if(value->type == BOOLEAN_TYPE) {
+        return value == getTrue();
+    } else if(value->type == OBJECT_TYPE) {
+        return true;
+    } else if(value->type == STRING_TYPE) {
+        // TODO yah yah whitespace is falsy
+        return strlen(jsValuePointer(value)) > 0;
+    } else if(value->type == NUMBER_TYPE) {
+        return jsValueNumber(value) != 0;
+    } else {
+        // functions
+        return true;
+    }
 }
 
 JsValue* getValueOperation(JsValue* value) {

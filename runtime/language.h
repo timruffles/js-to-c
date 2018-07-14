@@ -30,6 +30,8 @@ typedef struct JsValue JsValue;
 bool isUndefined(JsValue*);
 bool isNaN(JsValue*);
 
+bool isTruthy(JsValue*);
+
 JsValue* getUndefined();
 JsValue* getNull();
 JsValue* getNaN();

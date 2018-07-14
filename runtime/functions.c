@@ -14,6 +14,13 @@ typedef struct FunctionRecord {
     uint64_t argumentCount;
 } FunctionRecord;
 
+JsValue* functionRunWithArguments(JsValue* val, Env* parentEnv, JsValue* argumentValues[], uint64_t argumentCount) {
+    assert(jsValueType(val) == FUNCTION_TYPE);
+    FunctionRecord* record = objectGetCallInternal(val);
+    assert(record->argumentCount == argumentCount);
+    Env* callEnv = envCreateForCall(parentEnv, record->argumentNames, argumentValues, 2);
+    return functionRun(val, callEnv);
+}
 
 JsValue* functionRun(JsValue* val, Env* env) {
     return objectGetCallInternal(val)->function(env);
