@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "language.h"
 #include "objects.h"
@@ -12,6 +13,9 @@ char OBJECT_TYPE[] = "object";
 char STRING_TYPE[] = "string";
 char NUMBER_TYPE[] = "number";
 char FUNCTION_TYPE[] = "function";
+
+// special - internal types that don't map to a JS primitive type
+char NAN_TYPE[] = "NaN";
 
 // Because... why not? Not user mutable so easier to debug
 const char TRUE_VALUE = 'Y';
@@ -51,15 +55,36 @@ JsValue *const FALSE = &(JsValue) {
 };
 
 // use pointer equality to check for these values
-JsValue *const UNDEFINED = &(JsValue) {
+JsValue *const JS_UNDEFINED = &(JsValue) {
         .type = UNDEFINED_TYPE
 };
 
+JsValue *const JS_NULL = &(JsValue) {
+        .type = NULL_TYPE
+};
+
+JsValue *const JS_NAN = &(JsValue) {
+        .type = NAN_TYPE
+};
+
 JsValue *getUndefined() {
-    return UNDEFINED;
+    return JS_UNDEFINED;
+}
+
+JsValue *getNull() {
+    return JS_NULL;
+}
+
+JsValue *getNaN() {
+    return JS_NAN;
+}
+
+bool isNaN(JsValue* value) {
+    return JS_NAN == value;
 }
 
 JsValue *getTrue() {
+
     return TRUE;
 }
 
@@ -112,20 +137,23 @@ char* jsValueToString(JsValue* value) {
 }
 
 void* jsValuePointer(JsValue* val) {
+    assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE);
     // note: this will either be object or string
     return val->value.pointer;
 }
 
 double jsValueNumber(JsValue* val) {
+    assert(jsValueType(val) == NUMBER_TYPE);
     return val->value.number;
 }
 
 JsBooleanValue jsValueBoolean(JsValue* val) {
+    assert(jsValueType(val) == BOOLEAN_TYPE);
     return val->value.boolean;
 }
 
 bool isUndefined(JsValue *value) {
-    return value == UNDEFINED;
+    return value == JS_UNDEFINED;
 }
 
 JsValue* getValueOperation(JsValue* value) {
@@ -137,6 +165,6 @@ JsValue* getValueOperation(JsValue* value) {
     }
 }
 
-char* jsValueType(JsValue* value) {
+JsValueType jsValueType(JsValue* value) {
     return value->type;
 }

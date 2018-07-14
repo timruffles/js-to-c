@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
+
 // Currently JsIdentifiers are simply c strings - we can know
 // all the identifiers we need in environments at compile time
 //
@@ -13,7 +15,7 @@ typedef char JsBooleanValue;
 
 union JsValueValue;
 
-typedef char* JsValueType;
+typedef const char* const JsValueType;
 
 extern char UNDEFINED_TYPE[];
 extern char NULL_TYPE[];
@@ -25,11 +27,12 @@ extern char FUNCTION_TYPE[];
 
 typedef struct JsValue JsValue;
 
-// shared singleton constant values
-extern JsValue* const UNDEFINED;
+bool isUndefined(JsValue*);
+bool isNaN(JsValue*);
 
-bool isUndefined(JsValue* val);
 JsValue* getUndefined();
+JsValue* getNull();
+JsValue* getNaN();
 
 JsValue* getTrue();
 JsValue* getFalse();
@@ -54,4 +57,3 @@ JsValueType jsValueType(JsValue* value);
 
 // https://www.ecma-international.org/ecma-262/5.1/#sec-8.7.1
 JsValue* getValueOperation(JsValue*);
-JsValue* typeofOperation(JsValue*);

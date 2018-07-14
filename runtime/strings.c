@@ -27,6 +27,12 @@ JsString* stringGet(JsValue* value) {
     return jsString;
 }
 
+int stringComparison(JsValue* left, JsValue* right) {
+    JsString* leftString = jsValuePointer(left);
+    JsString* rightString = jsValuePointer(right);
+    return strcmp(leftString->cString, rightString->cString);
+}
+
 char* stringGetCString(JsValue* value) {
     JsString* jsString = jsValuePointer(value);
     return jsString->cString;

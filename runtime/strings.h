@@ -9,3 +9,4 @@ JsValue* stringCreateFromCString(char*);
 JsString* stringGet(JsValue*);
 uint64_t stringLength(JsValue*);
 char* stringGetCString(JsValue*);
+int stringComparison(JsValue* left, JsValue* right);

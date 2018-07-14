@@ -28,7 +28,6 @@ void itLogsJsValuesToOutput() {
     functionRun(consoleLogJsv, env);
 }
 
-
 int main() {
     //FILE* fp = fopen("/tmp/globaltest", "w+")
     //assert(fp != NULL);
