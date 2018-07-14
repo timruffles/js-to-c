@@ -10,6 +10,7 @@ typedef JsValue Env;
 Env *envCreateRoot();
 
 Env *envCreate(Env *const parent);
+Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount);
 
 void envDestroy(Env *);
 

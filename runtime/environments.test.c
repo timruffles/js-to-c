@@ -79,6 +79,18 @@ void itUsesStringValueNotIdentifyForSet() {
     );
 }
 
+void itSetsUpArgumentValuesInCallEnv() {
+    Env* env = envCreateRoot();
+    JsValue* names[] = {stringCreateFromCString("one"), stringCreateFromCString("two")};
+    JsValue* values[] = {getTrue(), stringCreateFromCString("twoValue")};
+    Env* callEnv = envCreateForCall(env, names, values, 2);
+
+    assert(callEnv != NULL);
+
+    assert(envGet(callEnv, stringCreateFromCString("one")) == getTrue());
+    assert(stringComparison(envGet(callEnv, stringCreateFromCString("two")), stringCreateFromCString("twoValue")) == 0);
+}
+
 int main(int argc, char** argv) {
     idOne = stringCreateFromCString("one");
 
@@ -89,5 +101,7 @@ int main(int argc, char** argv) {
     test(itCanAssignAVariable);
     test(itUsesStringValueNotIdentifyForGet);
     test(itUsesStringValueNotIdentifyForSet);
+
+    test(itSetsUpArgumentValuesInCallEnv);
 }
 

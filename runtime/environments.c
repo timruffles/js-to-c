@@ -16,6 +16,15 @@ Env *envCreate(Env* parent) {
     return objectCreate(parent);
 }
 
+Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount) {
+    Env* callEnv = objectCreate(parent);
+    for(uint64_t i = 0; i < argCount; i++) {
+        envDeclare(callEnv, argumentNames[i]);
+        envSet(callEnv, argumentNames[i], argumentValues[i]);
+    }
+    return callEnv;
+}
+
 JsValue *envGet(Env *env, JsValue *name) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
