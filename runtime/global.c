@@ -9,20 +9,20 @@
 #include "functions.h"
 #include "objects.h"
 
-FILE* outStream;
+static FILE* outStream;
 
-FILE* getOutStream() {
+static FILE* getOutStream() {
     if(outStream == NULL) {
         return fopen("/dev/stdout", "w");
     }
     return outStream;
 }
 
-void setOutStream(FILE* stream) {
+static void setOutStream(FILE* stream) {
     outStream = stream;
 }
 
-void ensureWrite(char* output, FILE* stream) {
+static void ensureWrite(char* output, FILE* stream) {
     size_t toWrite = strlen(output);
     size_t written = fwrite(output, sizeof(char), toWrite, stream);
     assert(written == toWrite);

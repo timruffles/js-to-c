@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "assert.h"
 #include "environments.h"
@@ -6,6 +7,7 @@
 #include "objects.h"
 #include "functions.h"
 #include "strings.h"
+#include "debug.h"
 
 
 typedef struct FunctionRecord {
@@ -15,10 +17,17 @@ typedef struct FunctionRecord {
 } FunctionRecord;
 
 JsValue* functionRunWithArguments(JsValue* val, Env* parentEnv, JsValue* argumentValues[], uint64_t argumentCount) {
-    assert(jsValueType(val) == FUNCTION_TYPE);
+    log_info("Asserting function type");
+    if(jsValueType(val) != FUNCTION_TYPE) {
+      printf("Expected function got %s\n", jsValueType(val));
+      assert(false);
+    }
+    log_info("Getting fn record");
     FunctionRecord* record = objectGetCallInternal(val);
+    log_info("Fn record %p", record);
     assert(record->argumentCount == argumentCount);
-    Env* callEnv = envCreateForCall(parentEnv, record->argumentNames, argumentValues, 2);
+    Env* callEnv = envCreateForCall(parentEnv, record->argumentNames, argumentValues, record->argumentCount);
+    log_info("Executing");
     return functionRun(val, callEnv);
 }
 

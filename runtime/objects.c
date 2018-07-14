@@ -5,6 +5,7 @@
 #include "exceptions.h"
 #include "strings.h"
 #include "functions.h"
+#include "debug.h"
 
 typedef struct {
     char* name;
@@ -38,12 +39,15 @@ JsValue* objectCreate(JsValue* prototype) {
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
     // TODO set function prototype
-    JsValue *obj = objectCreatePlain();
-    ((JsObject*)jsValuePointer(obj))->callInternal = fr;
-    return obj;
+    JsObject *obj = calloc(sizeof(JsObject), 1);
+    obj->callInternal = fr;
+
+    JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
+    return val;
 }
 
 JsValue* objectGet(JsValue *val, JsValue *name) {
+    log_info("Object lookup %s", stringGetCString(name));
     JsValue* found = objectLookup(val, name);
     return found == NULL
       ? getUndefined()

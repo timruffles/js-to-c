@@ -5,6 +5,7 @@
 #include "language.h"
 #include "objects.h"
 #include "strings.h"
+#include "debug.h"
 
 char UNDEFINED_TYPE[] = "undefined";
 char NULL_TYPE[] = "null";
@@ -15,7 +16,7 @@ char NUMBER_TYPE[] = "number";
 char FUNCTION_TYPE[] = "function";
 
 // special - internal types that don't map to a JS primitive type
-char NAN_TYPE[] = "NaN";
+static char NAN_TYPE[] = "NaN";
 
 // Because... why not? Not user mutable so easier to debug
 static const char TRUE_VALUE = 'Y';
@@ -40,14 +41,14 @@ typedef struct JsValue {
     union JsValueValue value;
 } JsValue;
 
-JsValue *const TRUE = &(JsValue) {
+static JsValue *const TRUE = &(JsValue) {
         .type = BOOLEAN_TYPE,
         .value = {
                 .boolean = TRUE_VALUE
         }
 };
 
-JsValue *const FALSE = &(JsValue) {
+static JsValue *const FALSE = &(JsValue) {
         .type = BOOLEAN_TYPE,
         .value = {
                 .boolean = FALSE_VALUE
@@ -55,15 +56,15 @@ JsValue *const FALSE = &(JsValue) {
 };
 
 // use pointer equality to check for these values
-JsValue *const JS_UNDEFINED = &(JsValue) {
+static JsValue *const JS_UNDEFINED = &(JsValue) {
         .type = UNDEFINED_TYPE
 };
 
-JsValue *const JS_NULL = &(JsValue) {
+static JsValue *const JS_NULL = &(JsValue) {
         .type = NULL_TYPE
 };
 
-JsValue *const JS_NAN = &(JsValue) {
+static JsValue *const JS_NAN = &(JsValue) {
         .type = NAN_TYPE
 };
 
@@ -129,6 +130,7 @@ char* jsValueToString(JsValue* value) {
     } else if(value->type == NUMBER_TYPE) {
             // TODO interesting - where do we store the stringified value - pass in a char* I suppose
             // and write to that
+            log_info("Logging %f", jsValueNumber(value));
             return NUMBER_STRING;
     } else {
             return FUNCTION_STRING;
@@ -136,7 +138,7 @@ char* jsValueToString(JsValue* value) {
 }
 
 void* jsValuePointer(JsValue* val) {
-    assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE);
+    assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE);
     // note: this will either be object or string
     return val->value.pointer;
 }

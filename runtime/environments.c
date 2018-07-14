@@ -8,6 +8,7 @@
 #include "language.h"
 #include "exceptions.h"
 #include "strings.h"
+#include "debug.h"
 
 /**
  * Currently envs are just objects, so this works fine.
@@ -25,27 +26,31 @@ Env *envCreate(Env* parent) {
 }
 
 Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount) {
-    Env* callEnv = objectCreate(parent);
+    Env* callEnv = envCreate(parent);
+    log_info("Created cal env, now looping over %i args", argCount);
     for(uint64_t i = 0; i < argCount; i++) {
+        log_info("Env name %p", argumentNames[0]);
         envDeclare(callEnv, argumentNames[i]);
         envSet(callEnv, argumentNames[i], argumentValues[i]);
     }
+    log_info("Setup new call env");
     return callEnv;
 }
 
 JsValue *envGet(Env *env, JsValue *name) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
-        printf("Looked up undeclared %s\n", stringGetCString(name));
+        log_info("Looked up undeclared %s", stringGetCString(name));
         throwError("Attempted to lookup undeclared variable");
     }
+    log_info("Looked up %s got type %s", stringGetCString(name), jsValueType(found));
     return found;
 }
 
 void envSet(Env *env, JsValue *name, JsValue *value) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
-        printf("Tried to assign undeclared %s\n", stringGetCString(name));
+        log_info("Setting undeclared %s", stringGetCString(name));
         throwError("Attempted to assign undeclared variable");
     }
     objectSet(env, name, value);
