@@ -37,7 +37,7 @@ JsValue* objectCreate(JsValue* prototype) {
 }
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
-    // TODO set function pt
+    // TODO set function prototype
     JsValue *obj = objectCreatePlain();
     ((JsObject*)jsValuePointer(obj))->callInternal = fr;
     return obj;

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <strings.h>
+#include <stdlib.h>
 
 #include "environments.h"
 #include "strings.h"
@@ -46,8 +47,9 @@ JsValue* createGlobalObject() {
     objectSet(global, stringCreateFromCString("console"),
             console);
 
-    FunctionRecord* logFr = functionRecordCreate(consoleLog);
-    JsValue* consoleLogJsv = functionCreate(logFr);
+    JsValue** consoleArgs = calloc(sizeof(JsValue*), 1);
+    consoleArgs[0] = stringCreateFromCString("arg0");
+    JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1);
     objectSet(console, stringCreateFromCString("log"),
             consoleLogJsv);
 

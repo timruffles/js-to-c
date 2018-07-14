@@ -10,36 +10,38 @@
 
 // e.g const x => { x; return true }
 JsValue* exampleUserFunction(Env* env) {
-    envGet(env, stringCreateFromCString("x"));
+    assert(envGet(env, stringCreateFromCString("two")) == getTrue());
+    assert(jsValueNumber(envGet(env, stringCreateFromCString("one"))) - 7 < 0.000001);
     return getTrue();
 }
 
-void itCanCreateAFunctionRecord() {
-    FunctionRecord* record = functionRecordCreate(exampleUserFunction);
-    assert(record != NULL);
-}
+JsValue** argumentNames;
+JsValue** argumentValues;
 
 void itCanCreateAFunction() {
-    FunctionRecord* record = functionRecordCreate(exampleUserFunction);
-    JsValue* fn = functionCreate(record);
+    JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2);
     assert(fn != NULL);
 }
 
 void itCanCallAFunction() {
-    FunctionRecord* record = functionRecordCreate(exampleUserFunction);
-    JsValue* fn = functionCreate(record);
+    JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2);
+    assert(fn != NULL);
 
     Env* env = envCreateRoot();
-    JsValue* name = stringCreateFromCString("x");
-    envDeclare(env, name);
-    envSet(env, name, getTrue());
+    Env* callEnv = envCreateForCall(env, argumentNames, argumentValues, 2);
 
-    JsValue* returned = functionRun(fn, env);
+    JsValue* returned = functionRun(fn, callEnv);
     assert(returned == getTrue());
 }
 
 int main() {
-    test(itCanCreateAFunctionRecord);
+    argumentNames = calloc(sizeof(JsValue*), 2);
+    argumentValues = calloc(sizeof(JsValue*), 2);
+    argumentNames[0] = stringCreateFromCString("one");
+    argumentNames[1] = stringCreateFromCString("two");
+    argumentValues[0] = jsValueCreateNumber(7);
+    argumentValues[1] = getTrue();
+
     test(itCanCreateAFunction);
     test(itCanCallAFunction);
 }

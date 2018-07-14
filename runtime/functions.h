@@ -5,6 +5,5 @@
 typedef JsValue* (TargetFunction)(Env*);
 typedef struct FunctionRecord FunctionRecord;
 
-JsValue* functionCreate(FunctionRecord*);
-FunctionRecord* functionRecordCreate(TargetFunction*);
+JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint64_t argCount);
 JsValue* functionRun(JsValue* function, Env* env);
