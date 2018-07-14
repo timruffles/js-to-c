@@ -22,6 +22,9 @@ out/functions_test: functions.test.c $(source_with_headers)
 out/global_test: global.test.c $(source_with_headers)
 	$(CC) $(source_files) global.test.c -o $@
 
+out/operators_test: global.test.c $(source_with_headers)
+	$(CC) $(source_files) operators.test.c -o $@
+
 test: out/environments_test out/language_test out/objects_test out/strings_test
 	for t in out/*_test; do echo TESTING $$t; ./$$t; done
 

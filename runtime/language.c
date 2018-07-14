@@ -106,7 +106,7 @@ char* jsValueToString(JsValue* value) {
             // TODO interesting - where do we store the stringified value - pass in a char* I suppose
             // and write to that
             return NUMBER_STRING;
-    } else if(value->type == FUNCTION_TYPE) {
+    } else {
             return FUNCTION_STRING;
     }
 }
@@ -128,3 +128,15 @@ bool isUndefined(JsValue *value) {
     return value == UNDEFINED;
 }
 
+JsValue* getValueOperation(JsValue* value) {
+    if(value->type == NUMBER_TYPE) {
+        return value;
+    } else {
+        // TODO just for now
+        return jsValueCreateNumber(0);
+    }
+}
+
+char* jsValueType(JsValue* value) {
+    return value->type;
+}

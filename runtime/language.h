@@ -13,10 +13,11 @@ typedef char JsBooleanValue;
 
 union JsValueValue;
 
-typedef char JsValueType[];
+typedef char* JsValueType;
 
 extern char UNDEFINED_TYPE[];
 extern char NULL_TYPE[];
+extern char NUMBER_TYPE[];
 extern char BOOLEAN_TYPE[];
 extern char OBJECT_TYPE[];
 extern char STRING_TYPE[];
@@ -48,3 +49,9 @@ double jsValueNumber(JsValue* value);
 void* jsValuePointer(JsValue* value);
 
 char* jsValueToString(JsValue*);
+
+JsValueType jsValueType(JsValue* value);
+
+// https://www.ecma-international.org/ecma-262/5.1/#sec-8.7.1
+JsValue* getValueOperation(JsValue*);
+JsValue* typeofOperation(JsValue*);
