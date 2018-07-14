@@ -63,10 +63,10 @@ export type CompileTarget =
 
 
 const binaryOpToFunction: {[k: string]: string} = {
-    ">": "LTOperator",
-    ">=": "LTEOperator",
-    "<": "GTOperator",
-    "<=": "GTEOperator",
+    ">": "GTOperator",
+    ">=": "GTEOperator",
+    "<": "LTOperator",
+    "<=": "LTEOperator",
     "+": "addOperator",
     "-": "subtractOperator",
     "*": "multiplyOperator",
