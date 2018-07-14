@@ -39,6 +39,7 @@ void itHasDefinedTrutiness() {
     assert(!isTruthy(getFalse()));
     assert(!isTruthy(getUndefined()));
     assert(!isTruthy(getNull()));
+    assert(!isTruthy(stringCreateFromCString("")));
 }
 
 int main() {

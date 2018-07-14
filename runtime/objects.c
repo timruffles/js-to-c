@@ -77,7 +77,7 @@ JsValue* objectLookup(JsValue *val, JsValue *name) {
     }
 }
 
-PropertyDescriptor* propertyCreate() {
+static PropertyDescriptor* propertyCreate() {
     PropertyDescriptor *pd = calloc(sizeof(PropertyDescriptor), 1);
     return pd;
 }

@@ -37,6 +37,11 @@ export class IntermediateVariableTarget {
     constructor(readonly id: JsIdentifier) {}
 }
 
+export class PredefinedVariableTarget {
+    readonly type: 'PredefinedVariableTarget' = 'PredefinedVariableTarget';
+    constructor(readonly id: JsIdentifier) {}
+}
+
 export const ReturnTarget = {
     type: 'ReturnTarget' as 'ReturnTarget',
 };
@@ -53,6 +58,7 @@ export const SideEffectTarget = {
 export type CompileTarget =
     typeof SideEffectTarget |
     IntermediateVariableTarget |
+    PredefinedVariableTarget |
     typeof ReturnTarget;
 
 
@@ -176,6 +182,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../runtime/objects.h"
         #include "../runtime/language.h"
         #include "../runtime/operators.h"
+        #include "../runtime/global.h"
         
         ${interned}
         
@@ -187,9 +194,11 @@ function compileProgram(node: Program, state: CompileTimeState) {
         
         ${compileInternInitialisation(internedStrings)}
         
-        int main(int argc, char**argv) {
-            Env* global = envCreateRoot();
-            userProgram(global);
+        int main() {
+            initialiseInternedStrings();
+            JsValue* global = createGlobalObject();
+            Env* globalEnv = envFromGlobal(global);
+            userProgram(globalEnv);
             return 0;
         }
     `
@@ -205,7 +214,7 @@ function compileInternedStrings(interned: InternedString[]): string {
 
 function compileInternInitialisation(interned: InternedString[]): string {
     const initialisers = joinNodeOutput(interned.map(({id}) => (
-        `${id} = createStringFromCString(${id}_cstring);`
+        `${id} = stringCreateFromCString(${id}_cstring);`
     )));
 
     return `void initialiseInternedStrings() {
@@ -240,6 +249,8 @@ function assignToTarget(cExpression: string, target: CompileTarget) {
             return cExpression;
         case 'IntermediateVariableTarget':
             return `JsValue* ${target.id} = (${cExpression});`;
+        case 'PredefinedVariableTarget':
+            return `${target.id} = (${cExpression});`;
         case 'ReturnTarget':
             return `return (${cExpression});`;
     }
@@ -264,7 +275,6 @@ function assignToTarget(cExpression: string, target: CompileTarget) {
 function compileCallExpression(node: CallExpression, state: CompileTimeState) {
     const id = state.nextId();
     const calleeTarget = new IntermediateVariableTarget(state.getSymbolForId('callee', id));
-    const envVar = state.getSymbolForId('env', id);
     const argsArrayVar = state.getSymbolForId('args', id);
 
     const calleeSrc = compile(node.callee, state.childState({
@@ -290,13 +300,13 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
 
     return `${calleeSrc}
             ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
-            JsValue ${argsArrayVar}[] = {${argsValuesSrc}};
-            Env* ${envVar} = envCreateChild(
-               env, 
-               ${calleeTarget.id}->argumentNames,
-               &${argsArrayVar}
-            );
-            ${assignToTarget(`${calleeTarget.id}->fn(${envVar})`, state.target)}
+            JsValue* ${argsArrayVar}[] = {${argsValuesSrc}};
+            ${assignToTarget(`functionRunWithArguments(
+                ${calleeTarget.id}, 
+                env,
+                ${argsArrayVar},
+                ${argsWithTargets.length}
+            )`, state.target)}
             `;
 }
 
@@ -307,13 +317,15 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
     const objectSrc = compile(node.object, state.childState({
         target: objectTarget,
     }));
-    const propertySrc = compile(node.property, state.childState({
-        target: propertyTarget,
-    }));
+
+    // TODO only supporting literal property lookup at mo
+    //const propertySrc = compile(node.property, state.childState({
+    //    target: propertyTarget,
+    //}));
 
     const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
     return `${objectSrc}
-            ${propertySrc}
+            JsValue* ${propertyTarget.id} = ${wrapStringAsJsValueString(getIdentifierName(node.property as any))};
             ${resultSrc}
     `
 }
@@ -379,7 +391,8 @@ function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState
 }
 
 function compileConditionalExpression(node: ConditionalExpression, state: CompileTimeState) {
-    const testResultTarget = new IntermediateVariableTarget(state.getNextSymbol('conditionalResult'));
+    const resultTarget = new PredefinedVariableTarget(state.getNextSymbol('conditionalValue'))
+    const testResultTarget = new IntermediateVariableTarget(state.getNextSymbol('conditionalPredicate'));
     const testSrc = compile(node.test, state.childState({
         target: testResultTarget,
     }));
@@ -387,12 +400,18 @@ function compileConditionalExpression(node: ConditionalExpression, state: Compil
     const consequentSrc = compile(node.consequent, state);
     const alternateSrc = compile(node.alternate, state);
 
-    return `${testSrc};
+    return `/* ternary */
+            ${testSrc};
+            JsValue* ${resultTarget.id};
             if(isTruthy(${testResultTarget.id})) {
                 ${consequentSrc}
             } else {
                 ${alternateSrc}
             }`
+}
+
+function wrapStringAsJsValueString(str: string) {
+    return `stringCreateFromCString(${wrapAsCStringLiteral(str)})`
 }
 
 function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTimeState) {
@@ -404,7 +423,7 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
     const functionId = state.getNextSymbol(name);
     const argumentNames = node.params.map(getIdentifierName);
     const argumentNamesSrc = argumentNames
-        .map(wrapAsCStringLiteral)
+        .map(wrapStringAsJsValueString)
         .join(", ");
     const argsArrayName = `${functionId}_args`;
 
@@ -413,10 +432,14 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
     // TODO this will need topographic sorting
     state.functions.push(createCFunction(functionId, bodySrc));
 
+    const fnName = state.getNextSymbol('functionName');
+    const argCount = node.params.length;
+
     // TODO proper hoisting
-    return `const char* ${argsArrayName}[] = {${argumentNamesSrc}};
-            envDeclare(env, stringCreateFromCString("${name}"));
-            envSet(env, functionCreate(${functionId}, ${node.params.length}, ${argsArrayName}));`
+    return `JsValue* ${argsArrayName}[] = {${argumentNamesSrc}};
+            JsValue* ${fnName} = stringCreateFromCString("${name}");
+            envDeclare(env, ${fnName});
+            envSet(env, ${fnName}, functionCreate(${functionId}, ${argsArrayName}, ${argCount}));`
 }
 
 function compileBlockStatement(node: BlockStatement, state: CompileTimeState) {
@@ -427,19 +450,20 @@ function compileReturnStatement(node: ReturnStatement, state: CompileTimeState) 
     if(!node.argument) {
         return `return getUndefined()`;
     }
-    const returnTarget = new IntermediateVariableTarget(state.getNextSymbol('return'));
+    const returnTarget = new PredefinedVariableTarget(state.getNextSymbol('return'));
     const argumentSrc = compile(node.argument, state.childState({
         target: returnTarget,
     }))
-    return `${argumentSrc}
-            return ${returnTarget.id}`;
+    return `JsValue* ${returnTarget.id};
+            ${argumentSrc}
+            return ${returnTarget.id};`;
 }
 
 function compileLiteral(node: Literal, state: CompileTimeState) {
     if("regex" in node) return unimplemented("Literal<regex>")();
     const getValue = () => {
         if(typeof node.value === 'string') {
-            return `createStringFromCString(${wrapAsCStringLiteral(node.value)})`;
+            return `stringCreateFromCString(${wrapAsCStringLiteral(node.value)})`;
         } else if(typeof node.value === 'number') {
             return `jsValueCreateNumber(${node.value})`
         } else if(node.value === null) {

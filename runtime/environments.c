@@ -7,6 +7,14 @@
 #include "objects.h"
 #include "language.h"
 #include "exceptions.h"
+#include "strings.h"
+
+/**
+ * Currently envs are just objects, so this works fine.
+ */
+Env *envFromGlobal(JsValue* globalObject) {
+    return globalObject;
+}
 
 Env *envCreateRoot() {
     return objectCreatePlain();
@@ -28,6 +36,7 @@ Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentVa
 JsValue *envGet(Env *env, JsValue *name) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
+        printf("Looked up undeclared %s\n", stringGetCString(name));
         throwError("Attempted to lookup undeclared variable");
     }
     return found;
@@ -36,6 +45,7 @@ JsValue *envGet(Env *env, JsValue *name) {
 void envSet(Env *env, JsValue *name, JsValue *value) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
+        printf("Tried to assign undeclared %s\n", stringGetCString(name));
         throwError("Attempted to assign undeclared variable");
     }
     objectSet(env, name, value);

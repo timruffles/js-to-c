@@ -18,21 +18,21 @@ char FUNCTION_TYPE[] = "function";
 char NAN_TYPE[] = "NaN";
 
 // Because... why not? Not user mutable so easier to debug
-const char TRUE_VALUE = 'Y';
-const char FALSE_VALUE = 'N';
+static const char TRUE_VALUE = 'Y';
+static const char FALSE_VALUE = 'N';
 
 // string representations
-char TRUE_STRING[] = "true";
-char FALSE_STRING[] = "false";
-char OBJECT_STRING[] = "[Object object]";
-char FUNCTION_STRING[] = "[Function ...]";
-char NUMBER_STRING[] = "[todo]";
+static char TRUE_STRING[] = "true";
+static char FALSE_STRING[] = "false";
+static char OBJECT_STRING[] = "[Object object]";
+static char FUNCTION_STRING[] = "[Function ...]";
+static char NUMBER_STRING[] = "[todo]";
 
 union JsValueValue {
    double number;
    JsBooleanValue boolean;
    void* pointer;
-} value;
+};
 
 // TODO
 typedef struct JsValue {
@@ -146,12 +146,6 @@ double jsValueNumber(JsValue* val) {
     return val->value.number;
 }
 
-JsBooleanValue jsValueBoolean(JsValue* val) {
-    // TODO this isn't really necessary - remove
-    assert(jsValueType(val) == BOOLEAN_TYPE);
-    return val->value.boolean;
-}
-
 bool isUndefined(JsValue *value) {
     return value == JS_UNDEFINED;
 }
@@ -167,7 +161,7 @@ bool isTruthy(JsValue *value) {
         return true;
     } else if(value->type == STRING_TYPE) {
         // TODO yah yah whitespace is falsy
-        return strlen(jsValuePointer(value)) > 0;
+        return stringLength(value) > 0;
     } else if(value->type == NUMBER_TYPE) {
         return jsValueNumber(value) != 0;
     } else {

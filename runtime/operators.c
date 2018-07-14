@@ -1,5 +1,6 @@
 #include "language.h"
 #include "strings.h"
+#include "operators.h"
 
 #define BOTH_NUMBERS(L,R) !(isNaN(L) || isNaN(R) || jsValueType(L) != NUMBER_TYPE || jsValueType(R) != NUMBER_TYPE)
 
@@ -12,7 +13,7 @@ typedef enum ComparisonResult {
 
 } ComparisonResult;
 
-ComparisonResult deltaToComaparisonResult(double delta) {
+static ComparisonResult deltaToComaparisonResult(double delta) {
     // as with JS - floating point comparisons are problematic
     return delta == 0
         ? EQ
@@ -21,7 +22,7 @@ ComparisonResult deltaToComaparisonResult(double delta) {
             : LT;
 }
 
-ComparisonResult numberOnlyComparison(JsValue* left, JsValue* right) {
+static ComparisonResult numberOnlyComparison(JsValue* left, JsValue* right) {
     if(jsValueType(left) != NUMBER_TYPE
        || jsValueType(left) != NUMBER_TYPE) {
         return UD;

@@ -35,12 +35,12 @@ JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint
 }
 
 
-JsValue** functionGetArgumentNames(JsValue* val) {
-    assert(jsValueType(val) == FUNCTION_TYPE);
-    return objectGetCallInternal(val)->argumentNames;
-}
-
-uint64_t functionGetArgumentCount(JsValue* val) {
-    assert(jsValueType(val) == FUNCTION_TYPE);
-    return objectGetCallInternal(val)->argumentCount;
-}
+//JsValue** functionGetArgumentNames(JsValue* val) {
+//    assert(jsValueType(val) == FUNCTION_TYPE);
+//    return objectGetCallInternal(val)->argumentNames;
+//}
+//
+//uint64_t functionGetArgumentCount(JsValue* val) {
+//    assert(jsValueType(val) == FUNCTION_TYPE);
+//    return objectGetCallInternal(val)->argumentCount;
+//}

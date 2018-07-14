@@ -32,12 +32,12 @@ bool isNaN(JsValue*);
 
 bool isTruthy(JsValue*);
 
-JsValue* getUndefined();
-JsValue* getNull();
-JsValue* getNaN();
+JsValue* getUndefined(void);
+JsValue* getNull(void);
+JsValue* getNaN(void);
 
-JsValue* getTrue();
-JsValue* getFalse();
+JsValue* getTrue(void);
+JsValue* getFalse(void);
 
 /**
  * These are used internally by the actual concrete values

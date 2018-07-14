@@ -3,6 +3,7 @@
 #include <strings.h>
 #include <stdlib.h>
 
+#include "global.h"
 #include "environments.h"
 #include "strings.h"
 #include "functions.h"

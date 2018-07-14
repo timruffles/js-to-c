@@ -28,6 +28,14 @@ void itLogsJsValuesToOutput() {
     functionRun(consoleLogJsv, env);
 }
 
+void itWorksWithEnv() {
+    JsValue* global = createGlobalObject();
+    Env* env = envFromGlobal(global);
+
+    JsValue* console = envGet(env, stringCreateFromCString("console"));
+    assert(console != NULL);
+}
+
 int main() {
     //FILE* fp = fopen("/tmp/globaltest", "w+")
     //assert(fp != NULL);
@@ -35,5 +43,7 @@ int main() {
 
     test(itCreatesTheGlobalObject);
     test(itLogsJsValuesToOutput);
+
+    test(itWorksWithEnv);
 }
 
