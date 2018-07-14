@@ -46,3 +46,5 @@ JsValue *jsValueCreateNumber(double);
 
 double jsValueNumber(JsValue* value);
 void* jsValuePointer(JsValue* value);
+
+char* jsValueToString(JsValue*);

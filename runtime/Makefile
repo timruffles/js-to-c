@@ -19,6 +19,9 @@ out/language_test: $(source_with_headers)
 out/functions_test: functions.test.c $(source_with_headers)
 	$(CC) $(source_files) functions.test.c -o $@
 
+out/global_test: global.test.c $(source_with_headers)
+	$(CC) $(source_files) global.test.c -o $@
+
 test: out/environments_test out/language_test out/objects_test out/strings_test
 	for t in out/*_test; do echo TESTING $$t; ./$$t; done
 

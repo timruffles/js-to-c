@@ -17,6 +17,13 @@ char FUNCTION_TYPE[] = "function";
 const char TRUE_VALUE = 'Y';
 const char FALSE_VALUE = 'N';
 
+// string representations
+char TRUE_STRING[] = "true";
+char FALSE_STRING[] = "false";
+char OBJECT_STRING[] = "[Object object]";
+char FUNCTION_STRING[] = "[Function ...]";
+char NUMBER_STRING[] = "[todo]";
+
 union JsValueValue {
    double number;
    JsBooleanValue boolean;
@@ -80,6 +87,28 @@ JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
         }
     };
     return val;
+}
+
+char* jsValueToString(JsValue* value) {
+    if(value->type == UNDEFINED_TYPE) {
+        return UNDEFINED_TYPE;
+    } else if(value->type == NULL_TYPE) {
+            return NULL_TYPE;
+    } else if(value->type == BOOLEAN_TYPE) {
+            return (value->value.boolean) == TRUE_VALUE
+                ? TRUE_STRING
+                : FALSE_STRING;
+    } else if(value->type == OBJECT_TYPE) {
+            return OBJECT_STRING;
+    } else if(value->type == STRING_TYPE) {
+            return stringGetCString(value);
+    } else if(value->type == NUMBER_TYPE) {
+            // TODO interesting - where do we store the stringified value - pass in a char* I suppose
+            // and write to that
+            return NUMBER_STRING;
+    } else if(value->type == FUNCTION_TYPE) {
+            return FUNCTION_STRING;
+    }
 }
 
 void* jsValuePointer(JsValue* val) {
