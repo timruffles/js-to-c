@@ -114,26 +114,24 @@ JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
     return val;
 }
 
-char* jsValueToString(JsValue* value) {
+#define OUTPUT_CONST(X) snprintf(outputBuffer, bufferSize, X);
+void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
     if(value->type == UNDEFINED_TYPE) {
-        return UNDEFINED_TYPE;
+        OUTPUT_CONST(UNDEFINED_TYPE);
     } else if(value->type == NULL_TYPE) {
-            return NULL_TYPE;
+        OUTPUT_CONST(NULL_TYPE);
     } else if(value->type == BOOLEAN_TYPE) {
-            return (value->value.boolean) == TRUE_VALUE
-                ? TRUE_STRING
-                : FALSE_STRING;
+        OUTPUT_CONST((value->value.boolean) == TRUE_VALUE
+            ? TRUE_STRING
+            : FALSE_STRING);
     } else if(value->type == OBJECT_TYPE) {
-            return OBJECT_STRING;
+        OUTPUT_CONST(OBJECT_STRING);
     } else if(value->type == STRING_TYPE) {
-            return stringGetCString(value);
+        OUTPUT_CONST(stringGetCString(value));
     } else if(value->type == NUMBER_TYPE) {
-            // TODO interesting - where do we store the stringified value - pass in a char* I suppose
-            // and write to that
-            log_info("Logging %f", jsValueNumber(value));
-            return NUMBER_STRING;
+        snprintf(outputBuffer, bufferSize, "%f", jsValueNumber(value));
     } else {
-            return FUNCTION_STRING;
+        OUTPUT_CONST(FUNCTION_STRING);
     }
 }
 

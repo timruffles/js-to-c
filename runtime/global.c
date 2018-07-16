@@ -11,6 +11,9 @@
 
 static FILE* outStream;
 
+const uintptr_t oneMeg = 1024 * 1024;
+char outputBuffer[oneMeg];
+
 static FILE* getOutStream() {
     if(outStream == NULL) {
         return fopen("/dev/stdout", "w");
@@ -33,8 +36,8 @@ JsValue* consoleLog(Env* env) {
     FILE* stream = getOutStream();
     assert(stream != NULL);
 
-    char* output = jsValueToString(envGet(env, stringCreateFromCString("arg0")));
-    ensureWrite(output, stream);
+    jsValueToCString(envGet(env, stringCreateFromCString("arg0")), outputBuffer, sizeof(outputBuffer));
+    ensureWrite(outputBuffer, stream);
     ensureWrite("\n", stream);
     fflush(stream);
 

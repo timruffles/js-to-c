@@ -53,7 +53,7 @@ JsValue *jsValueCreateNumber(double);
 double jsValueNumber(JsValue* value);
 void* jsValuePointer(JsValue* value);
 
-char* jsValueToString(JsValue*);
+void jsValueToCString(JsValue*, char* buf, uint64_t bufSize);
 
 JsValueType jsValueType(JsValue* value);
 
