@@ -318,14 +318,16 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
         target: objectTarget,
     }));
 
-    // TODO only supporting literal property lookup at mo
-    //const propertySrc = compile(node.property, state.childState({
-    //    target: propertyTarget,
-    //}));
+    // TODO identifier here is strange - would expect it to be property?
+    const propertySrc = node.property.type === 'Identifier'
+        ? assignToTarget(wrapStringAsJsValueString(node.property.name), propertyTarget)
+        : compile(node.property, state.childState({
+           target: propertyTarget,
+        }));
 
     const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
     return `${objectSrc}
-            JsValue* ${propertyTarget.id} = ${wrapStringAsJsValueString(getIdentifierName(node.property as any))};
+            ${propertySrc}
             ${resultSrc}
     `
 }
