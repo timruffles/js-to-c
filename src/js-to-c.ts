@@ -328,8 +328,7 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
     const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
     return `${objectSrc}
             ${propertySrc}
-            ${resultSrc}
-    `
+            ${resultSrc}`
 }
 
 function compileIdentifier(node: Identifier, state: CompileTimeState) {

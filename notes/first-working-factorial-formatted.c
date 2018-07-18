@@ -20,7 +20,6 @@ JsValue *fact_1(Env *env) {
   JsValue *left_5 = (envGet(env, interned_7) /* n */);
   JsValue *right_6 = (jsValueCreateNumber(3));
   JsValue *conditionalPredicate_4 = (LTOperator(left_5, right_6));
-  ;
   JsValue *conditionalValue_3;
   if (isTruthy(conditionalPredicate_4)) {
     return_2 = (envGet(env, interned_7) /* n */);
@@ -32,7 +31,6 @@ JsValue *fact_1(Env *env) {
     JsValue *call10Arg_0 = (subtractOperator(left_12, right_13));
     JsValue *args_10[] = {call10Arg_0};
     JsValue *right_9 = (functionRunWithArguments(callee_10, env, args_10, 1));
-
     return_2 = (multiplyOperator(left_8, right_9));
   }
   return return_2;
