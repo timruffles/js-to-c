@@ -9,66 +9,79 @@
 #define KIBIBYTE() (1024)
 #define MIBIBYTE() (KIBIBYTE() * KIBIBYTE())
 #define HEAP_SIZE() (KIBIBYTE() * 1)
-
-// packing this into 4 bytes wouldn't be sensible, as we'd
-// only be able to have at max ~2-3GB
-typedef struct AllocatedValue {
-    // the diff between startOfHeapPointer and the value
-    uint64_t heapLocation :62;
-    bool marked :1;
-    bool moved :1;
-} AllocatedValue;
-
-static char AREA_ONE[HEAP_SIZE()];
-static char AREA_TWO[HEAP_SIZE()];
-
-static AllocatedValue allocatedValues[1024 * 1024];
-static AllocatedValue* nextValue = allocatedValues;
-
-static char* activeArea = AREA_ONE;
-static char* inactiveArea = AREA_TWO;
-
-static void* startOfHeapPointer = AREA_ONE;
-static void* endOfHeapPointer = AREA_ONE + HEAP_SIZE();
-
-static char testString[] = "hello this is a string of text";
-
-// algo
-//   for each value pointer in envs
-//      if moved
-//        value = value->value.pointer
-//      else
-//        set mark 1
-//        move 
+#define MAX(X, Y) (X > Y ? X : Y)
 
 
+typedef enum JsValueTypeForGC {
+    // pointer - just string in this example
+    String,
+    // immediate: primitive, booleans
+    Number,
+    EnvType,
+} JsValueTypeForGC;
 
 typedef struct JsValue {
-    char* type;
+    JsValueTypeForGC type;
     union {
+        // immediate type (only number in our example)
         double number;
+        // pointer types
         void* pointer;
     } value;
 } JsValue;
 
-// as we need to reserve heap space for the c string too,
-// use the string pointer to allocate the string
-typedef struct AllocatedString {
-    JsValue* jsValue;
-    char* string;
-} AllocatedString;
+typedef struct Env {
+    JsValue* values;
+    uint64_t count;
+} Env;
 
 
+// we track allocated values here - the nice thing
+// about a separate tracking is we never have to update
+// the location of existing values
+// 
+// TODO - is this too inefficient?:
+// - if we have 1gb of heap we're tracking 1gb of allocated values, which unless they're all immediate values is overkill
+// - how much of a faff is updating the pointers in the env values?
+// - how much of this needs to be decided now, versus getting something
+//   working and revisiting later?
+//
+// An array of pointer values to the heap
+static JsValue* allocatedValues[HEAP_SIZE()];
+static bool marks[HEAP_SIZE()];
+JsValue** nextValue = allocatedValues;
+
+// only envs we care about are current call env and all
+// parents, parent env, and all callbacks in task queue
+// (which link to various envs)
+static Env globalEnv[3];
+static Env callEnv[2];
+
+uint64_t heapBytesUsed = 0;
+
+static char testString[] = "hello this is a string of text";
 
 uint64_t heapBytesRemaining() {
   // we know this'll be >= 0
-  return (uint64_t)(endOfHeapPointer - startOfHeapPointer);
+  return HEAP_SIZE() - heapBytesUsed;
+}
+
+void freeValue(JsValue* value) {
+    if(value->type == String) {
+        free(value->value.pointer);
+        free(value);
+    } else if(value->type == EnvType) {
+        // free object etc
+    } else {
+        // immediate
+        free(value);
+    }
 }
 
 void GC() {
     printf("GC run\n");
-    // TODO Walk env and mark
-    uint64_t allocatedCount = max(nextValue - allocatedValues - 1, 0);
+    // TODO Walk global and currentEnv and mark
+    uint64_t allocatedCount = MAX(nextValue - allocatedValues - 1, 0);
     /**
      * For each allocated value so far we check if:
      * - has been moved - nothing to do
@@ -76,65 +89,69 @@ void GC() {
      *   - move value
      *   - update all pointers
      */
+    printf("Allocated values at %p\n", allocatedValues);
     for(uint64_t i = 0; i < allocatedCount; i++) {
-        AllocatedValue* value = allocatedValues + i;
-        if(value->moved) {
-            continue;
-        }
-        if(value->marked) {
-            // MOVE
-            
+        JsValue** value = allocatedValues + i;
+        if(!marks[i]) {
+            JsValue* onHeap = *value;
+            printf("Freeing unmarked value at %llu %p - in alloc list at %p\n", i, onHeap, value);
+            freeValue(onHeap);
         }
     }
+    // TODO refill allocated values as we go
+    // TODO reset marks array up to highest remaining element 
 }
 
-void* allocate(uint64_t bytes) {
+void* heapAllocate(uint64_t bytes) {
     if(heapBytesRemaining() < bytes) {
         GC();
     }
-    void* pointer = startOfHeapPointer;
-    memset(pointer, 0, bytes);
-    startOfHeapPointer += bytes;
-    return pointer;
+    heapBytesUsed += bytes;
+    return calloc(sizeof(char), bytes);
 }
 
-JsValue* allocateJsValue() {
-    JsValue* pointer = (JsValue*) allocate(sizeof(JsValue));
-    *nextValue = (AllocatedValue) {
-        .heapLocation = ((void*)pointer - startOfHeapPointer),
-        .marked = 0,
-        .moved = 0,
-    };
+
+JsValue* allocateJsValue(JsValueTypeForGC type) {
+    JsValue* pointer = (JsValue*) heapAllocate(sizeof(JsValue));
+    printf("Allocated a value at %p\n", pointer);
+    pointer->type = type;
+    *nextValue = pointer;
     nextValue += 1;
     return pointer;
 }
 
-AllocatedString allocateJsString(char* cString, uint64_t length) {
-    JsValue* valuePtr = allocateJsValue();
-    char* stringPtr = (char*)allocate(length);
-
-    return (AllocatedString) {
-      .jsValue = valuePtr,
-      .string = stringPtr,
-    };
+JsValue* allocateJsString(char* cString, uint64_t length) {
+    JsValue* valuePtr = allocateJsValue(String);
+    char* stringPtr = heapAllocate(length);
+    valuePtr->value.pointer = stringPtr;
+    return valuePtr;
 }
 
-void mark(AllocatedValue* value) {
-    value->marked = true;
+JsValue* createEnv() {
+    JsValue* value = allocateJsValue(EnvType);
+    value->value.pointer = heapAllocate(sizeof(Env));
+    *((Env*)value->value.pointer) = (Env) {
+        .values = NULL,
+        .count = 0,
+    };
+    return value;
+}
+
+void envWalk(JsValue* value, void (callback)(JsValue*)) {
+    Env* env = (Env*) value->value.pointer;
+    for(uint64_t i = 0; i < env->count; i++) {
+        JsValue* found = env->values + i;
+        callback(found);
+    }
 }
 
 int main() {
-    memset(AREA_ONE, 0, HEAP_SIZE());
-    memset(AREA_TWO, 0, HEAP_SIZE());
-
     uint64_t before = heapBytesRemaining();
     uint64_t toAllocate = 10;
     for(uint64_t i = 0; i < toAllocate; i++) {
         allocateJsString(testString, strlen(testString));
     }
-    (*(allocatedValues + 1)).marked = true;
-    (*(allocatedValues + 4)).marked = true;
-    (*(allocatedValues + 6)).marked = true;
+    GC();
 
     printf("%i %i %i\n", before, heapBytesRemaining(), before - heapBytesRemaining());
 }
