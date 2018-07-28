@@ -39,9 +39,6 @@ union JsValueValue {
 typedef struct JsValue {
     const char * const type;
     union JsValueValue value;
-
-    // only for use by GC system
-    struct JsValue* gcMovedTo;
 } JsValue;
 
 static JsValue *const TRUE = &(JsValue) {
@@ -95,10 +92,6 @@ JsValue *getFalse() {
     return FALSE;
 }
 
-JsValue* jsValueMovedTo(JsValue* value) {
-    return value->gcMovedTo;
-};
-
 JsValue *jsValueCreateNumber(double number) {
     JsValue* val = callocBytes(sizeof(JsValue));
     *val = (JsValue) {
@@ -110,9 +103,8 @@ JsValue *jsValueCreateNumber(double number) {
     return val;
 }
 
-JsValue *jsValueCreatePointer(JsValueType type, size_t size) {
-    JsValue* val = callocBytes(sizeof(JsValue));
-    void* ptr = callocBytes(size);
+JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
+    JsValue* val = calloc(sizeof(JsValue), 1);
     *val = (JsValue) {
         .type = type,
         .value = {
