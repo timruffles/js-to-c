@@ -1,3 +1,3 @@
 #pragma once
 
-#define test(T) printf("%s...", #T); (T)(); printf(" passed\n");
+#define test(T) printf("%s...\n", #T); (T)(); printf(#T" passed\n");

@@ -1,5 +1,48 @@
 # Notes
 
+## 26 July 2018
+
+Thinking about GC, the requirements are:
+
+- need to know where next memory we can allocate is
+  - which gets tricky after we've freed some, i.e we either need to remove or track gaps
+- keep pointers valid after GC, so if an environment contains references to values they point to the same or equivalent values post GC
+- identifying values to free, and allowing this algorithm to work over multiple GC runs
+
+Thinking about GC, I thought one option was to `malloc` as usual and allow the OS to manage the space, with my job simply to track pointers to the values. The advantage could be that the alloc'd space is what is pointed to by the rest of the system. Since that's immutable, there's no need to update pointers in env etc.
+
+However, the JsValue structs are specifically designed to be reasonably efficent, taking up only 2 pointers. Storing them on the heap, and then tracking them via pointers, is wasteful (i.e numbers now cost 24 bytes rather than 16).
+
+    
+    typedef struct JsObjectProperty {
+        char* key;
+        JsValue* value;
+    } JsObjectProperty;
+
+    JsValue* allocatedValues[];
+    typedef JsValue** AllocatedValue;
+    static JsValue** nextValue = allocatedValues;
+
+    JsValue* allocateValue() {
+        JsValue* value = calloc(1, sizeof(JsValue));
+        *(nextValue) = value;
+        nextValue += 1;
+        return value; 
+    }
+    
+The other challenge is, how would we do GC? We'd be iterating over `JsValue*` pointers but we'd need to identify `allocatedValues`. I abandoned this approach as I don't think the `alloc` solves anything, and the other approach seemed clearer.
+
+The other approach was to allocate managed ranges of memory in which the `JsValue` structs would be allocated. The marks could be tracked internally or externally (a boolean `Marked` array of the same size that could be zeroed before GC) - internally seems easiest for now, and can be changed later.
+
+So in this model all JsValues live in an array that's managed. During GC we look at the marked and moved properties and compact all live values to the bottom of the heap, counting how many values we have. Then we reset the managed heap pointer to the top, ready to overwrite the garbage. Pointers in environments and objects need to be updated as we go.
+
+    typedef struct {
+        // this will be updated to point to new location
+        JsValue *value;
+
+        // ...
+    } ObjectPropertyDescriptor;
+
 ## 13 July 2018
 
 Deciding on setjmp vs explicit handling has been going round back of my mind. Exceptions can be thrown by just about any code in JS, e.g the full horror of getters is clear here:

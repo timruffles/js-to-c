@@ -27,7 +27,6 @@ static char TRUE_STRING[] = "true";
 static char FALSE_STRING[] = "false";
 static char OBJECT_STRING[] = "[Object object]";
 static char FUNCTION_STRING[] = "[Function ...]";
-static char NUMBER_STRING[] = "[todo]";
 
 union JsValueValue {
    double number;
