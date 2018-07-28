@@ -40,9 +40,9 @@ function updateFixture({ name, tests, testFile }) {
 
     const testsSrc = tests.map(({name,fixtureFile, output}) => {
         return `describe("${name}", () => {
-          let cFile;
-          let executable;
-          let output;
+          let cFile = 'NOT COMPILED';
+          let executable = 'NOT LINKED';
+          let output = 'NOT RUN';
           it('compiles', () => {
             cFile = compile('${fixtureFile}');
           });

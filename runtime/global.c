@@ -11,8 +11,8 @@
 
 static FILE* outStream;
 
-const uintptr_t oneMeg = 1024 * 1024;
-char outputBuffer[oneMeg];
+static const uintptr_t oneMeg = 1024 * 1024;
+static char outputBuffer[oneMeg];
 
 static FILE* getOutStream() {
     if(outStream == NULL) {

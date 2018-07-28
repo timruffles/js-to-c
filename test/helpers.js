@@ -7,19 +7,19 @@ const path = require('path');
 
 exports.compile = function(file) {
     const cSrc = compileFile(file);
-    const output = pathInFixtures(`${path.basename(file)}.c`);
+    const output = pathInFixtures(`${path.basename(file, '.js')}.c`);
     writeFileSync(output, cSrc);
     return output;
 }
 
 exports.link = function(cFile) {
     const binPath = pathInFixtures(path.basename(cFile, '.c'));
-    execSync(`clang -Weverything ${cFile} -o ${binPath}`);
+    execSync(`${__dirname}/../link-c ${cFile} ${binPath}`);
     return binPath;
 }
 
 exports.runExecutable = function(path) {
-    const stdout = execFileSync(path); 
+    const stdout = execFileSync(path).toString(); 
     return { stdout };
 }
 
