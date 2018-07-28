@@ -392,7 +392,10 @@ function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState
         target: targetRight,
     }));
 
-    const operatorFn = binaryOpToFunction[node.operator] || 'notDefined';
+    const operatorFn = binaryOpToFunction[node.operator];
+    if(!operatorFn) {
+        throw Error(`unimplemented operator '${node.operator}'`)
+    }
 
     const linkSrc = assignToTarget(`${operatorFn}(${targetLeft.id}, ${targetRight.id})`, state.target);
 

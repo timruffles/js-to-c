@@ -39,23 +39,12 @@ function updateFixture({ name, tests, testFile }) {
     }
 
     const testsSrc = tests.map(({name,fixtureFile, output}) => {
-        return `describe("${name}", () => {
-          let cFile = 'NOT COMPILED';
-          let executable = 'NOT LINKED';
-          let output = 'NOT RUN';
-          it('compiles', () => {
-            cFile = compile('${fixtureFile}');
-          });
-          it('links', () => {
-            executable = link(cFile);
-          });
-          it('runs', () => {
-            ({ stdout: output } = runExecutable(executable));
-          });
-          it('has expected output', () => {
+        return `it("${name}", () => {
+            const cFile = compile('${fixtureFile}');
+            const executable = link(cFile);
+            const { stdout: output } = runExecutable(executable);
             assertOutputEqual(output, \`\$\{output\}\`);
-          });
-        });`
+          });`
     }).join('\n\n');
 
     const testFileSrc = `'use strict';

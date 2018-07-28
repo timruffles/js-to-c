@@ -1,13 +1,22 @@
 'use strict';
-const { writeFileSync } = require('fs');
+const { writeFileSync, unlinkSync } = require('fs');
 const { execSync, execFileSync } = require('child_process');
 const assert = require('assert');
 const { compileFile } = require('..');
 const path = require('path');
 
 exports.compile = function(file) {
-    const cSrc = compileFile(file);
     const output = pathInFixtures(`${path.basename(file, '.js')}.c`);
+    try {
+        // ensure later steps don't run a stale exe
+        unlinkSync(output);
+    } catch(e) {
+        if(e.code !== 'ENOENT') {
+            throw e;
+        }
+    }
+
+    const cSrc = compileFile(file);
     writeFileSync(output, cSrc);
     return output;
 }
