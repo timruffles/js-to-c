@@ -1,4 +1,6 @@
-"functions with constant expressions" = """
+["functions with constant expressions"]
+
+example = """
 function meaningOfLifeSquared() {
     return 42 * 42;
 }
@@ -6,10 +8,15 @@ function meaningOfLifeSquared() {
 console.log(meaningOfLifeSquared());
 """
 
-"simple call" = """
+output = "1764"
+
+["simple call"]
+example = """
 function add(a,b) {
     return a + b;
 }
 
-console.log(add(a,b));
+console.log(add(10, 5));
 """
+
+output = "15"

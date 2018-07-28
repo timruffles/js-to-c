@@ -17,7 +17,7 @@ function updateFixtures() {
         const tests = toml.parse(fs.readFileSync(__dirname + '/' + tf, { encoding: 'utf8' }));
 
         for(const testName in tests) {
-            const testBody = tests[testName];
+            const testBody = tests[testName].example;
 
             fs.writeFileSync(`${__dirname}/fixtures/${testNameToFileName(testName)}.js`, testBody);
         }
