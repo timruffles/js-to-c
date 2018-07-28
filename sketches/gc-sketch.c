@@ -82,18 +82,18 @@ void freeValue(JsValue* value) {
 }
 
 bool* markForValue(JsValue* value) {
-  // all JsValues live in the allocated values region, so
-  // take diff from start and convert to bit offset in marks
-  // array
-  printf("value address %p vs start %p\n", value, *allocatedValues);
-  ptrdiff_t diff = (void*)value - (void*)(allocatedValues);
-  printf("index diff %lu\n", diff);
-  return &marks[diff];
+    // all JsValues live in the allocated values region, so
+    // take diff from start and convert to bit offset in marks
+    // array
+    printf("value address %p vs start %p\n", value, *allocatedValues);
+    ptrdiff_t diff = (void*)value - (void*)(allocatedValues);
+    printf("index diff %lu\n", diff);
+    return &marks[diff];
 }
 
 void markValue(JsValue* value) {
-  printf("Marked %p\n", value);
-  *markForValue(value) = true;
+    printf("Marked %p\n", value);
+    *markForValue(value) = true;
 }
 
 void envWalk(JsValue* value, void (callback)(JsValue*)) {
