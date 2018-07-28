@@ -5,7 +5,9 @@
 #include "language.h"
 #include "objects.h"
 #include "strings.h"
-#include "debug.h"
+#include "lib/debug.h"
+
+#define callocBytes(N) calloc(1, N)
 
 char UNDEFINED_TYPE[] = "undefined";
 char NULL_TYPE[] = "null";
@@ -34,10 +36,12 @@ union JsValueValue {
    void* pointer;
 };
 
-// TODO
 typedef struct JsValue {
     const char * const type;
     union JsValueValue value;
+
+    // only for use by GC system
+    struct JsValue* gcMovedTo;
 } JsValue;
 
 static JsValue *const TRUE = &(JsValue) {
@@ -91,8 +95,12 @@ JsValue *getFalse() {
     return FALSE;
 }
 
+JsValue* jsValueMovedTo(JsValue* value) {
+    return value->gcMovedTo;
+};
+
 JsValue *jsValueCreateNumber(double number) {
-    JsValue* val = calloc(sizeof(JsValue), 1);
+    JsValue* val = callocBytes(sizeof(JsValue));
     *val = (JsValue) {
         .type = NUMBER_TYPE,
         .value = {
@@ -102,8 +110,9 @@ JsValue *jsValueCreateNumber(double number) {
     return val;
 }
 
-JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
-    JsValue* val = calloc(sizeof(JsValue), 1);
+JsValue *jsValueCreatePointer(JsValueType type, size_t size) {
+    JsValue* val = callocBytes(sizeof(JsValue));
+    void* ptr = callocBytes(size);
     *val = (JsValue) {
         .type = type,
         .value = {

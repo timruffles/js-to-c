@@ -2,13 +2,13 @@
   "name": "js-to-c",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "js-build/js-to-c.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "start": "nodemon --ext ts -w src/ --exec 'tsc && ./compile-and-run test/fixtures/simple-object-properties.js || echo fail'",
-    "test": "node test/updateFixtures.js && echo now compile n run"
+    "test": "node test/update.js && mocha"
   },
   "keywords": [],
   "author": "Tim Ruffles <timruffles@googlemail.com>",
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/esprima": "4.0.2",
     "@types/estree": "0.0.39",
-    "@types/node": "10.5.2"
+    "@types/node": "10.5.2",
+    "mocha": "5.2.0"
   }
 }

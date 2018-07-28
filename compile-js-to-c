@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# compiles JS to an equivalent C program
+
+source lib.sh
+
+main() {
+    JsToC $1 > $2
+}
+
+main $@

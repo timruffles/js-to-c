@@ -8,7 +8,7 @@
 #include "language.h"
 #include "exceptions.h"
 #include "strings.h"
-#include "debug.h"
+#include "lib/debug.h"
 
 /**
  * Currently envs are just objects, so this works fine.

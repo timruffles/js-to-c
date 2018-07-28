@@ -80,11 +80,17 @@ if(require.main === module) {
 }
 
 function main() {
-    const input = fs.readFileSync(process.argv[2], { encoding: 'utf8'});
+    console.log(compileFile(process.argv[2]));
+}
 
-    const ast = parseScript(input);
+export function compileFile(fn: string) {
+    const input = fs.readFileSync(fn, { encoding: 'utf8'});
+    return compileString(input);
+}
 
-    console.log(compile(ast, new CompileTimeState));
+export function compileString(src: string) {
+    const ast = parseScript(src);
+    return compile(ast, new CompileTimeState);
 }
 
 function compile(ast: Node, state: CompileTimeState): string {
@@ -177,17 +183,20 @@ function compileProgram(node: Program, state: CompileTimeState) {
 
     return `
         #include <stdio.h>
-        #include "../runtime/environments.h"
-        #include "../runtime/strings.h"
-        #include "../runtime/objects.h"
-        #include "../runtime/language.h"
-        #include "../runtime/operators.h"
-        #include "../runtime/global.h"
+        #include "../../runtime/environments.h"
+        #include "../../runtime/strings.h"
+        #include "../../runtime/objects.h"
+        #include "../../runtime/language.h"
+        #include "../../runtime/operators.h"
+        #include "../../runtime/global.h"
+        #include "../../runtime/objects.h"
+        #include "../../runtime/functions.h"
         
         ${interned}
         
         ${joinNodeOutput(state.functions)}
         
+        void userProgram(Env*);
         void userProgram(Env* env) {
             ${body};
         }
@@ -207,8 +216,8 @@ function compileProgram(node: Program, state: CompileTimeState) {
 
 function compileInternedStrings(interned: InternedString[]): string {
     return joinNodeOutput(interned.map(({id, value}) => (
-        `char ${id}_cstring[] = "${value}";
-         JsValue* ${id};`
+        `static char ${id}_cstring[] = "${value}";
+         static JsValue* ${id};`
     )));
 }
 
@@ -217,7 +226,8 @@ function compileInternInitialisation(interned: InternedString[]): string {
         `${id} = stringCreateFromCString(${id}_cstring);`
     )));
 
-    return `void initialiseInternedStrings() {
+    return `void initialiseInternedStrings(void);
+    void initialiseInternedStrings() {
         ${initialisers}
     }`;
 }

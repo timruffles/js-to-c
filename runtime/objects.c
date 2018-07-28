@@ -5,7 +5,7 @@
 #include "exceptions.h"
 #include "strings.h"
 #include "functions.h"
-#include "debug.h"
+#include "lib/debug.h"
 
 typedef struct {
     char* name;
@@ -26,8 +26,7 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
-    JsObject *obj = calloc(sizeof(JsObject), 1);
-    JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
+    JsValue *val = jsValueCreatePointer(OBJECT_TYPE, sizeof(JsObject));
     return val;
 }
 

@@ -7,7 +7,7 @@
 #include "objects.h"
 #include "functions.h"
 #include "strings.h"
-#include "debug.h"
+#include "lib/debug.h"
 
 
 typedef struct FunctionRecord {
