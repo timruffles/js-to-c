@@ -1,0 +1,3 @@
+#!/bin/bash
+
+clang -Weverything -Wno-unused-macros -Wno-missing-prototypes $1 -o /tmp/run && /tmp/run
