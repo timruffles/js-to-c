@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "lib/debug.h"
 #include "language.h"
 #include "objects.h"
 #include "strings.h"
-#include "lib/debug.h"
-
-#define callocBytes(N) calloc(1, N)
+#include "gc.h"
 
 char UNDEFINED_TYPE[] = "undefined";
 char NULL_TYPE[] = "null";
@@ -37,6 +36,7 @@ union JsValueValue {
 };
 
 typedef struct JsValue {
+    // 1 byte
     const char * const type;
     union JsValueValue value;
 } JsValue;
@@ -93,7 +93,7 @@ JsValue *getFalse() {
 }
 
 JsValue *jsValueCreateNumber(double number) {
-    JsValue* val = callocBytes(sizeof(JsValue));
+    JsValue* val = gcAllocate(sizeof(JsValue));
     *val = (JsValue) {
         .type = NUMBER_TYPE,
         .value = {
@@ -104,11 +104,11 @@ JsValue *jsValueCreateNumber(double number) {
 }
 
 JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
-    JsValue* val = callocBytes(sizeof(JsValue));
+    JsValue* val = gcAllocate(sizeof(JsValue));
     *val = (JsValue) {
         .type = type,
         .value = {
-            .pointer = pointer, 
+            .pointer = pointer,
         }
     };
     return val;

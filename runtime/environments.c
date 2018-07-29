@@ -61,7 +61,7 @@ void envDeclare(Env *env, JsValue *name) {
 }
 
 void envDestroy(Env *env) {
-    free(env);
+    // currently NOOP
 }
 
 

@@ -5,6 +5,7 @@
 #include "language.h"
 #include "objects.h"
 #include "strings.h"
+#include "gc.h"
 
 #define test(T) (T)(); printf("%s passed\n", #T);
 
@@ -43,6 +44,8 @@ void itHasDefinedTrutiness() {
 }
 
 int main() {
+    _gcTestInit();
+
     test(itCanCreateNumber);
     test(itCanAccessNumberValue);
     test(itCanAccessPointerValue);

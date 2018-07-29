@@ -6,6 +6,7 @@
 #include "language.h"
 #include "strings.h"
 #include "test.h"
+#include "gc.h"
 
 JsValue* idOne;
 JsValue* idOneB;
@@ -102,6 +103,8 @@ void itPrefersOwnPropertiesToPrototype() {
 }
 
 int main() {
+    _gcTestInit();
+
     idOne = stringCreateFromCString("one");
     idOneB = stringCreateFromCString("one");
     idOneC = stringCreateFromCString("one");

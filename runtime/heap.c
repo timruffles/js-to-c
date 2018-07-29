@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "./conditions.h"
+
 #define ENSURE_CALLOC_BYTES(V, N) V = calloc(1, sizeof(N)); assert(V != NULL);
 
 typedef struct Heap {
@@ -14,16 +16,19 @@ typedef struct Heap {
 } Heap;
 
 uint64_t heapBytesUsed(Heap* heap) {
+    assert_debug(heap != NULL);
     // we know this'll be >= 0
     return heap->top - heap->bottom;
 }
 
 uint64_t heapBytesRemaining(Heap* heap) {
+    assert_debug(heap != NULL);
     // we know this'll be >= 0
     return heap->size - heapBytesUsed(heap);
 }
 
 void heapFree(Heap* heap) {
+    assert_debug(heap != NULL);
     free(heap->bottom);
 }
 
@@ -37,10 +42,12 @@ Heap* heapCreate(uint64_t size) {
 }
 
 void heapEmpty(Heap* heap) {
+    assert_debug(heap != NULL);
     heap->top = heap->bottom;
 }
 
 void* heapAllocate(Heap* heap, uint64_t bytes) {
+    assert_debug(heap != NULL);
     if(heapBytesRemaining(heap) < bytes) {
         return NULL;
     }

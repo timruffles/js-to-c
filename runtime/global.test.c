@@ -7,6 +7,7 @@
 #include "global.h"
 #include "strings.h"
 #include "objects.h"
+#include "gc.h"
 
 void itCreatesTheGlobalObject() {
     JsValue* global = createGlobalObject();
@@ -37,6 +38,8 @@ void itWorksWithEnv() {
 }
 
 int main() {
+    _gcTestInit();
+
     FILE* fp = fopen("/tmp/globaltest", "w+")
     assert(fp != NULL);
     _setOutStream(fp);

@@ -7,6 +7,7 @@
 #include "functions.h"
 #include "strings.h"
 #include "test.h"
+#include "gc.h"
 
 // e.g const x => { x; return true }
 JsValue* exampleUserFunction(Env* env) {
@@ -35,6 +36,8 @@ void itCanCallAFunction() {
 }
 
 int main() {
+    _gcTestInit();
+
     argumentNames = calloc(2, sizeof(JsValue*));
     argumentValues = calloc(2, sizeof(JsValue*));
     argumentNames[0] = stringCreateFromCString("one");

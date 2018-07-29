@@ -6,6 +6,7 @@
 #include "language.h"
 #include "test.h"
 #include "strings.h"
+#include "gc.h"
 
 JsValue* idOne;
 
@@ -92,6 +93,8 @@ void itSetsUpArgumentValuesInCallEnv() {
 }
 
 int main(int argc, char** argv) {
+    _gcTestInit();
+
     idOne = stringCreateFromCString("one");
 
     test(itCanCreateRootEnv);
