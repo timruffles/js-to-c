@@ -21,7 +21,7 @@ static FILE* getOutStream() {
     return outStream;
 }
 
-static void setOutStream(FILE* stream) {
+extern void _setOutStream(FILE* stream) {
     outStream = stream;
 }
 

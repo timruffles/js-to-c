@@ -37,9 +37,9 @@ void itWorksWithEnv() {
 }
 
 int main() {
-    //FILE* fp = fopen("/tmp/globaltest", "w+")
-    //assert(fp != NULL);
-    //setOutStream(fp);
+    FILE* fp = fopen("/tmp/globaltest", "w+")
+    assert(fp != NULL);
+    _setOutStream(fp);
 
     test(itCreatesTheGlobalObject);
     test(itLogsJsValuesToOutput);

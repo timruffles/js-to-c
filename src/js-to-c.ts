@@ -210,7 +210,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
             userProgram(globalEnv);
             return 0;
         }
-    `
+`
 }
 
 
