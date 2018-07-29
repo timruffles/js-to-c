@@ -26,7 +26,7 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
-    JsObject *obj = calloc(sizeof(JsObject), 1);
+    JsObject *obj = calloc(1, sizeof(JsObject));
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
     return val;
 }

@@ -97,14 +97,14 @@ JsValue *jsValueCreateNumber(double number) {
     *val = (JsValue) {
         .type = NUMBER_TYPE,
         .value = {
-            .number = number, 
+            .number = number,
         }
     };
     return val;
 }
 
 JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
-    JsValue* val = calloc(sizeof(JsValue), 1);
+    JsValue* val = callocBytes(sizeof(JsValue));
     *val = (JsValue) {
         .type = type,
         .value = {

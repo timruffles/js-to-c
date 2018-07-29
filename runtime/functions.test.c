@@ -35,8 +35,8 @@ void itCanCallAFunction() {
 }
 
 int main() {
-    argumentNames = calloc(sizeof(JsValue*), 2);
-    argumentValues = calloc(sizeof(JsValue*), 2);
+    argumentNames = calloc(2, sizeof(JsValue*));
+    argumentValues = calloc(2, sizeof(JsValue*));
     argumentNames[0] = stringCreateFromCString("one");
     argumentNames[1] = stringCreateFromCString("two");
     argumentValues[0] = jsValueCreateNumber(7);

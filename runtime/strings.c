@@ -11,7 +11,7 @@ typedef struct JsString {
 } JsString;
 
 JsValue* stringCreateFromCString(char* string) {
-    JsString* jsString = calloc(sizeof(JsString), 1);
+    JsString* jsString = calloc(1, sizeof(JsString));
     uint64_t l = strlen(string);
 
     *jsString = (JsString) {

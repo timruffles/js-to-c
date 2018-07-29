@@ -32,7 +32,7 @@ static void ensureWrite(char* output, FILE* stream) {
 }
 
 JsValue* consoleLog(Env* env) {
-    // TODO varags
+    // TODO varargs
     FILE* stream = getOutStream();
     assert(stream != NULL);
 
@@ -51,7 +51,8 @@ JsValue* createGlobalObject() {
     objectSet(global, stringCreateFromCString("console"),
             console);
 
-    JsValue** consoleArgs = calloc(sizeof(JsValue*), 1);
+    // TODO varargs
+    JsValue** consoleArgs = calloc(1, sizeof(JsValue*));
     consoleArgs[0] = stringCreateFromCString("arg0");
     JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1);
     objectSet(console, stringCreateFromCString("log"),
