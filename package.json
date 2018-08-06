@@ -22,6 +22,7 @@
     "@types/esprima": "4.0.2",
     "@types/estree": "0.0.39",
     "@types/node": "10.5.2",
-    "mocha": "5.2.0"
+    "mocha": "5.2.0",
+    "nodemon": "1.18.3"
   }
 }
