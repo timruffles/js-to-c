@@ -30,7 +30,7 @@ void itCanAccessPointerValue() {
     assert(ptr == &a);
 }
 
-void itHasDefinedTrutiness() {
+void itHasDefinedTruthiness() {
     assert(isTruthy(getTrue()));
     assert(isTruthy(stringCreateFromCString("hello")));
     assert(isTruthy(jsValueCreateNumber(7)));
@@ -50,6 +50,6 @@ int main() {
     test(itCanAccessNumberValue);
     test(itCanAccessPointerValue);
 
-    test(itHasDefinedTrutiness);
+    test(itHasDefinedTruthiness);
 }
 
