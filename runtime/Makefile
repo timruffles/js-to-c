@@ -11,10 +11,10 @@ out/environments_test: $(source_with_headers)
 out/objects_test: objects.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) objects.test.c -o $@
 
-out/strings_test: $(source_with_headers)
+out/strings_test: strings.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) strings.test.c -o $@
 
-out/language_test: $(source_with_headers)
+out/language_test: language.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) language.test.c -o $@
 
 out/functions_test: functions.test.c $(source_with_headers)
@@ -29,8 +29,23 @@ out/operators_test: operators.test.c $(source_with_headers)
 out/heap_test: heap.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) heap.test.c -o $@
 
+out/gc_test: gc.test.c $(source_with_headers)
+	$(CC) $(CLANG_OPTS) $(source_files) gc.test.c -o $@
+
+
+# manually ordered for dependencies - i.e objects aren't going to work if we can't allocate
+# or have reliable strings
 .PHONY: test
 test: out/environments_test out/language_test out/objects_test out/strings_test out/operators_test out/heap_test
+	out/heap_test && \
+	out/language_test && \
+	out/strings_test && \
+	out/objects_test && \
+	out/environments_test && \
+	out/operators_test
+
+.PHONY: test
+test_debug: out/environments_test out/language_test out/objects_test out/strings_test out/operators_test out/heap_test
 	set -e; for t in out/*_test; do echo TESTING $$t; lldb -o run ./$$t || break; done
 
 

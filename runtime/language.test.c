@@ -6,8 +6,7 @@
 #include "objects.h"
 #include "strings.h"
 #include "gc.h"
-
-#define test(T) (T)(); printf("%s passed\n", #T);
+#include "test.h"
 
 void itCanCreateNumber() {
     JsValue* val = jsValueCreateNumber(42.42);

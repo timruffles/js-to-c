@@ -6,8 +6,9 @@
 #include <string.h>
 
 #include "./conditions.h"
+#include "./lib/debug.h"
 
-#define ENSURE_CALLOC_BYTES(V, N) V = calloc(1, sizeof(N)); assert(V != NULL);
+#define ENSURE_CALLOC_BYTES(V, N) V = calloc(N, 1); assert(V != NULL);
 
 typedef struct Heap {
     char* bottom;
