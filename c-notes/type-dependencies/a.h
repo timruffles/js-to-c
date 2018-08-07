@@ -1,8 +1,12 @@
+#pragma once
 
+// forward declare - we're going to have
+// a struct called A declare at some point
+typedef struct A A;
 
-// a bit like js value - union of many types
-typedef struct {
-    union {
-        B theB;
-    } things;
+#include "b.h"
+
+typedef struct A {
+    B b;
 } A;
+
