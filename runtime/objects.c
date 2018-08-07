@@ -112,7 +112,7 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
 }
 
 void objectDestroy(JsValue *object) {
-    free(object);
+    // NOOP
 }
 
 

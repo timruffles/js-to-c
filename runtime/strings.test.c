@@ -6,6 +6,7 @@
 #include "strings.h"
 #include "language.h"
 #include "test.h"
+#include "gc.h"
 
 void itCanCreateAStringFromACString() {
     char* theContent = "Hello";
@@ -27,6 +28,8 @@ void itGetsStringLength() {
 }
 
 int main() {
+    _gcTestInit();
+
     test(itCanCreateAStringFromACString);
     test(itGetsJsStringFromValue);
     test(itGetsStringLength);

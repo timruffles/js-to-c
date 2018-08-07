@@ -16,7 +16,6 @@ JsValue* idTwo;
 void itCreatesPlainObjects() {
     JsValue* object = objectCreatePlain();
     assert(object != NULL);
-    free(object);
 }
 
 void itDestroysObjects() {

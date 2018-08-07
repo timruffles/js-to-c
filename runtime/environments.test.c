@@ -13,7 +13,6 @@ JsValue* idOne;
 void itCanCreateRootEnv() {
     Env* env = envCreateRoot();
     assert(env != NULL);
-    free(env);
 }
 
 void itCanDestroyAnEnv() {
