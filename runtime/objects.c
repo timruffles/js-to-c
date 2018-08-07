@@ -8,9 +8,11 @@
 #include "gc.h"
 #include "lib/debug.h"
 
+#define JS_VALUE_OBJECT_CREATE() jsValueCreatePointer(OBJECT_TYPE, sizeof(JsObject))
 
 typedef struct {
-    char* name;
+    char* key;
+    JsValue *name;
     JsValue *value;
 
     UT_hash_handle hh;
@@ -28,24 +30,23 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
-    JsObject *obj = gcAllocate(sizeof(JsObject));
-    JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
-    return val;
+    JsPointerAllocation alloc = JS_VALUE_OBJECT_CREATE();
+    // TODO set pt
+    return alloc.value;
 }
 
 JsValue* objectCreate(JsValue* prototype) {
-    JsValue *obj = objectCreatePlain();
-    ((JsObject*)jsValuePointer(obj))->prototype = prototype;
-    return obj;
+    JsPointerAllocation alloc = JS_VALUE_OBJECT_CREATE();
+    JsObject* object = alloc.pointer;
+    object->prototype = prototype;
+    return alloc.value;
 }
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
-    // TODO set function prototype
-    JsObject *obj = gcAllocate(sizeof(JsObject));
-    obj->callInternal = fr;
-
-    JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
-    return val;
+    JsPointerAllocation alloc = JS_VALUE_OBJECT_CREATE();
+    JsObject* object = alloc.pointer;
+    object->callInternal = fr;
+    return alloc.value;
 }
 
 JsValue* objectGet(JsValue *val, JsValue *name) {
@@ -98,7 +99,8 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
 
     if(descriptor == NULL) {
         descriptor = propertyCreate();
-        descriptor->name = nameString;
+        descriptor->key = nameString;
+        descriptor->name = name;
         HASH_ADD_KEYPTR(
           hh,
           object->properties,
@@ -113,25 +115,29 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
     return value;
 }
 
-//// walk an object tree, calling cb with every JsValue found
-//JsValue* objectTraverseForGc(JsValue* object, ForOwnCallback* cb) {
-//    JsValue* ptr = cb(object);
+//GcState jsValueGcState(JsValue* value) {
+//    return value->gcState;
+//}
+
+// walk an object tree, calling cb with every JsValue found
+//JsValue* objectGc(JsValue* object, GcCallback* cb) {
+//    JsValue* moved = cb(object);
+//    object->movedTo = moved;
+//
 //    if(object->prototype) {
-//        object->prototype = cb(object->prototype);
+//        moved->prototype = objectGc(object->prototype);
 //    }
 //
+//    moved->properties = NULL;
 //    for(PropertyDescriptor* pd = object->properties;
 //        pd != NULL;
-//        pd = pd->hh.next) {
-//        JsValueType type = jsValueType(pd->value);
-//        if(type == OBJECT_TYPE || type == FUNCTION_TYPE) {
-//            pd->value = objectTraverseDeep(pd->value, cb);
-//        } else {
-//            pd->value = cb(pd->property, pd->value);
-//        }
+//        pd = pd->hh.next
+//    ) {
+//        JsValue* valueMoved = jsValueGc(pd->value, cb);
+//        objectSet(moved, pd->name, valueMoved);
 //    }
 //
-//    return ptr;
+//    return moved;
 //}
 
 void objectDestroy(JsValue *object) {

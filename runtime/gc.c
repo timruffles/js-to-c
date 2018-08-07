@@ -10,6 +10,7 @@
 //static Heap heapOne;
 //static Heap heapTwo;
 
+
 static Heap* activeHeap;
 
 //static Heap* nextHeap = &heapTwo;
@@ -39,6 +40,30 @@ GcStats gcStats() {
         .remaining = heapBytesRemaining(activeHeap),
     };
 }
+
+//void gcRun(JsValue** roots, uint64_t size) {
+//}
+
+//JsValue* jsValueGc(JsValue* value, GcCallback* moveCb) {
+//    JsValue* movedTo = jsValueGcState(value)->movedTo;
+//    if(movedTo != NULL) {
+//        return movedTo;
+//    }
+//
+//    if(value->type == UNDEFINED_TYPE ||
+//       value->type == NULL_TYPE ||
+//       value->type == BOOLEAN_TYPE ||
+//       value->type == NUMBER_TYPE
+//    ) {
+//        return moveCb(value);
+//    } else if(value->type == OBJECT_TYPE) {
+//        return objectGc(object, moveCb);
+//    } else if(value->type == STRING_TYPE) {
+//        return stringGc(object, moveCb);
+//    } else {
+//        return functionGc(object, moveCb);
+//    }
+//}
 
 //void gcRun() {
 //    printf("GC run\n");

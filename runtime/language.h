@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
@@ -17,6 +18,7 @@ union JsValueValue;
 
 typedef const char* const JsValueType;
 
+// user-visible types
 extern char UNDEFINED_TYPE[];
 extern char NULL_TYPE[];
 extern char NUMBER_TYPE[];
@@ -25,7 +27,16 @@ extern char OBJECT_TYPE[];
 extern char STRING_TYPE[];
 extern char FUNCTION_TYPE[];
 
+// internal types
+extern char HEAP_STRING[];
+extern char PROPERTY_DESCRIPTOR[];
+
 typedef struct JsValue JsValue;
+
+typedef struct {
+    JsValue* value;
+    void* pointer;
+} JsPointerAllocation;
 
 bool isUndefined(JsValue*);
 bool isNaN(JsValue*);
@@ -47,7 +58,7 @@ JsValue* getFalse(void);
  * numeric or boolean type which both fit within a pointer,
  * or a pointer to a value for all other types.
  */
-JsValue *jsValueCreatePointer(JsValueType type, void*);
+JsPointerAllocation jsValueCreatePointer(JsValueType type, size_t);
 JsValue *jsValueCreateNumber(double);
 
 double jsValueNumber(JsValue* value);

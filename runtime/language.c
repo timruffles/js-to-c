@@ -36,8 +36,8 @@ union JsValueValue {
 };
 
 typedef struct JsValue {
-    // 1 byte
     const char * const type;
+    JsValue* movedTo;
     union JsValueValue value;
 } JsValue;
 
@@ -103,15 +103,19 @@ JsValue *jsValueCreateNumber(double number) {
     return val;
 }
 
-JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
+JsPointerAllocation jsValueCreatePointer(JsValueType type, size_t size) {
     JsValue* val = gcAllocate(sizeof(JsValue));
+    void* pointer = gcAllocate(size);
     *val = (JsValue) {
         .type = type,
         .value = {
             .pointer = pointer,
         }
     };
-    return val;
+    return (JsPointerAllocation) {
+        .pointer = pointer,
+        .value = val,
+    };
 }
 
 #define OUTPUT_CONST(X) snprintf(outputBuffer, bufferSize, X);
@@ -182,3 +186,4 @@ JsValue* getValueOperation(JsValue* value) {
 JsValueType jsValueType(JsValue* value) {
     return value->type;
 }
+

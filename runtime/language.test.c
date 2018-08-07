@@ -19,14 +19,12 @@ void itCanAccessNumberValue() {
 }
 
 void itCanAccessPointerValue() {
-    char a = 'Y';
-
     // just checking if the pointers end up pointing to the right place
-    JsValue* val = jsValueCreatePointer(OBJECT_TYPE, &a);
-    char* ptr = jsValuePointer(val);
+    JsPointerAllocation alloc = jsValueCreatePointer(OBJECT_TYPE, sizeof(char[64]));
 
-    assert(*ptr == 'Y');
-    assert(ptr == &a);
+    assert(alloc.pointer != NULL);
+    assert(alloc.value != NULL);
+    assert(alloc.value->type == OBJECT_TYPE);
 }
 
 void itHasDefinedTruthiness() {

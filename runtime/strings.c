@@ -12,15 +12,14 @@ typedef struct JsString {
 } JsString;
 
 JsValue* stringCreateFromCString(char* string) {
-    JsString* jsString = gcAllocate(sizeof(JsString));
+    JsPointerAllocation alloc = jsValueCreatePointer(STRING_TYPE, sizeof(JsString));
     uint64_t l = strlen(string);
-
+    JsString* jsString = alloc.pointer;
     *jsString = (JsString) {
         .cString = string,
         .length = l,
     };
-    JsValue *val = jsValueCreatePointer(STRING_TYPE, jsString);
-    return val;
+    return alloc->value;
 }
 
 JsString* stringGet(JsValue* value) {

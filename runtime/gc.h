@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 typedef struct {
@@ -8,5 +10,7 @@ typedef struct {
 void gcInit(void);
 void* gcAllocate(size_t);
 GcStats gcStats(void);
+
+//void gcRun(JsValue** roots, uint64_t size);
 
 void _gcTestInit(void);
