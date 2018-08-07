@@ -1,5 +1,26 @@
 # Notes
 
+## 7 August 2018
+
+- GC - walk roots
+- There is a root to every allocated object
+  via a JsValue
+- We walk JsValues and copy them over
+
+I've realised we need some hetrogenous technique to track GC state for all non-immediate values, and that strings (and BigNums etc if in other languages) likely deserve separate handling. The initial design had JsValues mapping pretty closely to user-land JS values. What about more internal objects like PropertyDescriptor? Some, like FunctionRecord, should be exempt from GC, as they point to compiled code.
+
+So case analysis:
+
+- immediate data: currently just Number
+- pointers:
+  - strings
+  - objects
+  - environments (e.g activation records are in the heap, and refer to each other so will need to be part of GC)
+
+Ruby's uses `uintptr_t` for all its allocated values, which are either immediate values or a pointer to an [RVALUE](https://github.com/ruby/ruby/blob/325d378a1f320c6225bfa1d1598be710ddf45159/gc.c#L410). This is a tagged pointer representation. 
+
+Keeping the JsValue opaque, I can start off with a simple/inefficient representation and optimise later.
+
 ## 26 July 2018
 
 Thinking about GC, the requirements are:
