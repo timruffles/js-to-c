@@ -3,6 +3,7 @@
 
 #include "strings.h"
 #include "language.h"
+#include "gc.h"
 
 // our string primitive - can be boxed by toObject
 typedef struct JsString {
@@ -11,7 +12,7 @@ typedef struct JsString {
 } JsString;
 
 JsValue* stringCreateFromCString(char* string) {
-    JsString* jsString = calloc(1, sizeof(JsString));
+    JsString* jsString = gcAllocate(sizeof(JsString));
     uint64_t l = strlen(string);
 
     *jsString = (JsString) {

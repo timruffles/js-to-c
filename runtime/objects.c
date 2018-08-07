@@ -5,7 +5,9 @@
 #include "exceptions.h"
 #include "strings.h"
 #include "functions.h"
+#include "gc.h"
 #include "lib/debug.h"
+
 
 typedef struct {
     char* name;
@@ -18,7 +20,7 @@ typedef struct JsObject {
     PropertyDescriptor* properties;
     JsValue* prototype;
 
-    // can we call this - kinda like [[Call]]?
+    // determines if this is callable - i.e [[Call]] internal slot
     FunctionRecord* callInternal;
 } JsObject;
 
@@ -26,7 +28,7 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
-    JsObject *obj = calloc(1, sizeof(JsObject));
+    JsObject *obj = gcAllocate(sizeof(JsObject));
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
     return val;
 }
@@ -39,7 +41,7 @@ JsValue* objectCreate(JsValue* prototype) {
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
     // TODO set function prototype
-    JsObject *obj = calloc(sizeof(JsObject), 1);
+    JsObject *obj = gcAllocate(sizeof(JsObject));
     obj->callInternal = fr;
 
     JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
@@ -82,7 +84,7 @@ JsValue* objectLookup(JsValue *val, JsValue *name) {
 }
 
 static PropertyDescriptor* propertyCreate() {
-    PropertyDescriptor *pd = calloc(sizeof(PropertyDescriptor), 1);
+    PropertyDescriptor *pd = gcAllocate(sizeof(PropertyDescriptor));
     return pd;
 }
 
@@ -110,6 +112,27 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
 
     return value;
 }
+
+//// walk an object tree, calling cb with every JsValue found
+//JsValue* objectTraverseForGc(JsValue* object, ForOwnCallback* cb) {
+//    JsValue* ptr = cb(object);
+//    if(object->prototype) {
+//        object->prototype = cb(object->prototype);
+//    }
+//
+//    for(PropertyDescriptor* pd = object->properties;
+//        pd != NULL;
+//        pd = pd->hh.next) {
+//        JsValueType type = jsValueType(pd->value);
+//        if(type == OBJECT_TYPE || type == FUNCTION_TYPE) {
+//            pd->value = objectTraverseDeep(pd->value, cb);
+//        } else {
+//            pd->value = cb(pd->property, pd->value);
+//        }
+//    }
+//
+//    return ptr;
+//}
 
 void objectDestroy(JsValue *object) {
     // NOOP

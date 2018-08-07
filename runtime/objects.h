@@ -18,3 +18,6 @@ JsValue* objectLookup(JsValue* object, JsValue* property);
 
 // internal slot lookup
 FunctionRecord* objectGetCallInternal(JsValue *);
+
+
+typedef void (ForOwnCallback)(JsValue*, JsValue*);

@@ -52,7 +52,7 @@ JsValue* createGlobalObject() {
             console);
 
     // TODO varargs
-    JsValue** consoleArgs = calloc(1, sizeof(JsValue*));
+    JsValue** consoleArgs = calloc(sizeof(JsValue*), 1);
     consoleArgs[0] = stringCreateFromCString("arg0");
     JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1);
     objectSet(console, stringCreateFromCString("log"),

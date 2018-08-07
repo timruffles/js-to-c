@@ -7,6 +7,7 @@
 #include "objects.h"
 #include "functions.h"
 #include "strings.h"
+#include "gc.h"
 #include "lib/debug.h"
 
 
@@ -36,7 +37,7 @@ JsValue* functionRun(JsValue* val, Env* env) {
 }
 
 JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint64_t argCount) {
-    FunctionRecord* record = calloc(sizeof(FunctionRecord), 1);
+    FunctionRecord* record = gcAllocate(sizeof(FunctionRecord));
     record->function = function;
     record->argumentNames = argumentNames;
     record->argumentCount = argCount;

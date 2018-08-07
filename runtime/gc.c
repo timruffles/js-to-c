@@ -1,7 +1,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "./heap.h"
+#include "heap.h"
+#include "lib/debug.h"
+#include "gc.h"
 
 #define HEAP_SIZE (1024 * 1024)
 
@@ -26,9 +28,16 @@ void _gcTestInit() {
 void* gcAllocate(size_t bytes) {
     void* allocated = heapAllocate(activeHeap, bytes);
     if(allocated == NULL) {
-      // TODO - GC()
+        log_err("GC REQUIRED - TODO");
     }
     return allocated;
+}
+
+GcStats gcStats() {
+    return (GcStats) {
+        .used = heapBytesUsed(activeHeap),
+        .remaining = heapBytesRemaining(activeHeap),
+    };
 }
 
 //void gcRun() {

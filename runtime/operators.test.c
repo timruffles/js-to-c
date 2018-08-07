@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "operators.h"
+#include "gc.h"
 #include "test.h"
 #include "language.h"
 #include "strings.h"
@@ -67,6 +68,8 @@ void itImplementsStrictEquality() {
 }
 
 int main() {
+    _gcTestInit();
+
     five = jsNum(5);
     ten = jsNum(10);
 
