@@ -26,10 +26,11 @@ void _gcTestInit() {
 }
 
 void* gcAllocate(size_t bytes) {
-    void* allocated = heapAllocate(activeHeap, bytes);
+    GcObject* allocated = heapAllocate(activeHeap, bytes);
     if(allocated == NULL) {
         log_err("GC REQUIRED - TODO");
     }
+    allocated->next = heapTop(activeHeap);
     return allocated;
 }
 
@@ -40,20 +41,16 @@ GcStats gcStats() {
     };
 }
 
-//void gcRun() {
-//    printf("GC run\n");
-//
-//    moveValue(globalEnv);
-//    globalEnv = globalEnv->movedTo;
-//
-//    envWalk(globalEnv, moveValue);
-//
-//    Heap* oldActive = activeHeap;
-//    activeHeap = nextHeap;
-//    nextHeap = oldActive;
-//
-//    heapEmpty(oldActive);
-//}
+void gcRun(GcObject* roots) {
+    // for item in roots
+      // move item
+      //   update forwarding of old
+      //   clear forwarding in new
+      //   update next pointer
+      // traverse item
+      //   move found into to-check area
+    
+}
 //
 //void gcReset() {
 //    heapFree(&heapOne);

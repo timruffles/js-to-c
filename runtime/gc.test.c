@@ -6,6 +6,11 @@
 #include "gc.h"
 
 
+typedef struct {
+    GcHeader;
+    uint64_t number;
+} TestStruct;
+
 void itCanTestInitWithoutInit() {
     _gcTestInit();
 }
@@ -25,11 +30,22 @@ void itCanAllocate() {
     assert(*values == 0);
 }
 
+void itSetsNextPointerToPositionOfObjectAllocatedNext() {
+    _gcTestInit();
+
+    TestStruct* valueA = gcAllocate(sizeof(TestStruct)); 
+    TestStruct* valueB = gcAllocate(sizeof(TestStruct)); 
+    valueB->number = 42;
+
+    assert(((TestStruct*)valueA->next)->number == 42);
+}
+
 
 int main() {
     test(itCanTestInitWithoutInit); 
     test(itCanTestInitAfterInit); 
     test(itCanAllocate); 
+    test(itSetsNextPointerToPositionOfObjectAllocatedNext);
 }
 
 

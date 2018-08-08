@@ -1,5 +1,14 @@
 #include <stdint.h>
 
+// movedTo: forwarding address during GC
+// next:    next GC object
+#define GcHeader void* movedTo; void* next;
+
+// common head of all Gc allocated structs
+typedef struct GcObject {
+    GcHeader;
+} GcObject;
+
 typedef struct {
     uint64_t used;
     uint64_t remaining;
