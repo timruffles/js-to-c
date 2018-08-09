@@ -4,7 +4,16 @@
 
 #include "test.h"
 #include "gc.h"
+#include "language.h"
+#include "objects.h"
+#include "strings.h"
 
+#define ASSERT_MOVED(P) assert(_gcMovedTo((void*)P) != NULL)
+#define ASSERT_NOT_MOVED(P) assert(_gcMovedTo((void*)P) == NULL)
+#define MOVED(V) _gcMovedTo((void*)V)
+
+#define JS_SET(O,P,V) objectSet(O,stringCreateFromCString(P),V)
+#define JS_GET(O,P) objectGet(O,stringCreateFromCString(P))
 
 typedef struct {
     GcHeader;
@@ -40,14 +49,63 @@ void itSetsNextPointerToPositionOfObjectAllocatedNext() {
     assert(((TestStruct*)valueA->next)->number == 42);
 }
 
+void itGarbageCollectsCorrectly() {
+    _gcTestInit();
+
+    JsValue* liveOne = objectCreatePlain();
+    JsValue* garbageOne = objectCreatePlain();
+    JsValue* liveTwo = objectCreatePlain();
+    JsValue* garbageTwo = objectCreatePlain();
+    JsValue* liveDeepOne = objectCreatePlain();
+
+    JsValue* root = objectCreatePlain();
+    JS_SET(root, "liveOne", liveOne);
+    JS_SET(liveOne, "id", jsValueCreateNumber(101));
+    JS_SET(root, "liveTwo", liveTwo);
+    JS_SET(root, "liveOneSecondRef", liveOne);
+
+    JS_SET(liveTwo, "liveDeepOne", liveDeepOne);
+    JS_SET(liveDeepOne, "id", jsValueCreateNumber(2002));
+
+    GcObject* roots[] = {(void*)root};
+    _gcRun(roots, 1);
+
+    JsValue* newRoot = _gcMovedTo((void*)root);
+
+    // we copied over roots + live
+    ASSERT_MOVED(root);
+    ASSERT_MOVED(liveOne);
+    ASSERT_MOVED(liveTwo);
+    ASSERT_MOVED(liveDeepOne);
+
+    // ensure objects have been copied over safely
+    assert(JS_GET(MOVED(liveTwo), "liveDeepOne") == MOVED(liveDeepOne));
+    assert(jsValueNumber(JS_GET(JS_GET(MOVED(liveTwo), "liveDeepOne"), "id")) == 2002);
+
+    // ensure we have indeed copied the value, by demoing writes to old value don't affect new
+    JS_SET(liveOne, "id", jsValueCreateNumber(42));
+    assert((jsValueNumber(JS_GET(liveOne, "id")) - 42) < 0.00001);
+    assert((jsValueNumber(JS_GET(MOVED(liveOne), "id")) - 101) < 0.00001);
+
+    // multiple references are fine - we don't move things twice, and update the pointers
+    // to ensure they're moved
+    assert(JS_GET(MOVED(root), "liveOne")
+        == JS_GET(MOVED(root), "liveOneSecondRef"));
+
+    // didn't copy over garbage
+    ASSERT_NOT_MOVED(garbageOne);
+    ASSERT_NOT_MOVED(garbageTwo);
+}
+
 
 int main() {
     test(itCanTestInitWithoutInit); 
     test(itCanTestInitAfterInit); 
     test(itCanAllocate); 
     test(itSetsNextPointerToPositionOfObjectAllocatedNext);
-}
 
+    test(itGarbageCollectsCorrectly);
+}
 
 //void itDoesNotMoveGarbage() {
 //    gcReset();
@@ -69,51 +127,7 @@ int main() {
 //    assert(after < before);
 //}
 //
-//void itMovesGlobalInGc() {
-//    gcReset();
 //
-//    // this is a pointer on old heap
-//    Env* initialGlobal = envCreate();
-//    globalEnv = initialGlobal;
-//    gcRun();
-//
-//    assert(globalEnv != initialGlobal);
-//    assert(globalEnv->movedTo != NULL);
-//}
-//
-//void itMovesLiveObjects() {
-//    gcReset();
-//
-//    JsValue* liveOne = allocateJsValue(Number);
-//    allocateJsValue(Number);
-//    JsValue* liveTwo = allocateJsValue(Number);
-//    allocateJsValue(Number);
-//    allocateJsValue(Number);
-//    JsValue* liveReferencedMultipleTimes = allocateJsValue(Number);
-//
-//    JsValue* globalVals[] = {liveOne, liveTwo, liveReferencedMultipleTimes, liveReferencedMultipleTimes};
-//    globalEnv = envCreate();
-//    envSetList(globalEnv, globalVals, ARRAY_SIZE(globalVals));
-//
-//    assert(globalVals[0] == liveOne);
-//    gcRun();
-//
-//    // we're not pointing at new 
-//    assert(globalVals[0] != liveOne);
-//
-//    // ensure we have indeed copied the value, by demoing writes to old value don't affect new
-//    liveOne->type = String;
-//    assert(globalVals[0]->type == Number);
-//
-//    // and that we're pointing to the new value
-//    assert(liveOne->movedTo == globalVals[0]);
-//
-//    // multiple references are fine - we don't move things twice, and update the pointers
-//    // to ensure they're moved
-//    assert(liveReferencedMultipleTimes->movedTo == globalVals[2]);
-//    assert(liveReferencedMultipleTimes->movedTo == globalVals[3]);
-//
-//}
 //
 //void itMovesValuesOnceOnly() {
 //    JsValue* value = allocateStringData(testString, sizeof(testString));

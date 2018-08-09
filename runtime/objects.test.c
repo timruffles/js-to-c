@@ -42,6 +42,14 @@ void itGetsPropertyValues() {
     objectDestroy(object);
 }
 
+void itGetsPropertyValuesWithMultiple() {
+    JsValue* object = objectCreatePlain();
+    objectSet(object, idOne, getTrue());
+    objectSet(object, idTwo, getTrue());
+
+    assert(objectGet(object, idTwo) == getTrue());
+}
+
 void itLooksUpByStringValueNotIdentity() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
@@ -113,6 +121,7 @@ int main() {
     test(itDestroysObjects)
     test(itAssignsProperties)
     test(itGetsPropertyValues)
+    test(itGetsPropertyValuesWithMultiple);
     test(itUpdatesPropertyValues);
     test(itCreatesObjectsWithPrototype);
     test(itFindsPrototypeProperties);

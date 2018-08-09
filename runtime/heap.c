@@ -5,16 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./conditions.h"
-#include "./lib/debug.h"
+#include "conditions.h"
+#include "lib/debug.h"
+#include "heap.h"
 
 #define ENSURE_CALLOC_BYTES(V, N) V = calloc(N, 1); assert(V != NULL);
-
-typedef struct Heap {
-    char* bottom;
-    char* top;
-    uint64_t size;
-} Heap;
 
 uint64_t heapBytesUsed(Heap* heap) {
     assert_debug(heap != NULL);

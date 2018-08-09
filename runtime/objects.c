@@ -8,20 +8,23 @@
 #include "gc.h"
 #include "lib/debug.h"
 
+typedef struct PropertyDescriptor PropertyDescriptor;
 
-typedef struct {
+typedef struct PropertyDescriptor {
     GcHeader;
 
     char* name;
     JsValue *value;
 
-    UT_hash_handle hh;
+    PropertyDescriptor* nextProperty;
 } PropertyDescriptor;
 
 typedef struct JsObject {
     GcHeader;
 
     PropertyDescriptor* properties;
+    PropertyDescriptor* tailProperty;
+
     JsValue* prototype;
 
     // determines if this is callable - i.e [[Call]] internal slot
@@ -32,6 +35,7 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
+    // TODO set pt
     JsObject *obj = gcAllocate(sizeof(JsObject));
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
     return val;
@@ -53,7 +57,6 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
 }
 
 JsValue* objectGet(JsValue *val, JsValue *name) {
-    log_info("Object lookup %s", stringGetCString(name));
     JsValue* found = objectLookup(val, name);
     return found == NULL
       ? getUndefined()
@@ -64,17 +67,26 @@ FunctionRecord* objectGetCallInternal(JsValue *val) {
     return ((JsObject*)jsValuePointer(val))->callInternal;
 }
 
+PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
+    while(pd != NULL) {
+        if(strcmp(pd->name, name) == 0) {
+            return pd;
+        }
+        pd = pd->nextProperty;
+    }
+    return NULL;
+}
+
 JsValue* objectLookup(JsValue *val, JsValue *name) {
     // TODO type assertion on val
     char* cString = stringGetCString(name);
-    PropertyDescriptor *descriptor;
 
     // starting with object, and going up prototype chain, find a matching
     // property
     JsValue* target = val;
     while(1) {
         JsObject* object = jsValuePointer(target);
-        HASH_FIND_STR(object->properties, cString, descriptor);
+        PropertyDescriptor* descriptor = findProperty(object->properties, cString);
         if(descriptor != NULL) {
             return descriptor->value;
         }
@@ -88,8 +100,17 @@ JsValue* objectLookup(JsValue *val, JsValue *name) {
 }
 
 static PropertyDescriptor* propertyCreate() {
-    PropertyDescriptor *pd = gcAllocate(sizeof(PropertyDescriptor));
+    PropertyDescriptor *pd = gcAllocate2(sizeof(PropertyDescriptor), PROPERTY_DESCRIPTOR_TYPE);
     return pd;
+}
+
+static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
+    if(object->properties == NULL) {
+        object->properties = pd;
+    } else {
+        object->tailProperty->nextProperty = pd;
+    }
+    object->tailProperty = pd;
 }
 
 JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
@@ -97,19 +118,11 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
     JsObject* object = jsValuePointer(objectVal);
     char* nameString = stringGetCString(name);
 
-    PropertyDescriptor *descriptor;
-    HASH_FIND_STR(object->properties, nameString, descriptor);
-
+    PropertyDescriptor *descriptor = findProperty(object->properties, nameString);
     if(descriptor == NULL) {
         descriptor = propertyCreate();
         descriptor->name = nameString;
-        HASH_ADD_KEYPTR(
-          hh,
-          object->properties,
-          nameString,
-          stringLength(name),
-          descriptor
-        );
+        appendProperty(object, descriptor);
     }
 
     descriptor->value = value;
@@ -117,26 +130,25 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
     return value;
 }
 
-//// walk an object tree, calling cb with every JsValue found
-//JsValue* objectTraverseForGc(JsValue* object, ForOwnCallback* cb) {
-//    JsValue* ptr = cb(object);
-//    if(object->prototype) {
-//        object->prototype = cb(object->prototype);
-//    }
-//
-//    for(PropertyDescriptor* pd = object->properties;
-//        pd != NULL;
-//        pd = pd->hh.next) {
-//        JsValueType type = jsValueType(pd->value);
-//        if(type == OBJECT_TYPE || type == FUNCTION_TYPE) {
-//            pd->value = objectTraverseDeep(pd->value, cb);
-//        } else {
-//            pd->value = cb(pd->property, pd->value);
-//        }
-//    }
-//
-//    return ptr;
-//}
+void objectGcTraverse(JsValue* value, GcCallback* cb) {
+    JsObject* object = jsValuePointer(value);
+    if(object->prototype) {
+        object->prototype = cb(object->prototype);
+    }
+
+    void* before = object->properties;
+    PropertyDescriptor** toUpdate = &object->properties;
+    for(PropertyDescriptor* pd = object->properties;
+        pd != NULL;
+        pd = pd->nextProperty
+    ) {
+        PropertyDescriptor* moved = cb(pd);
+        *toUpdate = moved;
+
+        moved->value = cb(pd->value);
+        toUpdate = &moved->nextProperty;
+    }
+}
 
 void objectDestroy(JsValue *object) {
     // NOOP

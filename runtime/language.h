@@ -7,7 +7,7 @@
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
 
-enum Types {
+enum TypeTag {
     // these are the types for root JS values
     UNDEFINED_TYPE,
     NULL_TYPE,

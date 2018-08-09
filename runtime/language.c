@@ -82,13 +82,8 @@ JsValue *getFalse() {
 }
 
 JsValue *jsValueCreateNumber(double number) {
-    JsValue* val = gcAllocate(sizeof(JsValue));
-    *val = (JsValue) {
-        .type = NUMBER_TYPE,
-        .value = {
-            .number = number,
-        }
-    };
+    JsValue* val = gcAllocate2(sizeof(JsValue), NUMBER_TYPE);
+    val->value.number = number;
     return val;
 }
 

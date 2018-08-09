@@ -2,6 +2,7 @@
 
 #include "language.h"
 #include "functions.h"
+#include "gc.h"
 
 typedef struct JsObject JsObject;
 
@@ -19,5 +20,6 @@ JsValue* objectLookup(JsValue* object, JsValue* property);
 // internal slot lookup
 FunctionRecord* objectGetCallInternal(JsValue *);
 
+void objectGcTraverse(JsValue* value, GcCallback* cb);
 
 typedef void (ForOwnCallback)(JsValue*, JsValue*);
