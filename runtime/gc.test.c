@@ -116,7 +116,7 @@ int main() {
 //}
 //
 //void itMovesValuesOnceOnly() {
-//    JsValue* value = allocateJsString(testString, sizeof(testString));
+//    JsValue* value = allocateStringData(testString, sizeof(testString));
 //    moveValue(value);
 //    uint64_t before = heapBytesRemaining(nextHeap);
 //    moveValue(value);
@@ -126,7 +126,7 @@ int main() {
 //}
 //
 //void itMovesStrings() {
-//    JsValue* value = allocateJsString(testString, sizeof(testString));
+//    JsValue* value = allocateStringData(testString, sizeof(testString));
 //    moveValue(value);
 //    assert(value->value.pointer != value->movedTo->value.pointer);
 //    assert(strcmp(value->value.pointer, value->movedTo->value.pointer) == 0);

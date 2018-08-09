@@ -43,7 +43,7 @@ JsValue *envGet(Env *env, JsValue *name) {
         log_info("Looked up undeclared %s", stringGetCString(name));
         throwError("Attempted to lookup undeclared variable");
     }
-    log_info("Looked up %s got type %s", stringGetCString(name), jsValueType(found));
+    log_info("Looked up %s got type %i", stringGetCString(name), jsValueType(found));
     return found;
 }
 

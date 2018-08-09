@@ -8,17 +8,6 @@
 #include "strings.h"
 #include "gc.h"
 
-char UNDEFINED_TYPE[] = "undefined";
-char NULL_TYPE[] = "null";
-char BOOLEAN_TYPE[] = "boolean";
-char OBJECT_TYPE[] = "object";
-char STRING_TYPE[] = "string";
-char NUMBER_TYPE[] = "number";
-char FUNCTION_TYPE[] = "function";
-
-// special - internal types that don't map to a JS primitive type
-static char NAN_TYPE[] = "NaN";
-
 // Because... why not? Not user mutable so easier to debug
 static const char TRUE_VALUE = 'Y';
 static const char FALSE_VALUE = 'N';
@@ -31,13 +20,13 @@ static char FUNCTION_STRING[] = "[Function ...]";
 
 union JsValueValue {
    double number;
-   JsBooleanValue boolean;
+   const char boolean;
    void* pointer;
+   GcObject* objectPointer;
 };
 
 typedef struct JsValue {
-    // 1 byte
-    const char * const type;
+    GcHeader;
     union JsValueValue value;
 } JsValue;
 
@@ -117,9 +106,9 @@ JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
 #define OUTPUT_CONST(X) snprintf(outputBuffer, bufferSize, X);
 void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
     if(value->type == UNDEFINED_TYPE) {
-        OUTPUT_CONST(UNDEFINED_TYPE);
+        OUTPUT_CONST("undefined");
     } else if(value->type == NULL_TYPE) {
-        OUTPUT_CONST(NULL_TYPE);
+        OUTPUT_CONST("null");
     } else if(value->type == BOOLEAN_TYPE) {
         OUTPUT_CONST((value->value.boolean) == TRUE_VALUE
             ? TRUE_STRING
@@ -182,3 +171,38 @@ JsValue* getValueOperation(JsValue* value) {
 JsValueType jsValueType(JsValue* value) {
     return value->type;
 }
+
+#define REFLECT(T, S) case T: return (GcObjectReflection) { .name = S };
+GcObjectReflection jsValueReflect(JsValue* object) {
+    switch(object->type) {
+        REFLECT(UNDEFINED_TYPE, "undefined");
+        REFLECT(NULL_TYPE, "null");
+        REFLECT(NUMBER_TYPE, "number");
+        REFLECT(BOOLEAN_TYPE, "boolean");
+        REFLECT(OBJECT_TYPE, "object");
+        REFLECT(STRING_TYPE, "string");
+        REFLECT(FUNCTION_TYPE, "function");
+        default:
+            assert(false);
+    }
+}
+
+GcObjectReflection gcObjectReflect(GcObject* object) {
+    switch(object->type) {
+        REFLECT(UNDEFINED_TYPE, "undefined");
+        REFLECT(NULL_TYPE, "null");
+        REFLECT(NUMBER_TYPE, "number");
+        REFLECT(BOOLEAN_TYPE, "boolean");
+        REFLECT(OBJECT_TYPE, "object");
+        REFLECT(STRING_TYPE, "string");
+        REFLECT(FUNCTION_TYPE, "function");
+
+        REFLECT(STRING_VALUE_TYPE, "stringValue");
+        REFLECT(OBJECT_VALUE_TYPE, "objectValue");
+        REFLECT(PROPERTY_DESCRIPTOR_TYPE, "propertyDescriptor");
+
+        default:
+            assert(false);
+    }
+}
+

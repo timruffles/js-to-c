@@ -57,3 +57,7 @@ void* heapAllocate(Heap* heap, uint64_t bytes) {
     heap->top += bytes;
     return oldTop;
 }
+
+void* heapTop(Heap* heap) {
+    return heap->top;
+}

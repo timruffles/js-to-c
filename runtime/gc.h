@@ -1,8 +1,10 @@
+#pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 // movedTo: forwarding address during GC
 // next:    next GC object
-#define GcHeader void* movedTo; void* next;
+#define GcHeader void* movedTo; void* next; int type;
 
 // common head of all Gc allocated structs
 typedef struct GcObject {

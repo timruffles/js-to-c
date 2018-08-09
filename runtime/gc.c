@@ -41,16 +41,33 @@ GcStats gcStats() {
     };
 }
 
-void gcRun(GcObject* roots) {
-    // for item in roots
-      // move item
-      //   update forwarding of old
-      //   clear forwarding in new
-      //   update next pointer
-      // traverse item
-      //   move found into to-check area
-    
-}
+// roots: global environment
+//        task queues pointing to ExecuableFunctions (which point to environments)
+//void gcRun(GcObject* roots, uint64_t rootCount) {
+//    // For item in roots
+//    for(uint64_t i = 0;
+//        i < rootCount;
+//        i++) {
+//
+//
+//    }
+//    //   move item
+//    //
+//    // While to-check < top
+//    //   traverse item
+//    //     move found into to-check
+//    //
+//    // Done
+//    //
+//    // Move(item)
+//    //   copy item into new
+//    //     update movedTo of old
+//    //     clear movedTo in new
+//    //     update next pointer in new
+//    //   traverse item
+//    //     move found into to-check area
+//    
+//}
 //
 //void gcReset() {
 //    heapFree(&heapOne);

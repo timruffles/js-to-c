@@ -11,6 +11,7 @@
 #include "lib/debug.h"
 
 
+// compiled function
 typedef struct FunctionRecord {
     TargetFunction* function;
     JsValue** argumentNames;
@@ -20,7 +21,7 @@ typedef struct FunctionRecord {
 JsValue* functionRunWithArguments(JsValue* val, Env* parentEnv, JsValue* argumentValues[], uint64_t argumentCount) {
     log_info("Asserting function type");
     if(jsValueType(val) != FUNCTION_TYPE) {
-      printf("Expected function got %s\n", jsValueType(val));
+      printf("Expected function got %s\n", jsValueReflect(val).name);
       assert(false);
     }
     log_info("Getting fn record");

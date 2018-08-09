@@ -6,16 +6,16 @@
 #include "gc.h"
 
 // our string primitive - can be boxed by toObject
-typedef struct JsString {
+typedef struct StringData {
     char* cString;
     const uint64_t length;
-} JsString;
+} StringData;
 
 JsValue* stringCreateFromCString(char* string) {
-    JsString* jsString = gcAllocate(sizeof(JsString));
+    StringData* jsString = gcAllocate(sizeof(StringData));
     uint64_t l = strlen(string);
 
-    *jsString = (JsString) {
+    *jsString = (StringData) {
         .cString = string,
         .length = l,
     };
@@ -23,23 +23,23 @@ JsValue* stringCreateFromCString(char* string) {
     return val;
 }
 
-JsString* stringGet(JsValue* value) {
-    JsString* jsString = jsValuePointer(value);
+StringData* stringGet(JsValue* value) {
+    StringData* jsString = jsValuePointer(value);
     return jsString;
 }
 
 int stringComparison(JsValue* left, JsValue* right) {
-    JsString* leftString = jsValuePointer(left);
-    JsString* rightString = jsValuePointer(right);
+    StringData* leftString = jsValuePointer(left);
+    StringData* rightString = jsValuePointer(right);
     return strcmp(leftString->cString, rightString->cString);
 }
 
 char* stringGetCString(JsValue* value) {
-    JsString* jsString = jsValuePointer(value);
+    StringData* jsString = jsValuePointer(value);
     return jsString->cString;
 }
 
 uint64_t stringLength(JsValue* value) {
-    JsString* jsString = jsValuePointer(value);
+    StringData* jsString = jsValuePointer(value);
     return jsString->length;
 }

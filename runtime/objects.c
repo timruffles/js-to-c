@@ -10,6 +10,8 @@
 
 
 typedef struct {
+    GcHeader;
+
     char* name;
     JsValue *value;
 
@@ -17,6 +19,8 @@ typedef struct {
 } PropertyDescriptor;
 
 typedef struct JsObject {
+    GcHeader;
+
     PropertyDescriptor* properties;
     JsValue* prototype;
 
