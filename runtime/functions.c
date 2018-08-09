@@ -38,20 +38,9 @@ JsValue* functionRun(JsValue* val, Env* env) {
 }
 
 JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint64_t argCount) {
-    FunctionRecord* record = gcAllocate(sizeof(FunctionRecord));
+    FunctionRecord* record = gcAllocate2(sizeof(FunctionRecord), FUNCTION_TYPE);
     record->function = function;
     record->argumentNames = argumentNames;
     record->argumentCount = argCount;
     return objectCreateFunction(record);
 }
-
-
-//JsValue** functionGetArgumentNames(JsValue* val) {
-//    assert(jsValueType(val) == FUNCTION_TYPE);
-//    return objectGetCallInternal(val)->argumentNames;
-//}
-//
-//uint64_t functionGetArgumentCount(JsValue* val) {
-//    assert(jsValueType(val) == FUNCTION_TYPE);
-//    return objectGetCallInternal(val)->argumentCount;
-//}

@@ -38,7 +38,7 @@ void* gcAllocate2(size_t bytes, int type) {
 void* gcAllocate(size_t bytes) {
     GcObject* allocated = heapAllocate(activeHeap, bytes);
     if(allocated == NULL) {
-        log_err("GC REQUIRED - TODO");
+        // TODO
     }
     allocated->next = heapTop(activeHeap);
     assert(allocated->next != NULL);
@@ -74,16 +74,9 @@ static void traverse(GcObject* object) {
     switch(object->type) {
         case OBJECT_TYPE:
             return objectGcTraverse((void*)object, (void*)move);
-        case PROPERTY_DESCRIPTOR_TYPE:
-        case NUMBER_TYPE:
-        case NULL_TYPE:
-        case NAN_TYPE:
-        case UNDEFINED_TYPE:
-        case STRING_TYPE:
-        case STRING_VALUE_TYPE:
-            return;
+        // TODO - strings copy over string
         default:
-            assert(!"unimplemented type");
+            return;
     }
 }
 
@@ -120,11 +113,13 @@ static void traverse(GcObject* object) {
 // roots: global environment
 //        task queues pointing to ExecuableFunctions (which point to environments)
 void _gcRun(GcObject** roots, uint64_t rootCount) {
+    GcStats before = gcStats();
+
     // For item in roots
     for(uint64_t i = 0;
         i < rootCount;
         i++) {
-        move(roots[i]);
+        roots[i] = move(roots[i]);
     }
     log_info("GC moved %llu roots", rootCount);
 
@@ -133,7 +128,15 @@ void _gcRun(GcObject** roots, uint64_t rootCount) {
         traverse(toProcess);
         toProcess = toProcess->next;
     }
-    log_info("GC complete");
+
+    Heap* oldHeap = activeHeap;
+    activeHeap = nextHeap;
+    heapFree(oldHeap);
+    nextHeap = oldHeap;
+
+    GcStats after = gcStats();
+    int saved = before.used - after.used;
+    log_info("GC complete, %i bytes collected", saved);
 }
 
 void* _gcMovedTo(GcObject* object) {

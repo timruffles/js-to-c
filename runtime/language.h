@@ -19,7 +19,6 @@ enum TypeTag {
     // internal types that don't map to a JS primitive type
     NAN_TYPE,
 
-
     // other allocated types that aren't explicitly
     // user allocated - implementation details
     STRING_VALUE_TYPE,
@@ -56,6 +55,7 @@ JsValue *jsValueCreateNumber(double);
 
 double jsValueNumber(JsValue* value);
 void* jsValuePointer(JsValue* value);
+void jsValuePointerSet(JsValue* val, void* ptr);
 
 void jsValueToCString(JsValue*, char* buf, uint64_t bufSize);
 

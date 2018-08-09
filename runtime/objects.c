@@ -36,7 +36,7 @@ typedef struct JsObject {
  */
 JsValue* objectCreatePlain() {
     // TODO set pt
-    JsObject *obj = gcAllocate(sizeof(JsObject));
+    JsObject *obj = gcAllocate2(sizeof(JsObject), OBJECT_VALUE_TYPE);
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
     return val;
 }
@@ -49,7 +49,7 @@ JsValue* objectCreate(JsValue* prototype) {
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
     // TODO set function prototype
-    JsObject *obj = gcAllocate(sizeof(JsObject));
+    JsObject *obj = gcAllocate2(sizeof(JsObject), OBJECT_VALUE_TYPE);
     obj->callInternal = fr;
 
     JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
@@ -131,7 +131,10 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
 }
 
 void objectGcTraverse(JsValue* value, GcCallback* cb) {
-    JsObject* object = jsValuePointer(value);
+    JsObject* oldObject = jsValuePointer(value);
+    JsObject* object = cb(oldObject);
+    jsValuePointerSet(value, object);
+
     if(object->prototype) {
         object->prototype = cb(object->prototype);
     }

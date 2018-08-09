@@ -88,9 +88,8 @@ JsValue *jsValueCreateNumber(double number) {
 }
 
 JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
-    JsValue* val = gcAllocate(sizeof(JsValue));
+    JsValue* val = gcAllocate2(sizeof(JsValue), type);
     val->value.pointer = pointer;
-    val->type = type;
     return val;
 }
 
@@ -119,6 +118,12 @@ void* jsValuePointer(JsValue* val) {
     assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE);
     // note: this will either be object or string
     return val->value.pointer;
+}
+
+void jsValuePointerSet(JsValue* val, void* ptr) {
+    assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE);
+    // note: this will either be object or string
+    val->value.pointer = ptr;
 }
 
 double jsValueNumber(JsValue* val) {
