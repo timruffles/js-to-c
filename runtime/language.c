@@ -94,12 +94,8 @@ JsValue *jsValueCreateNumber(double number) {
 
 JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
     JsValue* val = gcAllocate(sizeof(JsValue));
-    *val = (JsValue) {
-        .type = type,
-        .value = {
-            .pointer = pointer,
-        }
-    };
+    val->value.pointer = pointer;
+    val->type = type;
     return val;
 }
 
