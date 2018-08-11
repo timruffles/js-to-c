@@ -10,9 +10,6 @@
 
 #define HEAP_SIZE (1024 * 1024)
 
-static Heap heapOne;
-static Heap heapTwo;
-
 static Heap* activeHeap;
 static Heap* nextHeap;
 
@@ -73,10 +70,11 @@ static GcObject* move(GcObject* item) {
 static void traverse(GcObject* object) {
     switch(object->type) {
         case OBJECT_TYPE:
-            return objectGcTraverse((void*)object, (void*)move);
+            objectGcTraverse((void*)object, (void*)move);
+            break;
         // TODO - strings copy over string
         default:
-            return;
+            break;
     }
 }
 

@@ -1,4 +1,4 @@
-["simple object properties"]
+["object literal, simple properties"]
 
 example = """
 var a = {
@@ -7,7 +7,7 @@ var a = {
 console.log(a.one);
 """
 
-output = ""
+output = "oneVal"
 
 ["numeric object keys"]
 

@@ -8,10 +8,6 @@
 #include "objects.h"
 #include "strings.h"
 
-#define ASSERT_MOVED(P) assert(_gcMovedTo((void*)P) != NULL)
-#define ASSERT_NOT_MOVED(P) assert(_gcMovedTo((void*)P) == NULL)
-#define MOVED(V) _gcMovedTo((void*)V)
-
 #define JS_SET(O,P,V) objectSet(O,stringCreateFromCString(P),V)
 #define JS_GET(O,P) objectGet(O,stringCreateFromCString(P))
 

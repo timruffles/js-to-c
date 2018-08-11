@@ -1,6 +1,7 @@
 import fs from 'fs';
 import {parseScript, Syntax} from "esprima";
 import {
+    AssignmentExpression,
     BinaryExpression,
     BlockStatement,
     CallExpression,
@@ -14,7 +15,10 @@ import {
     Program,
     ReturnStatement,
     VariableDeclaration,
-    VariableDeclarator
+    VariableDeclarator,
+    WhileStatement,
+    BinaryOperator,
+    AssignmentOperator, ObjectExpression, Expression,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -62,7 +66,7 @@ export type CompileTarget =
     typeof ReturnTarget;
 
 
-const binaryOpToFunction: {[k: string]: string} = {
+const binaryOpToFunction: {[k: string]: string | undefined} = {
     ">": "GTOperator",
     ">=": "GTEOperator",
     "<": "LTOperator",
@@ -70,6 +74,13 @@ const binaryOpToFunction: {[k: string]: string} = {
     "+": "addOperator",
     "-": "subtractOperator",
     "*": "multiplyOperator",
+
+};
+
+const assignmentOpToFunction: {[k: string]: string | undefined} = {
+    // currently implemented compile-side
+    "+=": "addOperator",
+    "-=": "subtractOperator",
 };
 
 const compileExpressionStatement: NodeCompiler = (node, state) => compile(node.expression, state);
@@ -103,7 +114,7 @@ function getCompilers(): NodeCompilerLookup {
         ArrayExpression: unimplemented('ArrayExpression'),
         ArrayPattern: unimplemented('ArrayPattern'),
         ArrowFunctionExpression: unimplemented('ArrowFunctionExpression'),
-        AssignmentExpression: unimplemented('AssignmentExpression'),
+        AssignmentExpression: compileAssignmentExpression,
         AssignmentPattern: unimplemented('AssignmentPattern'),
         AwaitExpression: unimplemented('AwaitExpression'),
         BinaryExpression: compileBinaryExpression,
@@ -143,7 +154,7 @@ function getCompilers(): NodeCompilerLookup {
         MetaProperty: unimplemented('MetaProperty'),
         MethodDefinition: unimplemented('MethodDefinition'),
         NewExpression: unimplemented('NewExpression'),
-        ObjectExpression: unimplemented('ObjectExpression'),
+        ObjectExpression: compileObjectExpression,
         ObjectPattern: unimplemented('ObjectPattern'),
         Program: compileProgram,
         Property: unimplemented('Property'),
@@ -164,7 +175,7 @@ function getCompilers(): NodeCompilerLookup {
         UpdateExpression: unimplemented('UpdateExpression'),
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
-        WhileStatement: unimplemented('WhileStatement'),
+        WhileStatement: compileWhileStatement,
         WithStatement: unimplemented('WithStatement'),
         YieldExpression: unimplemented('YieldExpression')
     }
@@ -191,19 +202,20 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/global.h"
         #include "../../runtime/objects.h"
         #include "../../runtime/functions.h"
+        #include "../../runtime/gc.h"
         
         ${interned}
         
         ${joinNodeOutput(state.functions)}
         
-        void userProgram(Env*);
-        void userProgram(Env* env) {
+        static void userProgram(Env* env) {
             ${body};
         }
         
         ${compileInternInitialisation(internedStrings)}
         
         int main() {
+            gcInit();
             initialiseInternedStrings();
             JsValue* global = createGlobalObject();
             Env* globalEnv = envFromGlobal(global);
@@ -247,7 +259,18 @@ function mapCompile(nodes: Node[], state: CompileTimeState) {
 function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeState) {
     const target = ensureSupportedTarget(node.id);
     if(target.type === 'Identifier') {
-        return `envDeclare(env, ${state.internString(target.name).id});`
+        const targetInternedString = state.internString(target.name);
+        const initTarget = new IntermediateVariableTarget(state.getNextSymbol('init'));
+        const initSrc = node.init
+            ? compile(node.init, state.childState({target: initTarget}))
+            : '';
+        const setSrc = node.init
+            ? `envSet(env, ${targetInternedString.id}, ${initTarget.id});`
+            : ''
+
+        return `envDeclare(env, ${targetInternedString.id});
+                ${initSrc}
+                ${setSrc}`
     } else {
        return unimplemented('MemberExpression')();
     }
@@ -373,13 +396,14 @@ function getIdentifierName(node: Pattern): string {
 }
 
 function createCFunction(name: string, bodySrc: string) {
-    return `JsValue* ${name}(Env* env) {
+    return `static JsValue* ${name}(Env* env) {
         ${bodySrc}
     }`
 }
 function wrapAsCStringLiteral(string: string) {
     return `"${string}"`
 }
+
 
 function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState) {
     const targetLeft = new IntermediateVariableTarget(state.getNextSymbol('left'))
@@ -392,10 +416,7 @@ function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState
         target: targetRight,
     }));
 
-    const operatorFn = binaryOpToFunction[node.operator];
-    if(!operatorFn) {
-        throw Error(`unimplemented operator '${node.operator}'`)
-    }
+    const operatorFn = getBinaryOperatorFunction(node.operator);
 
     const linkSrc = assignToTarget(`${operatorFn}(${targetLeft.id}, ${targetRight.id})`, state.target);
 
@@ -473,6 +494,19 @@ function compileReturnStatement(node: ReturnStatement, state: CompileTimeState) 
             return ${returnTarget.id};`;
 }
 
+function compileWhileStatement(node: WhileStatement, state: CompileTimeState) {
+    const testVariable = new IntermediateVariableTarget(state.getNextSymbol('testResult'));
+    return `while(1) {
+        ${compile(node.test, state.childState({
+            target: testVariable
+        }))}
+        if (!isTruthy(${testVariable.id})) {
+            break;
+        }
+        ${compile(node.body, state)}
+    }`
+}
+
 function compileLiteral(node: Literal, state: CompileTimeState) {
     if("regex" in node) return unimplemented("Literal<regex>")();
     const getValue = () => {
@@ -490,4 +524,62 @@ function compileLiteral(node: Literal, state: CompileTimeState) {
     }
 
     return assignToTarget(getValue(), state.target);
+}
+
+function collapseExpressionToSupportedType<T extends Expression>(t: Expression, predicate: (t: Expression) => t is T): T {
+   if(predicate(t)) {
+       return t;
+   } else {
+       throw Error(`Unsupported type: ${t.type}`)
+   }
+}
+
+function isIdentifier(t: Expression): t is Identifier {
+   return t.type === 'Identifier';
+}
+
+function compileObjectExpression(node: ObjectExpression, state: CompileTimeState) {
+    const objectVar = state.getNextSymbol('objectLiteral');
+    const objectCreateSrc = `JsValue* ${objectVar} = objectCreatePlain();`
+    const objectSrc = assignToTarget(objectVar, state.target);
+
+    const propertiesSrc = node.properties.map(property => {
+        const valueTarget = new IntermediateVariableTarget(state.getNextSymbol('value'));
+        const key = state.internString(collapseExpressionToSupportedType(property.key, isIdentifier).name);
+        return `${compile(property.value, state.childState({ target: valueTarget }))}
+            objectSet(${objectVar}, ${key.id}, ${valueTarget.id});`;
+    }).join('\n')
+
+    return `${objectCreateSrc}\n${propertiesSrc}\n${objectSrc}`
+}
+
+function compileAssignmentExpression(node: AssignmentExpression, state: CompileTimeState) {
+    const target = node.left;
+    const result = new PredefinedVariableTarget(state.getNextSymbol('result'));
+    if(target.type !== 'Identifier') {
+        return unimplemented('MemberExpression')();
+    }
+    const variable = state.internString(target.name);
+    const update = node.operator === '=' ? '' : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(envGet(env, ${variable.id}), ${result.id})`;
+
+    return `JsValue* ${result.id};
+            ${compile(node.right, state.childState({ target: result }))}
+            ${update}
+            envSet(env, ${variable.id}, ${result.id});`
+}
+
+function getBinaryOperatorFunction(operator: BinaryOperator): string {
+    const operatorFn = binaryOpToFunction[operator];
+    if(!operatorFn) {
+        throw Error(`unimplemented operator '${operator}'`)
+    }
+    return operatorFn;
+}
+
+function getAssignmentOperatorFunction(operator: AssignmentOperator): string {
+    const operatorFn = assignmentOpToFunction[operator];
+    if(!operatorFn) {
+        throw Error(`unimplemented operator '${operator}'`)
+    }
+    return operatorFn;
 }

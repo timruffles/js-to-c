@@ -67,7 +67,7 @@ FunctionRecord* objectGetCallInternal(JsValue *val) {
     return ((JsObject*)jsValuePointer(val))->callInternal;
 }
 
-PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
+static PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
     while(pd != NULL) {
         if(strcmp(pd->name, name) == 0) {
             return pd;

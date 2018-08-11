@@ -3,7 +3,7 @@ source_files=$(filter-out %test.c %.h, $(all_source_including_tests))
 source_with_headers=$(filter-out %test.c, $(all_source_including_tests))
 
 CC=clang
-CLANG_OPTS=-O0 -g -Wno-format-security -Wno-format-pedantic -Wno-float-equal -Wno-padded -Wno-gnu-folding-constant -Wno-gnu-folding-constant -Wno-missing-noreturn
+CLANG_OPTS=-O0 -g -Weverything -Wno-format-security -Wno-format-pedantic -Wno-float-equal -Wno-padded -Wno-gnu-folding-constant -Wno-gnu-folding-constant -Wno-missing-noreturn
 
 out/environments_test: environments.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) environments.test.c -o $@

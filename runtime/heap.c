@@ -9,7 +9,7 @@
 #include "lib/debug.h"
 #include "heap.h"
 
-#define ENSURE_CALLOC_BYTES(V, N) V = calloc(N, 1); assert(V != NULL);
+#define ENSURE_CALLOC_BYTES(V, N) V = calloc(N, 1); assert(V != NULL)
 
 uint64_t heapBytesUsed(Heap* heap) {
     assert_debug(heap != NULL);

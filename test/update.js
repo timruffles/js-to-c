@@ -43,7 +43,7 @@ function updateFixture({ name, tests, testFile }) {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
             const { stdout: output } = runExecutable(executable);
-            assertOutputEqual(output, \`\$\{output\}\`);
+            assertOutputEqual(output, \`${output}\`);
           });`
     }).join('\n\n');
 
