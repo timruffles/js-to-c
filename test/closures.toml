@@ -1,0 +1,16 @@
+["basic closure"]
+
+example = """
+var count = 0;
+
+function increment() {
+  count += 1;
+}
+
+increment();
+increment();
+increment();
+console.log(count);
+"""
+
+output="3"

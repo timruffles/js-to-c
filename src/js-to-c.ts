@@ -331,15 +331,21 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
         .map(({target}) => target.id)
         .join(', ');
 
+    const argsArrayInit = argsWithTargets.length > 0
+        ? `JsValue* ${argsArrayVar}[] = {${argsValuesSrc}};`
+        : `JsValue** ${argsArrayVar} = NULL;`;
+
+
+
     return `${calleeSrc}
             ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
-            JsValue* ${argsArrayVar}[] = {${argsValuesSrc}};
+            ${argsArrayInit}
             ${assignToTarget(`functionRunWithArguments(
                 ${calleeTarget.id}, 
                 env,
                 ${argsArrayVar},
                 ${argsWithTargets.length}
-            )`, state.target)}
+            );`, state.target)}
             `;
 }
 
@@ -462,7 +468,8 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
         .join(", ");
     const argsArrayName = `${functionId}_args`;
 
-    const bodySrc = compile(node.body, state);
+    const ensureUndefined = `\rreturn getUndefined();`;
+    const bodySrc = compile(node.body, state) + ensureUndefined;
 
     // TODO this will need topographic sorting
     state.functions.push(createCFunction(functionId, bodySrc));
@@ -470,8 +477,12 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
     const fnName = state.getNextSymbol('functionName');
     const argCount = node.params.length;
 
+    const argsArraySrc = argumentNames.length > 0
+        ? `JsValue* ${argsArrayName}[] = {${argumentNamesSrc}};`
+        : `JsValue** ${argsArrayName} = NULL;`
+
     // TODO proper hoisting
-    return `JsValue* ${argsArrayName}[] = {${argumentNamesSrc}};
+    return `${argsArraySrc}
             JsValue* ${fnName} = stringCreateFromCString("${name}");
             envDeclare(env, ${fnName});
             envSet(env, ${fnName}, functionCreate(${functionId}, ${argsArrayName}, ${argCount}));`
@@ -560,7 +571,7 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
         return unimplemented('MemberExpression')();
     }
     const variable = state.internString(target.name);
-    const update = node.operator === '=' ? '' : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(envGet(env, ${variable.id}), ${result.id})`;
+    const update = node.operator === '=' ? '' : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(envGet(env, ${variable.id}), ${result.id});`;
 
     return `JsValue* ${result.id};
             ${compile(node.right, state.childState({ target: result }))}

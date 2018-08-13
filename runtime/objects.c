@@ -139,7 +139,6 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
         object->prototype = cb(object->prototype);
     }
 
-    void* before = object->properties;
     PropertyDescriptor** toUpdate = &object->properties;
     for(PropertyDescriptor* pd = object->properties;
         pd != NULL;
@@ -153,7 +152,7 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
     }
 }
 
-void objectDestroy(JsValue *object) {
+void objectDestroy() {
     // NOOP
 }
 

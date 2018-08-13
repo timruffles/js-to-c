@@ -51,3 +51,12 @@ JsValue *fact_1(Env *env) {
     ./src
         the TypeScript compiler
 
+## Testing
+
+### Functional
+
+Run `npm test` to update the tests, then use mocha as usual.
+
+### Unit
+
+The runtime has unit tests - use the Makefile in `./runtime` to run them.
