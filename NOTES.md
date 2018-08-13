@@ -1,5 +1,18 @@
 # Notes
 
+## 13 August 2018
+
+Comparison operators on pointers need care. `==` and `!=` seem always to be safe - everything else is pretty fraught. This came up while I was writing the GC step that walks up the heap of moved objects:
+
+
+    GcObject* toProcess = (void*)nextHeap->bottom;
+    while((char*)toProcess != nextHeap->top) {
+        traverse(toProcess);
+        toProcess = toProcess->next;
+    }
+
+Doing `while(toProcess < nextHeap->top)` triggered lots of compiler warnings. I think it would have been safe since both pointers were to an area of `malloc`'d memory, and I assume the addresses within have to be sequential. Pointers within the same array can certainly be compared with relational operators, and subtracted, without undefined behaviour.
+
 ## 8 August 2018
 
 C makes decisions about where to abstract clearer - either pop structs in header, and write functions to conceal the structure, or not. Simple getters suggest perhaps exposing a read-only view of the struct, as this is equivalent to the getter anyhow (and refactoring is mechnical).

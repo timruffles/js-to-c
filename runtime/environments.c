@@ -60,7 +60,7 @@ void envDeclare(Env *env, JsValue *name) {
     objectSet(env, name, getUndefined());
 }
 
-void envDestroy(Env *env) {
+void envDestroy() {
     // currently NOOP
 }
 

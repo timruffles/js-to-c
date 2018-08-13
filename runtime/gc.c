@@ -70,7 +70,7 @@ static GcObject* move(GcObject* item) {
 static void traverse(GcObject* object) {
     switch(object->type) {
         case OBJECT_TYPE:
-            objectGcTraverse((void*)object, (void*)move);
+            objectGcTraverse((void*)object, (GcCallback*)move);
             break;
         // TODO - strings copy over string
         default:
@@ -122,7 +122,7 @@ void _gcRun(GcObject** roots, uint64_t rootCount) {
     log_info("GC moved %llu roots", rootCount);
 
     GcObject* toProcess = (void*)nextHeap->bottom;
-    while((uint64_t*)toProcess != (uint64_t*)nextHeap->top) {
+    while((char*)toProcess != nextHeap->top) {
         traverse(toProcess);
         toProcess = toProcess->next;
     }
@@ -133,8 +133,9 @@ void _gcRun(GcObject** roots, uint64_t rootCount) {
     nextHeap = oldHeap;
 
     GcStats after = gcStats();
-    int saved = before.used - after.used;
-    log_info("GC complete, %i bytes collected", saved);
+    // TODO - do this more safely?
+    int64_t saved = (int64_t)(before.used - after.used);
+    log_info("GC complete, %lli bytes collected", saved);
 }
 
 void* _gcMovedTo(GcObject* object) {

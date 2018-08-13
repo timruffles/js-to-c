@@ -14,7 +14,7 @@
 uint64_t heapBytesUsed(Heap* heap) {
     assert_debug(heap != NULL);
     // we know this'll be >= 0
-    return heap->top - heap->bottom;
+    return (uint64_t)(heap->top - heap->bottom);
 }
 
 uint64_t heapBytesRemaining(Heap* heap) {
