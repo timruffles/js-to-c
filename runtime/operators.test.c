@@ -8,6 +8,7 @@
 #include "test.h"
 #include "language.h"
 #include "strings.h"
+#include "lib/debug.h"
 
 // float equality - within acceptable error
 #define outputComparison(X,Y) printf("%f %f %f\n", jsValueNumber(X), jsValueNumber(Y), fabs(jsValueNumber(X) - jsValueNumber(Y)));
