@@ -22,7 +22,7 @@ typedef struct FunctionRecord {
 JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint64_t argumentCount) {
     log_info("Asserting function type");
     if(jsValueType(val) != FUNCTION_TYPE) {
-      printf("Expected function got %s\n", jsValueReflect(val).name);
+      log_err("Expected function got %s\n", jsValueReflect(val).name);
       assert(false);
     }
     log_info("Getting fn record");
