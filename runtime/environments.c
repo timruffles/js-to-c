@@ -1,3 +1,6 @@
+/**
+ * Environments - currently implemented on top of objects.
+ */
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -43,17 +46,24 @@ JsValue *envGet(Env *env, JsValue *name) {
         log_info("Looked up undeclared %s", stringGetCString(name));
         throwError("Attempted to lookup undeclared variable");
     }
-    log_info("Looked up %s got type %i", stringGetCString(name), jsValueType(found));
+    log_info("Looked up %s got type %s", stringGetCString(name), jsValueReflect(found).name);
     return found;
 }
 
 void envSet(Env *env, JsValue *name, JsValue *value) {
-    JsValue* found = objectLookup(env, name);
-    if(found == NULL) {
-        log_info("Setting undeclared %s", stringGetCString(name));
-        throwError("Attempted to assign undeclared variable");
+    Env* lookup = env;
+    while(lookup) {
+        JsValue* found = objectInternalOwnProperty(lookup, name);
+        if(found == NULL) {
+            lookup = objectEnvGetParent(lookup);
+        } else {
+            objectSet(lookup, name, value);
+            return;
+        }
     }
-    objectSet(env, name, value);
+
+    log_info("Setting undeclared %s", stringGetCString(name));
+    throwError("Attempted to assign undeclared variable");
 }
 
 void envDeclare(Env *env, JsValue *name) {

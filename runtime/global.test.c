@@ -26,7 +26,7 @@ void itLogsJsValuesToOutput() {
             stringCreateFromCString("console")),
         stringCreateFromCString("log")
     );
-    functionRun(consoleLogJsv, env);
+    _functionRun(consoleLogJsv, env);
 }
 
 void itWorksWithEnv() {

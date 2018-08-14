@@ -8,6 +8,8 @@
 #include "gc.h"
 #include "lib/debug.h"
 
+#define OBJECT_VALUE(V) ((JsObject*)jsValuePointer(V))
+
 typedef struct PropertyDescriptor PropertyDescriptor;
 
 typedef struct PropertyDescriptor {
@@ -43,7 +45,7 @@ JsValue* objectCreatePlain() {
 
 JsValue* objectCreate(JsValue* prototype) {
     JsValue *obj = objectCreatePlain();
-    ((JsObject*)jsValuePointer(obj))->prototype = prototype;
+    OBJECT_VALUE(obj)->prototype = prototype;
     return obj;
 }
 
@@ -64,7 +66,7 @@ JsValue* objectGet(JsValue *val, JsValue *name) {
 }
 
 FunctionRecord* objectGetCallInternal(JsValue *val) {
-    return ((JsObject*)jsValuePointer(val))->callInternal;
+    return OBJECT_VALUE(val)->callInternal;
 }
 
 static PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
@@ -77,6 +79,17 @@ static PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
     return NULL;
 }
 
+JsValue* objectInternalOwnProperty(JsValue* value, JsValue* name) {
+    char* cString = stringGetCString(name);
+    PropertyDescriptor* pd = findProperty(OBJECT_VALUE(value)->properties
+            , cString);
+    return pd == NULL
+        ? NULL
+        : pd->value;
+}
+
+
+// returns NULL or pointer to JsValue*
 JsValue* objectLookup(JsValue *val, JsValue *name) {
     // TODO type assertion on val
     char* cString = stringGetCString(name);
@@ -128,6 +141,13 @@ JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
     descriptor->value = value;
 
     return value;
+}
+
+/**
+ * Get parent environment
+ */
+JsValue* objectEnvGetParent(JsValue* env) {
+    return ((JsObject*)jsValuePointer(env))->prototype;
 }
 
 void objectGcTraverse(JsValue* value, GcCallback* cb) {

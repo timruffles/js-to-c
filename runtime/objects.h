@@ -16,6 +16,8 @@ void objectDestroy(JsValue* object);
 
 // used internally by environments to model envs as objects
 JsValue* objectLookup(JsValue* object, JsValue* property);
+JsValue* objectInternalOwnProperty(JsValue* value, JsValue* property);
+JsValue* objectEnvGetParent(JsValue* env);
 
 // internal slot lookup
 FunctionRecord* objectGetCallInternal(JsValue *);
@@ -23,3 +25,5 @@ FunctionRecord* objectGetCallInternal(JsValue *);
 void objectGcTraverse(JsValue* value, GcCallback* cb);
 
 typedef void (ForOwnCallback)(JsValue*, JsValue*);
+
+

@@ -16,22 +16,22 @@ JsValue* exampleUserFunction(Env* env) {
     return getTrue();
 }
 
-JsValue** argumentNames;
-JsValue** argumentValues;
+static JsValue** argumentNames;
+static JsValue** argumentValues;
+static Env* exampleEnv;
 
 void itCanCreateAFunction() {
-    JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2);
+    JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2, exampleEnv);
     assert(fn != NULL);
 }
 
 void itCanCallAFunction() {
-    JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2);
+    JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2, exampleEnv);
     assert(fn != NULL);
 
-    Env* env = envCreateRoot();
-    Env* callEnv = envCreateForCall(env, argumentNames, argumentValues, 2);
+    Env* callEnv = envCreateForCall(exampleEnv, argumentNames, argumentValues, 2);
 
-    JsValue* returned = functionRun(fn, callEnv);
+    JsValue* returned = _functionRun(fn, callEnv);
     assert(returned == getTrue());
 }
 
