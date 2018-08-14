@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "nodemon --ext ts -w src/ --exec 'tsc && ./compile-and-run test/fixtures/simple-object-properties.js || echo fail'",
+    "setup": "tsc",
     "test": "node test/update.js && mocha"
   },
   "keywords": [],
