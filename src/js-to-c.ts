@@ -342,7 +342,6 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
             ${argsArrayInit}
             ${assignToTarget(`functionRunWithArguments(
                 ${calleeTarget.id}, 
-                env,
                 ${argsArrayVar},
                 ${argsWithTargets.length}
             );`, state.target)}
@@ -468,7 +467,7 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
         .join(", ");
     const argsArrayName = `${functionId}_args`;
 
-    const ensureUndefined = `\rreturn getUndefined();`;
+    const ensureUndefined = `\nreturn getUndefined();`;
     const bodySrc = compile(node.body, state) + ensureUndefined;
 
     // TODO this will need topographic sorting
@@ -485,7 +484,7 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
     return `${argsArraySrc}
             JsValue* ${fnName} = stringCreateFromCString("${name}");
             envDeclare(env, ${fnName});
-            envSet(env, ${fnName}, functionCreate(${functionId}, ${argsArrayName}, ${argCount}));`
+            envSet(env, ${fnName}, functionCreate(${functionId}, ${argsArrayName}, ${argCount}, env));`
 }
 
 function compileBlockStatement(node: BlockStatement, state: CompileTimeState) {

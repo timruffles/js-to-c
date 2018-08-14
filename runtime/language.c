@@ -168,6 +168,7 @@ JsValueType jsValueType(JsValue* value) {
     return value->type;
 }
 
+
 #define REFLECT(T, S) case T: return (GcObjectReflection) { .name = S };
 GcObjectReflection jsValueReflect(JsValue* object) {
     switch(object->type) {

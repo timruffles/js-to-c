@@ -46,6 +46,7 @@ JsValue* consoleLog(Env* env) {
 
 JsValue* createGlobalObject() {
     JsValue* global = objectCreatePlain();
+    Env* globalEnv = envFromGlobal(global);
 
     JsValue* console = objectCreatePlain();
     objectSet(global, stringCreateFromCString("console"),
@@ -54,7 +55,7 @@ JsValue* createGlobalObject() {
     // TODO varargs
     JsValue** consoleArgs = calloc(sizeof(JsValue*), 1);
     consoleArgs[0] = stringCreateFromCString("arg0");
-    JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1);
+    JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1, globalEnv);
     objectSet(console, stringCreateFromCString("log"),
             consoleLogJsv);
 

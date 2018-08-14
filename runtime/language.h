@@ -6,6 +6,7 @@
 #include "gc.h"
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
+#define DEBUG_VALUE_N(M, X, O) char* op##O = calloc(1, 1024); jsValueToCString(X, op##O, 1000); printf(M, op##O);
 
 enum TypeTag {
     // these are the types for root JS values

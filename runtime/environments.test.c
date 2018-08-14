@@ -6,7 +6,11 @@
 #include "language.h"
 #include "test.h"
 #include "strings.h"
+#include "operators.h"
 #include "gc.h"
+
+#define DECLARE_AND_SET(E,K,V) envDeclare(E,K); envSet(E,K,V)
+#define STRICT_EQUAL(A,B) strictEqualOperator(A,B) == getTrue()
 
 JsValue* idOne;
 
@@ -33,6 +37,7 @@ void itReturnsUndefinedForDeclareButUndefined() {
     envDeclare(env, idOne);
     JsValue* val = envGet(env, idOne);
 
+    assert(val == getUndefined());
     envDestroy(env);
 }
 
@@ -91,6 +96,24 @@ void itSetsUpArgumentValuesInCallEnv() {
     assert(stringComparison(envGet(callEnv, stringCreateFromCString("two")), stringCreateFromCString("twoValue")) == 0);
 }
 
+void itAffectsNearestAncestorWithDeclaredVar() {
+    Env* env = envCreateRoot();
+    JsValue* varA = stringCreateFromCString("one");
+
+    DECLARE_AND_SET(env, varA, jsValueCreateNumber(0));
+    Env* childA = envCreate(env);
+    Env* childB = envCreate(childA);
+
+    envSet(childB, varA, jsValueCreateNumber(5));
+
+    assert(STRICT_EQUAL(jsValueCreateNumber(5),
+                envGet(env, varA)));
+    assert(STRICT_EQUAL(jsValueCreateNumber(5),
+                envGet(childA, varA)));
+    assert(STRICT_EQUAL(jsValueCreateNumber(5),
+                envGet(childB, varA)));
+}
+
 int main(int argc, char** argv) {
     _gcTestInit();
 
@@ -105,5 +128,6 @@ int main(int argc, char** argv) {
     test(itUsesStringValueNotIdentifyForSet);
 
     test(itSetsUpArgumentValuesInCallEnv);
+    test(itAffectsNearestAncestorWithDeclaredVar);
 }
 
