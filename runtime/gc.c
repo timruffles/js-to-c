@@ -7,15 +7,15 @@
 #include "language.h"
 #include "assert.h"
 #include "objects.h"
-
-#define HEAP_SIZE (1024 * 1024)
+#include "config.h"
 
 static Heap* activeHeap;
 static Heap* nextHeap;
 
 void gcInit() {
-    activeHeap = heapCreate(HEAP_SIZE);
-    nextHeap = heapCreate(HEAP_SIZE);
+    ConfigValue heapSize = getConfig(HeapSizeConfig);
+    activeHeap = heapCreate(heapSize.uintValue);
+    nextHeap = heapCreate(heapSize.uintValue);
 }
 
 void _gcTestInit() {
@@ -36,6 +36,7 @@ void* gcAllocate(size_t bytes) {
     GcObject* allocated = heapAllocate(activeHeap, bytes);
     if(allocated == NULL) {
         // TODO
+        assert(!"failed to allocate");
     }
     allocated->next = heapTop(activeHeap);
     assert(allocated->next != NULL);

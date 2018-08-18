@@ -87,7 +87,7 @@ void itGarbageCollectsCorrectly() {
     assert(JS_GET(newRoot, "liveOne")
         == JS_GET(newRoot, "liveOneSecondRef"));
 
-    // garbage 0'd
+    // garbage is zeroed
     assert(jsValueType(garbageOne) == 0);
     GcObject* garbageTwoGc = (void*)garbageTwo;
     assert(garbageTwoGc->next == 0);
@@ -100,6 +100,8 @@ void itGarbageCollectsCorrectly() {
 
 
 int main() {
+    initConfigFromEnv();
+
     test(itCanTestInitWithoutInit); 
     test(itCanTestInitAfterInit); 
     test(itCanAllocate); 
