@@ -32,6 +32,9 @@ out/heap_test: heap.test.c $(source_with_headers)
 out/gc_test: gc.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) gc.test.c -o $@
 
+out/config_test: config.test.c $(source_with_headers)
+	$(CC) $(CLANG_OPTS) $(source_files) config.test.c -o $@
+
 
 # manually ordered for dependencies - i.e objects aren't going to work if we can't allocate
 # or have reliable strings
