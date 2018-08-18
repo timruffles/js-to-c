@@ -14,7 +14,7 @@ typedef struct ConfigRecord {
 static ConfigRecord* configRecords;
 static ConfigRecord* tailRecord;
 
-void setConfig(ConfigKey key, ConfigValue value) {
+void configSet(ConfigKey key, ConfigValue value) {
     for(ConfigRecord* head = configRecords;
         head != NULL;
         head = head->next) {
@@ -37,7 +37,7 @@ void setConfig(ConfigKey key, ConfigValue value) {
     tailRecord = newRecord;
 }
 
-ConfigValue getConfig(ConfigKey key) {
+ConfigValue configGet(ConfigKey key) {
     for(ConfigRecord* head = configRecords;
         head != NULL;
         head = head->next) {
@@ -49,7 +49,8 @@ ConfigValue getConfig(ConfigKey key) {
 }
 
 static void setHeapSize() {
-    char* heapSizeRaw = getenv("JSC_HEAP_SIZE");
+    // set in kibibytes
+    char* heapSizeRaw = getenv("JSC_HEAP_SIZE_KB");
     if(heapSizeRaw == NULL) {
         goto setDefault;
     }
@@ -59,15 +60,15 @@ static void setHeapSize() {
         goto setDefault;
     }
 
-    ConfigValue value = { .uintValue = (uint64_t)heapSize };
-    setConfig(HeapSizeConfig, value);
+    ConfigValue value = { .uintValue = (uint64_t)heapSize * 1024 };
+    configSet(HeapSizeConfig, value);
 
 setDefault:;
     ConfigValue defaultValue = { .uintValue = HEAP_SIZE_DEFAULT };
-    setConfig(HeapSizeConfig, defaultValue);
+    configSet(HeapSizeConfig, defaultValue);
 }
 
-void initConfigFromEnv() {
+void configInitFromEnv() {
     // yes, this leaks, no biggy just in tests
     configRecords = NULL;
     tailRecord = NULL;
