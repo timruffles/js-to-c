@@ -9,3 +9,6 @@ typedef struct RuntimeEnvironment {
 
     Env* globalEnv;
 } RuntimeEnvironment;
+
+RuntimeEnvironment* runtimeInit(void);
+RuntimeEnvironment* runtimeGet(void);

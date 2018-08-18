@@ -14,11 +14,9 @@
 static Heap* activeHeap;
 static Heap* nextHeap;
 
-static JsValue** rootsArray;
-static uint64_t rootsArrayLength = 0;
-
 void gcInit() {
     ConfigValue heapSize = configGet(HeapSizeConfig);
+    log_info("initialised gc with heap size %llu", heapSize.uintValue);
     activeHeap = heapCreate(heapSize.uintValue);
     nextHeap = heapCreate(heapSize.uintValue);
 }
@@ -40,6 +38,7 @@ void* gcAllocate2(size_t bytes, int type) {
 void* gcAllocate(size_t bytes) {
     GcObject* allocated = heapAllocate(activeHeap, bytes);
     if(allocated == NULL) {
+        log_info("Out of memory, GC running");
         RuntimeEnvironment* runtime = runtimeGet();
         _gcRun(runtime->gcRoots, runtime->gcRootsCount);
     }
@@ -146,9 +145,4 @@ void _gcRun(GcObject** roots, uint64_t rootCount) {
 
 void* _gcMovedTo(GcObject* object) {
     return object->movedTo;
-}
-
-void gcSetRoots(JsValue** roots, uint64_t count) {
-    rootsArray = roots;
-    rootsArrayLength = count;
 }

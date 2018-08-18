@@ -202,7 +202,6 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/global.h"
         #include "../../runtime/objects.h"
         #include "../../runtime/functions.h"
-        #include "../../runtime/gc.h"
         #include "../../runtime/runtime.h"
         
         ${interned}
@@ -216,9 +215,9 @@ function compileProgram(node: Program, state: CompileTimeState) {
         ${compileInternInitialisation(internedStrings)}
         
         int main() {
-            initialiseInternedStrings();
-            
             RuntimeEnvironment* runtime = runtimeInit();
+            
+            initialiseInternedStrings();
             
             userProgram(runtime->globalEnv);
             return 0;

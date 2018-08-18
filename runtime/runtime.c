@@ -1,8 +1,13 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "lib/debug.h"
 #include "global.h"
 #include "runtime.h"
+#include "config.h"
+#include "environments.h"
+#include "language.h"
+#include "gc.h"
 
 static RuntimeEnvironment* runtimeEnv;
 
@@ -18,7 +23,8 @@ static RuntimeEnvironment* runtimeCreate() {
     JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
     JsValue* global = createGlobalObject();
     Env* globalEnv = envFromGlobal(global);
-    gcRoots[0] = globalEnv;
+    assert(!"Issue - the gc roots array needs to be correctly sized for the elements, which isn't sizeof(GcObject), it's sizeof(JsValue). Can't iterate with incorrect size. Could use a linked list instead?");
+    gcRoots[0] = (GcObject*)globalEnv;
 
     *runtime = (RuntimeEnvironment) {
         .gcRoots = gcRoots,
@@ -30,8 +36,13 @@ static RuntimeEnvironment* runtimeCreate() {
 
 RuntimeEnvironment* runtimeInit() {
     configInitFromEnv();
-    runtimeEnv = runtimeCreate();
+    log_info("read config");
+
     gcInit();
+    log_info("setup gc");
+
+    log_info("created runtime environment");
+    runtimeEnv = runtimeCreate();
     return runtimeEnv;
 }
 
