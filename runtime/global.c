@@ -44,6 +44,8 @@ JsValue* consoleLog(Env* env) {
     return getUndefined();
 }
 
+// creates & sets the global env (note: called only once
+// except for in tests)
 JsValue* createGlobalObject() {
     JsValue* global = objectCreatePlain();
     Env* globalEnv = envFromGlobal(global);
@@ -65,4 +67,3 @@ JsValue* createGlobalObject() {
 
     return global;
 }
-

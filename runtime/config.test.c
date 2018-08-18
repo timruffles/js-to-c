@@ -8,18 +8,18 @@
 
 
 static void itSets() {
-    setConfig(_TestConfigKey, (ConfigValue) { .uintValue = 7 });
+    configSet(_TestConfigKey, (ConfigValue) { .uintValue = 7 });
 }
 
 static void itGets() {
-    setConfig(_TestConfigKey, (ConfigValue) { .uintValue = 7 });
-    ConfigValue value = getConfig(_TestConfigKey);
+    configSet(_TestConfigKey, (ConfigValue) { .uintValue = 7 });
+    ConfigValue value = configGet(_TestConfigKey);
     assert(value.uintValue == 7);
 }
 
 static void itHasDefaults() {
-    initConfigFromEnv();
-    ConfigValue value = getConfig(HeapSizeConfig);
+    configInitFromEnv();
+    ConfigValue value = configGet(HeapSizeConfig);
     assert(value.uintValue == HEAP_SIZE_DEFAULT);
 }
 

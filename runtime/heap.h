@@ -1,10 +1,13 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct Heap {
     char* bottom;
     char* top;
     uint64_t size;
+
+    bool expired;
 } Heap;
 
 void heapFree(Heap*);

@@ -203,6 +203,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/objects.h"
         #include "../../runtime/functions.h"
         #include "../../runtime/gc.h"
+        #include "../../runtime/runtime.h"
         
         ${interned}
         
@@ -215,11 +216,11 @@ function compileProgram(node: Program, state: CompileTimeState) {
         ${compileInternInitialisation(internedStrings)}
         
         int main() {
-            gcInit();
             initialiseInternedStrings();
-            JsValue* global = createGlobalObject();
-            Env* globalEnv = envFromGlobal(global);
-            userProgram(globalEnv);
+            
+            RuntimeEnvironment* runtime = runtimeInit();
+            
+            userProgram(runtime->globalEnv);
             return 0;
         }
 `

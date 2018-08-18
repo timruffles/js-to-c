@@ -25,6 +25,10 @@ uint64_t heapBytesRemaining(Heap* heap) {
 
 void heapFree(Heap* heap) {
     assert_debug(heap != NULL);
+    if(heap->expired) {
+        return;
+    }
+    heap->expired = true;
     // zero out the memory to make any garbage clear
     memset(heap->bottom, 0, heap->size);
     free(heap->bottom);

@@ -11,7 +11,7 @@ typedef union ConfigValue {
     const uint64_t uintValue;
 } ConfigValue;
 
-void setConfig(ConfigKey key, ConfigValue value);
-ConfigValue getConfig(ConfigKey key);
-void initConfigFromEnv();
+void configSet(ConfigKey key, ConfigValue value);
+ConfigValue configGet(ConfigKey key);
+void configInitFromEnv(void);
 

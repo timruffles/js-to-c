@@ -45,6 +45,18 @@ void itSetsNextPointerToPositionOfObjectAllocatedNext() {
     assert(((TestStruct*)valueA->next)->number == 42);
 }
 
+void itMovesRoots() {
+    _gcTestInit();
+
+    JsValue* root = objectCreatePlain();
+    GcObject* roots[] = {(void*)root};
+
+    _gcRun(roots, 1);
+
+    JsValue* newRoot = (void*)roots[0];
+    assert(newRoot != root);
+}
+
 void itGarbageCollectsCorrectly() {
     _gcTestInit();
 
@@ -72,11 +84,9 @@ void itGarbageCollectsCorrectly() {
     _gcRun(roots, 1);
 
     JsValue* newRoot = (void*)roots[0];
-    assert(newRoot != root);
 
     JsValue* newLiveOne = JS_GET(newRoot, "liveOne");
     JsValue* newLiveTwo = JS_GET(newRoot, "liveTwo");
-    JsValue* newLiveDeepOne = JS_GET(newLiveOne, "liveDeepOne");
 
     // ensure objects have been copied over safely
     assert(jsValueNumber(JS_GET(newLiveOne, "id")) == 101);
@@ -100,12 +110,13 @@ void itGarbageCollectsCorrectly() {
 
 
 int main() {
-    initConfigFromEnv();
+    configInitFromEnv();
 
     test(itCanTestInitWithoutInit); 
     test(itCanTestInitAfterInit); 
     test(itCanAllocate); 
     test(itSetsNextPointerToPositionOfObjectAllocatedNext);
 
+    test(itMovesRoots);
     test(itGarbageCollectsCorrectly);
 }
