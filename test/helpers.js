@@ -27,8 +27,8 @@ exports.link = function(cFile) {
     return binPath;
 }
 
-exports.runExecutable = function(path) {
-    const stdout = execFileSync(path).toString(); 
+exports.runExecutable = function(path, opts) {
+    const stdout = execFileSync(path, opts).toString(); 
     return { stdout };
 }
 

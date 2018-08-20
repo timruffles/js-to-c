@@ -19,10 +19,10 @@ static char OBJECT_STRING[] = "[Object object]";
 static char FUNCTION_STRING[] = "[Function ...]";
 
 union JsValueValue {
-   double number;
+   const double number;
    const char boolean;
-   void* pointer;
-   GcObject* objectPointer;
+   const void* pointer;
+   const GcObject* objectPointer;
 };
 
 typedef struct JsValue {
@@ -30,32 +30,12 @@ typedef struct JsValue {
     union JsValueValue value;
 } JsValue;
 
-static JsValue *const TRUE = &(JsValue) {
-        .type = BOOLEAN_TYPE,
-        .value = {
-                .boolean = TRUE_VALUE
-        }
-};
-
-static JsValue *const FALSE = &(JsValue) {
-        .type = BOOLEAN_TYPE,
-        .value = {
-                .boolean = FALSE_VALUE
-        }
-};
-
 // use pointer equality to check for these values
-static JsValue *const JS_UNDEFINED = &(JsValue) {
-        .type = UNDEFINED_TYPE
-};
-
-static JsValue *const JS_NULL = &(JsValue) {
-        .type = NULL_TYPE
-};
-
-static JsValue *const JS_NAN = &(JsValue) {
-        .type = NAN_TYPE
-};
+static JsValue* TRUE;
+static JsValue* FALSE;
+static JsValue* JS_UNDEFINED;
+static JsValue* JS_NULL;
+static JsValue* JS_NAN;
 
 JsValue* getUndefined() {
     return JS_UNDEFINED;
@@ -83,7 +63,7 @@ JsValue *getFalse() {
 
 JsValue *jsValueCreateNumber(double number) {
     JsValue* val = gcAllocate2(sizeof(JsValue), NUMBER_TYPE);
-    val->value.number = number;
+    val->value = (union JsValueValue){ .number = number };
     return val;
 }
 
@@ -117,7 +97,7 @@ void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
 void* jsValuePointer(JsValue* val) {
     assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE);
     // note: this will either be object or string
-    return val->value.pointer;
+    return (void*)val->value.pointer;
 }
 
 void jsValuePointerSet(JsValue* val, void* ptr) {
@@ -141,6 +121,7 @@ bool isTruthy(JsValue *value) {
     } else if(value->type == NULL_TYPE) {
         return false;
     } else if(value->type == BOOLEAN_TYPE) {
+        log_info("V %p %i %c", value, value->type, value->value.boolean);
         return value == getTrue();
     } else if(value->type == OBJECT_TYPE) {
         return true;
@@ -166,6 +147,20 @@ JsValue* getValueOperation(JsValue* value) {
 
 JsValueType jsValueType(JsValue* value) {
     return value->type;
+}
+
+void languageInit() {
+    assert(!"See notes - makes much more sense to special case these in GC");
+    TRUE = gcAllocate2(sizeof(JsValue), BOOLEAN_TYPE);
+    TRUE->value = (union JsValueValue){ .boolean = TRUE_VALUE };
+
+    FALSE = gcAllocate2(sizeof(JsValue), BOOLEAN_TYPE);
+    FALSE->value = (union JsValueValue){ .boolean = FALSE_VALUE };
+
+    // use pointer equality to check for these values
+    JS_UNDEFINED = gcAllocate2(sizeof(JsValue), UNDEFINED_TYPE);
+    JS_NAN = gcAllocate2(sizeof(JsValue), NAN_TYPE);
+    JS_NULL = gcAllocate2(sizeof(JsValue), NULL_TYPE);
 }
 
 

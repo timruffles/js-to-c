@@ -23,12 +23,12 @@ static RuntimeEnvironment* runtimeCreate() {
     JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
     JsValue* global = createGlobalObject();
     Env* globalEnv = envFromGlobal(global);
-    assert(!"Issue - the gc roots array needs to be correctly sized for the elements, which isn't sizeof(GcObject), it's sizeof(JsValue). Can't iterate with incorrect size. Could use a linked list instead?");
-    gcRoots[0] = (GcObject*)globalEnv;
+    gcRoots[0] = (JsValue*)globalEnv;
 
     *runtime = (RuntimeEnvironment) {
         .gcRoots = gcRoots,
         .gcRootsCount = gcRootsCount,
+        .globalEnv = globalEnv,
     };
 
     return runtime;
@@ -38,11 +38,15 @@ RuntimeEnvironment* runtimeInit() {
     configInitFromEnv();
     log_info("read config");
 
+
     gcInit();
     log_info("setup gc");
 
-    log_info("created runtime environment");
+    languageInit();
+    log_info("initialised language");
+
     runtimeEnv = runtimeCreate();
+    log_info("created runtime environment");
     return runtimeEnv;
 }
 

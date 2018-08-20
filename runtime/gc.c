@@ -60,6 +60,7 @@ static uint64_t gcObjectSize(GcObject* object) {
 }
 
 static GcObject* move(GcObject* item) {
+    log_info("Moving object at %p %d", item, item->type);
     if(item->movedTo) {
         return item->movedTo;
     }
@@ -115,14 +116,14 @@ static void traverse(GcObject* object) {
 
 // roots: global environment
 //        task queues pointing to ExecuableFunctions (which point to environments)
-void _gcRun(GcObject** roots, uint64_t rootCount) {
+void _gcRun(JsValue** roots, uint64_t rootCount) {
     GcStats before = gcStats();
 
     // For item in roots
     for(uint64_t i = 0;
         i < rootCount;
         i++) {
-        roots[i] = move(roots[i]);
+        roots[i] = (JsValue*)move((GcObject*)roots[i]);
     }
     log_info("GC moved %llu roots", rootCount);
 

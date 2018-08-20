@@ -69,7 +69,7 @@ void itImplementsStrictEquality() {
 }
 
 int main() {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     five = jsNum(5);
     ten = jsNum(10);

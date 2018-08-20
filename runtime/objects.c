@@ -151,11 +151,13 @@ JsValue* objectEnvGetParent(JsValue* env) {
 }
 
 void objectGcTraverse(JsValue* value, GcCallback* cb) {
+    log_info("moving obj");
     JsObject* oldObject = jsValuePointer(value);
     JsObject* object = cb(oldObject);
     jsValuePointerSet(value, object);
 
-    if(object->prototype) {
+    if(object->prototype != NULL) {
+        log_info("moving pt");
         object->prototype = cb(object->prototype);
     }
 
@@ -164,9 +166,11 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
         pd != NULL;
         pd = pd->nextProperty
     ) {
+        log_info("moving prop");
         PropertyDescriptor* moved = cb(pd);
         *toUpdate = moved;
 
+        log_info("moving value");
         moved->value = cb(pd->value);
         toUpdate = &moved->nextProperty;
     }

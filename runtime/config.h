@@ -1,6 +1,6 @@
 #pragma once
 
-#define HEAP_SIZE_DEFAULT 1024000
+#define HEAP_SIZE_DEFAULT 1024
 
 typedef enum ConfigKey {
     HeapSizeConfig,

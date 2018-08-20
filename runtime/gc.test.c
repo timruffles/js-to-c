@@ -7,6 +7,7 @@
 #include "language.h"
 #include "objects.h"
 #include "strings.h"
+#include "config.h"
 
 #define JS_SET(O,P,V) objectSet(O,stringCreateFromCString(P),V)
 #define JS_GET(O,P) objectGet(O,stringCreateFromCString(P))
@@ -49,16 +50,17 @@ void itMovesRoots() {
     _gcTestInit();
 
     JsValue* root = objectCreatePlain();
-    GcObject* roots[] = {(void*)root};
+    JsValue* roots[] = {root};
 
     _gcRun(roots, 1);
 
-    JsValue* newRoot = (void*)roots[0];
+    JsValue* newRoot = roots[0];
     assert(newRoot != root);
 }
 
 void itGarbageCollectsCorrectly() {
     _gcTestInit();
+    languageInit();
 
     JsValue* liveOne = objectCreatePlain();
     JsValue* garbageOne = objectCreatePlain();
@@ -79,11 +81,11 @@ void itGarbageCollectsCorrectly() {
 
     GcStats before = gcStats();
 
-    GcObject* roots[] = {(void*)root};
+    JsValue* roots[] = {root};
 
     _gcRun(roots, 1);
 
-    JsValue* newRoot = (void*)roots[0];
+    JsValue* newRoot = roots[0];
 
     JsValue* newLiveOne = JS_GET(newRoot, "liveOne");
     JsValue* newLiveTwo = JS_GET(newRoot, "liveTwo");
@@ -104,7 +106,7 @@ void itGarbageCollectsCorrectly() {
 
 
     GcStats after = gcStats();
-    int saved = before.used - after.used;
+    int64_t saved = (int64_t)(before.used - after.used);
     assert(saved > 0);
 }
 

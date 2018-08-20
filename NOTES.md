@@ -1,5 +1,18 @@
 # Notes
 
+## 20 August 2018
+
+Thinking about GC - values like true/false/undefined were initially static, now they'll either need special-casing in the GC system (to keep the pointers constant), or not.
+
+Special-casing isn't too tricky actually (which I realise after faffing around quite a lot to move them to be dynamically allocated), as they have defined types. Oops!
+
+This could also point towards how to handle other special cases in GC.
+
+### Todo
+
+- special case the language constants
+
+
 ## 13 August 2018
 
 Comparison operators on pointers need care. `==` and `!=` seem always to be safe - everything else is pretty fraught. This came up while I was writing the GC step that walks up the heap of moved objects:

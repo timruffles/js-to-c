@@ -52,14 +52,14 @@ JsValue* GTEOperator(JsValue* left, JsValue* right) {
 }
 
 JsValue* strictEqualOperator(JsValue* left, JsValue* right) {
+    if(left == right) {
+        return getTrue();
+    }
+
     JsValueType leftType = jsValueType(left);
     JsValueType rightType = jsValueType(right);
     if(leftType != rightType) {
         return getFalse();
-    }
-
-    if(left == right) {
-        return getTrue();
     }
 
     // for undefined + null, if they're the same type they're the same value
