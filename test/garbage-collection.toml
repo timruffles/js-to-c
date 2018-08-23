@@ -1,16 +1,16 @@
 ["global garbage"]
 
   
-env={ "JSC_HEAP_SIZE_KB": 1 }
+env={ JSC_HEAP_SIZE_KB = 1 }
 
 example = """
 var i = 0;
 var thing;
-while(i < 1000) {
+while(i < 10) {
   thing = {hiThere: i}; 
   i = i + 1;
 }
 console.log(i)
 """
 
-output="1000"
+output="1000.000000"

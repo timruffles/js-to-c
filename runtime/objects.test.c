@@ -110,7 +110,7 @@ void itPrefersOwnPropertiesToPrototype() {
 }
 
 int main() {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     idOne = stringCreateFromCString("one");
     idOneB = stringCreateFromCString("one");

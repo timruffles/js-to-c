@@ -38,7 +38,7 @@ void itWorksWithEnv() {
 }
 
 int main() {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     FILE* fp = fopen("/tmp/globaltest", "w+")
     assert(fp != NULL);

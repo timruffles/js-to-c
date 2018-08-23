@@ -2,16 +2,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef struct GcObject GcObject;
+#include "gcObject.h"
+#include "language.h"
 
-// movedTo: forwarding address during GC
-// next:    next GC object
-#define GcHeader GcObject* movedTo; GcObject* next; int type
-
-// common head of all Gc allocated structs
-typedef struct GcObject {
-    GcHeader;
-} GcObject;
 
 typedef struct {
     uint64_t used;
@@ -26,6 +19,6 @@ GcStats gcStats(void);
 void _gcTestInit(void);
 void* _gcMovedTo(GcObject*);
 
-void _gcRun(GcObject** roots, uint64_t rootCount);
+void _gcRun(JsValue** roots, uint64_t rootCount);
 
 typedef void* (GcCallback)(void*);

@@ -155,7 +155,7 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
     JsObject* object = cb(oldObject);
     jsValuePointerSet(value, object);
 
-    if(object->prototype) {
+    if(object->prototype != NULL) {
         object->prototype = cb(object->prototype);
     }
 

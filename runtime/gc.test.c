@@ -7,6 +7,7 @@
 #include "language.h"
 #include "objects.h"
 #include "strings.h"
+#include "config.h"
 
 #define JS_SET(O,P,V) objectSet(O,stringCreateFromCString(P),V)
 #define JS_GET(O,P) objectGet(O,stringCreateFromCString(P))
@@ -45,20 +46,14 @@ void itSetsNextPointerToPositionOfObjectAllocatedNext() {
     assert(((TestStruct*)valueA->next)->number == 42);
 }
 
-void itMovesRoots() {
-    _gcTestInit();
-
-    JsValue* root = objectCreatePlain();
-    GcObject* roots[] = {(void*)root};
-
-    _gcRun(roots, 1);
-
-    JsValue* newRoot = (void*)roots[0];
-    assert(newRoot != root);
+void itReusesFreeSpace() {
 }
 
 void itGarbageCollectsCorrectly() {
+    // note - this will crash nastily if we force a GC before
+    // manually running GC - as it'll use runtime env
     _gcTestInit();
+    runtimeInit();
 
     JsValue* liveOne = objectCreatePlain();
     JsValue* garbageOne = objectCreatePlain();
@@ -79,32 +74,26 @@ void itGarbageCollectsCorrectly() {
 
     GcStats before = gcStats();
 
-    GcObject* roots[] = {(void*)root};
+    JsValue* roots[] = {root};
 
     _gcRun(roots, 1);
 
-    JsValue* newRoot = (void*)roots[0];
+    JsValue* newLiveOne = JS_GET(root, "liveOne");
+    JsValue* newLiveTwo = JS_GET(root, "liveTwo");
 
-    JsValue* newLiveOne = JS_GET(newRoot, "liveOne");
-    JsValue* newLiveTwo = JS_GET(newRoot, "liveTwo");
-
-    // ensure objects have been copied over safely
     assert(jsValueNumber(JS_GET(newLiveOne, "id")) == 101);
     assert(jsValueNumber(JS_GET(JS_GET(newLiveTwo, "liveDeepOne"), "id")) == 2002);
 
-    // multiple references are fine - we don't move things twice, and update the pointers
-    // to ensure they're moved
-    assert(JS_GET(newRoot, "liveOne")
-        == JS_GET(newRoot, "liveOneSecondRef"));
+    assert(JS_GET(root, "liveOne")
+        == JS_GET(root, "liveOneSecondRef"));
 
     // garbage is zeroed
     assert(jsValueType(garbageOne) == 0);
     GcObject* garbageTwoGc = (void*)garbageTwo;
     assert(garbageTwoGc->next == 0);
 
-
     GcStats after = gcStats();
-    int saved = before.used - after.used;
+    int64_t saved = (int64_t)(before.used - after.used);
     assert(saved > 0);
 }
 

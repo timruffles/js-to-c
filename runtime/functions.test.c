@@ -36,7 +36,7 @@ void itCanCallAFunction() {
 }
 
 int main() {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     argumentNames = calloc(2, sizeof(JsValue*));
     argumentValues = calloc(2, sizeof(JsValue*));

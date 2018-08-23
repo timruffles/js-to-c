@@ -115,7 +115,7 @@ void itAffectsNearestAncestorWithDeclaredVar() {
 }
 
 int main(int argc, char** argv) {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     idOne = stringCreateFromCString("one");
 

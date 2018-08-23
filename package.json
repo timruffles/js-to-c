@@ -9,7 +9,8 @@
   "scripts": {
     "start": "nodemon --ext ts -w src/ --exec 'tsc && ./compile-and-run test/fixtures/simple-object-properties.js || echo fail'",
     "setup": "tsc",
-    "test": "node test/update.js && mocha"
+    "test:update": "node test/update.js",
+    "test": "npm run -s test:update && mocha"
   },
   "keywords": [],
   "author": "Tim Ruffles <timruffles@googlemail.com>",

@@ -38,11 +38,11 @@ function updateFixture({ name, tests, testFile }) {
         fs.writeFileSync(fixtureFile, example);
     }
 
-    const testsSrc = tests.map(({name,fixtureFile, output}) => {
+    const testsSrc = tests.map(({name,fixtureFile, output, env = {}}) => {
         return `it("${name}", () => {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
-            const { stdout: output } = runExecutable(executable);
+            const { stdout: output } = runExecutable(executable, { env: ${JSON.stringify(env)} });
             assertOutputEqual(output, \`${output}\`);
           });`
     }).join('\n\n');
