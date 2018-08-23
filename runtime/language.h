@@ -3,12 +3,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "gc.h"
+#include "gcObject.h"
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
 #define DEBUG_VALUE_N(M, X, O) char* op##O = calloc(1, 1024); jsValueToCString(X, op##O, 1000); printf(M, op##O);
 
 enum TypeTag {
+    // reserve 0 for cases where a JsValue is uninitialized, or pointing to cleared memory
+    UNITIALIZED_TYPE,
+    FREE_SPACE_TYPE,
     // these are the types for root JS values
     UNDEFINED_TYPE,
     NULL_TYPE,

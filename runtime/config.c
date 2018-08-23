@@ -52,16 +52,18 @@ static void setHeapSize() {
     // set in kibibytes
     char* heapSizeRaw = getenv("JSC_HEAP_SIZE_KB");
     if(heapSizeRaw == NULL) {
+        log_info("No heap size env var");
         goto setDefault;
     }
 
     int heapSize = atoi(heapSizeRaw);
     if(heapSize <= 0) {
+        log_info("Invalid heap size setting %d", heapSize);
         goto setDefault;
     }
 
     ConfigValue value = { .uintValue = (uint64_t)heapSize * 1024 };
-    configSet(HeapSizeConfig, value);
+    return configSet(HeapSizeConfig, value);
 
 setDefault:;
     ConfigValue defaultValue = { .uintValue = HEAP_SIZE_DEFAULT };

@@ -1,5 +1,60 @@
 # Notes
 
+## 21 August 2018
+
+Ah... GC moves environments mid function execution! In the compiled code this is disasterous, e.g:
+
+    JsValue* objectLiteral_9 = objectCreatePlain();
+    // GC may have occured, moving `env` to a new poistion and invalidating 
+    // the old env pointed to by env
+    JsValue* value_10 = (envGet(env, interned_1) /* i */);
+
+This will require some thought.
+
+Options:
+1. environments are special cased, and don't move
+  - however, I think this is actually a more general problem
+2. switch from a compacting GC
+  - most work?
+3. double pointers (where are they stored tho to be updated?)
+  - some indirection seems necessary if keep with compacting GC, could be special cased for envs, perhaps `getEnv(id)`
+
+Demonstration of 1 not really being a solution:
+
+    JsValue* left_13 = (envGet(env, interned_1) /* i */);
+    JsValue* right_14 = (jsValueCreateNumber(1));
+    result_12 = (addOperator(left_13, right_14));
+
+GC could easily occur between `left_13` being created and the `addOperator` being run, if the `jsValueCreateNumber` triggers a GC run.
+
+Using the `movedTo` field could be somewhat of a solution, if the free call occured after the current call stack clears? Every reference to a JSValue would then be via `accessGcObject(someValue)`.
+
+GC runs can't be deferred to the end of a user function as a solution to keeping all references live, as functions could trigger multiple GC runs (i.e a loop allocating).
+
+It'd be nice to avoid the compiler being coupled to the GC system too much. Currently it's totally ignored the situation, so all pointers are irrevocably to the position a value is originally allocated.
+
+Learning: end to end test early, I wrote unit tests with test code which carefully stopped using the old references, in a way that didn't resembled the compiler's output!
+
+### Mark and sweep
+
+Given a heap size of N, with a minimum GC object size M of the shared GC object header, we could track the memory with N/M bits.
+
+## 20 August 2018
+
+Thinking about GC - values like true/false/undefined were initially static, now they'll either need special-casing in the GC system (to keep the pointers constant), or not.
+
+Special-casing isn't too tricky actually (which I realise after faffing around quite a lot to move them to be dynamically allocated), as they have defined types. Oops!
+
+This could also point towards how to handle other special cases in GC.
+
+It might also be nice to get more of the static stuff into runtime, thinking
+about everything that is implicitly global etc and getting it in one place.
+
+### Todo
+
+- special case the language constants
+
+
 ## 13 August 2018
 
 Comparison operators on pointers need care. `==` and `!=` seem always to be safe - everything else is pretty fraught. This came up while I was writing the GC step that walks up the heap of moved objects:

@@ -28,7 +28,7 @@ void itGetsStringLength() {
 }
 
 int main() {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     test(itCanCreateAStringFromACString);
     test(itGetsJsStringFromValue);

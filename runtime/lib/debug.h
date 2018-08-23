@@ -29,4 +29,6 @@
 
 #define check_debug(A, M, ...) if(!(A)) { debug(M, ##__VA_ARGS__); errno=0; goto error; }
 
+#define todo(M) log_err(M); goto fail;
+
 #pragma clang diagnostic pop

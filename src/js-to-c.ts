@@ -203,6 +203,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/objects.h"
         #include "../../runtime/functions.h"
         #include "../../runtime/runtime.h"
+        #include "../../runtime/lib/debug.h"
         
         ${interned}
         
@@ -219,6 +220,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
             
             initialiseInternedStrings();
             
+            log_info("Running user program");
             userProgram(runtime->globalEnv);
             return 0;
         }
@@ -468,7 +470,7 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
     const argsArrayName = `${functionId}_args`;
 
     const ensureUndefined = `\nreturn getUndefined();`;
-    const bodySrc = compile(node.body, state) + ensureUndefined;
+    const bodySrc = `log_info("User function ${name}");` + compile(node.body, state) + ensureUndefined;
 
     // TODO this will need topographic sorting
     state.functions.push(createCFunction(functionId, bodySrc));

@@ -43,7 +43,7 @@ void itHasDefinedTruthiness() {
 }
 
 int main() {
-    _gcTestInit();
+    testLanguageAndGcInit();
 
     test(itCanCreateNumber);
     test(itCanAccessNumberValue);
