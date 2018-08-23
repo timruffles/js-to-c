@@ -11,7 +11,7 @@
 enum TypeTag {
     // reserve 0 for cases where a JsValue is uninitialized, or pointing to cleared memory
     UNITIALIZED_TYPE,
-    FREE_SPACE_TYPE,
+
     // these are the types for root JS values
     UNDEFINED_TYPE,
     NULL_TYPE,
@@ -20,6 +20,7 @@ enum TypeTag {
     OBJECT_TYPE,
     STRING_TYPE,
     FUNCTION_TYPE,
+
     // internal types that don't map to a JS primitive type
     NAN_TYPE,
 
@@ -28,6 +29,9 @@ enum TypeTag {
     STRING_VALUE_TYPE,
     OBJECT_VALUE_TYPE,
     PROPERTY_DESCRIPTOR_TYPE,
+    FUNCTION_RECORD_TYPE,
+
+    FREE_SPACE_TYPE,
 };
 
 typedef struct GcObjectReflection {

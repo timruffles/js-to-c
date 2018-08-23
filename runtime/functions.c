@@ -13,6 +13,7 @@
 
 // compiled function
 typedef struct FunctionRecord {
+    GcHeader;
     TargetFunction* function;
     JsValue** argumentNames;
     uint64_t argumentCount;
@@ -39,10 +40,11 @@ JsValue* _functionRun(JsValue* val, Env* env) {
 }
 
 JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint64_t argCount, Env* env) {
-    FunctionRecord* record = gcAllocate2(sizeof(FunctionRecord), FUNCTION_TYPE);
+    FunctionRecord* record = gcAllocate(sizeof(FunctionRecord), FUNCTION_RECORD_TYPE);
     record->function = function;
     record->argumentNames = argumentNames;
     record->argumentCount = argCount;
     record->env = env;
-    return objectCreateFunction(record);
+    JsValue* val = objectCreateFunction(record);
+    return val;
 }

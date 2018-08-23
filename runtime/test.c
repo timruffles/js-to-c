@@ -3,11 +3,13 @@
 
 #include "language.h"
 #include "gc.h"
+#include "test.h"
+#include "runtime.h"
 
 /**
  * Boostraps GC and language
  **/
-void bootstrap() {
+static void bootstrap() {
     static int bootstrapped;
     if(bootstrapped) {
     log_info("already bos");

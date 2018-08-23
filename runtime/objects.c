@@ -38,7 +38,7 @@ typedef struct JsObject {
  */
 JsValue* objectCreatePlain() {
     // TODO set pt
-    JsObject *obj = gcAllocate2(sizeof(JsObject), OBJECT_VALUE_TYPE);
+    JsObject *obj = gcAllocate(sizeof(JsObject), OBJECT_VALUE_TYPE);
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
     return val;
 }
@@ -51,7 +51,7 @@ JsValue* objectCreate(JsValue* prototype) {
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
     // TODO set function prototype
-    JsObject *obj = gcAllocate2(sizeof(JsObject), OBJECT_VALUE_TYPE);
+    JsObject *obj = gcAllocate(sizeof(JsObject), OBJECT_VALUE_TYPE);
     obj->callInternal = fr;
 
     JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
@@ -113,7 +113,7 @@ JsValue* objectLookup(JsValue *val, JsValue *name) {
 }
 
 static PropertyDescriptor* propertyCreate() {
-    PropertyDescriptor *pd = gcAllocate2(sizeof(PropertyDescriptor), PROPERTY_DESCRIPTOR_TYPE);
+    PropertyDescriptor *pd = gcAllocate(sizeof(PropertyDescriptor), PROPERTY_DESCRIPTOR_TYPE);
     return pd;
 }
 
@@ -151,24 +151,19 @@ JsValue* objectEnvGetParent(JsValue* env) {
 }
 
 void objectGcTraverse(JsValue* value, GcCallback* cb) {
-    JsObject* oldObject = jsValuePointer(value);
-    JsObject* object = cb(oldObject);
-    jsValuePointerSet(value, object);
+    JsObject* object = jsValuePointer(value);
+    cb(object);
 
     if(object->prototype != NULL) {
-        object->prototype = cb(object->prototype);
+        cb(object->prototype);
     }
 
-    PropertyDescriptor** toUpdate = &object->properties;
     for(PropertyDescriptor* pd = object->properties;
         pd != NULL;
         pd = pd->nextProperty
     ) {
-        PropertyDescriptor* moved = cb(pd);
-        *toUpdate = moved;
-
-        moved->value = cb(pd->value);
-        toUpdate = &moved->nextProperty;
+        cb(pd);
+        cb(pd->value);
     }
 }
 

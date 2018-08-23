@@ -9,16 +9,16 @@
 typedef struct {
     uint64_t used;
     uint64_t remaining;
+    uint64_t heapSize;
 } GcStats;
 
 void gcInit(void);
-void* gcAllocate(size_t);
-void* gcAllocate2(size_t, int type);
+void* gcAllocate(size_t, int type);
 GcStats gcStats(void);
 
 void _gcTestInit(void);
-void* _gcMovedTo(GcObject*);
 
 void _gcRun(JsValue** roots, uint64_t rootCount);
+void _gcVisualiseHeap(void);
 
 typedef void* (GcCallback)(void*);

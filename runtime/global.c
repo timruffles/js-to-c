@@ -8,6 +8,7 @@
 #include "strings.h"
 #include "functions.h"
 #include "objects.h"
+#include "lib/debug.h"
 
 static FILE* outStream;
 
@@ -51,7 +52,10 @@ JsValue* createGlobalObject() {
     Env* globalEnv = envFromGlobal(global);
 
     JsValue* console = objectCreatePlain();
-    objectSet(global, stringCreateFromCString("console"),
+    JsValue* str = stringCreateFromCString("console");
+    _gcVisualiseHeap();
+    log_info("post");
+    objectSet(global, str,
             console);
 
     // TODO varargs

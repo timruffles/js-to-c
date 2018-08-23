@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <stddef.h>
 
 #include "lib/debug.h"
@@ -12,16 +13,20 @@
 
 #define ensureCalloc(V, M) V = calloc(1, M); assert(V != NULL);
 
+typedef struct FreeSpace {
+  GcHeader;
+} FreeSpace;
+
 typedef struct FreeNode {
     struct FreeNode* next;
     struct FreeNode* prev;
-    struct char* memory;
+    struct FreeSpace* space;
 } FreeNode;
 
 static FreeNode* freeList;
 static FreeNode* freeListTail;
-static char* memory;
-
+static void* memory;
+static void* memoryEnd;
 
 /**
  * Memory is a free list
@@ -59,108 +64,174 @@ static char* memory;
  *     i += item.size
  */
 
-void freeListDelete(FreeNode* toRemove) {
+static FreeNode* freeNodeCreate(FreeSpace* space) {
+    FreeNode* node;
+    ensureCalloc(node, sizeof(FreeNode));
+    *node = (FreeNode) {
+        .space = space,
+    };
+    return node;
+}
+
+static FreeSpace freeSpaceCreate(uint64_t size) {
+    return (FreeSpace) {
+        .type = FREE_SPACE_TYPE,
+        .size = size,
+    };
+}
+
+static void freeListInit(FreeNode* node) {
+    freeList = node;
+    freeListTail = node;
+}
+
+static void freeListDelete(FreeNode* toRemove) {
    toRemove->prev = toRemove->next;
 }
 
-void freeListAppend(FreeNode* toAdd) {
+static void freeListAppend(FreeNode* toAdd) {
     freeListTail->next = toAdd;
+    toAdd->prev = freeListTail;
     freeListTail = toAdd;
 }
 
-void freeListFreeAll() {
+static void freeListFree(FreeNode* node) {
+    free(node);
+}
+
+static void freeListFreeAll() {
+    for(FreeNode* node = freeList;
+        node;
+        node = node->next
+    ) {
+        freeListFree(node);
+    }
 }
 
 void gcInit() {
-    ConfigValue heapSize = configGet(HeapSizeConfig);
+    uint64_t heapSize = configGet(HeapSizeConfig).uintValue;
 
-    log_info("initialised gc with heap size %llu", heapSize.uintValue);
+    log_info("initialised gc with heap size %llu", heapSize);
 
     ensureCalloc(memory, heapSize);
 
     FreeSpace* space = memory;
-    *space = (FreeSpace) {
-        .type = FREE_SPACE_TYPE,
-        .size = sizeof(FreeSpace),
-        .space = memory,
-        .capacity = heapSize,
-    };
+    memoryEnd = memory + heapSize;
 
-    FreeNode node* = ensureCalloc(sizeof(FreeNode));
-    *node = (FreeNode) {
-        .space = node,
-    };
-    freeList = node;
+    *space = freeSpaceCreate(heapSize);
+
+    FreeNode* node = freeNodeCreate(space);
+    freeListInit(node);
 }
 
 
 void _gcTestInit() {
     if(memory != NULL) {
-        freeListFreeAll(freeSpace);
+        freeListFreeAll();
         free(memory);
     }
     gcInit();
 }
 
-void* gcAllocate2(size_t bytes, int type) {
-    GcObject* allocated = gcAllocate(bytes);
-    allocated->type = type;
-    return allocated;
-}
 
-FreeNode* findFreeSpace() {
-    FreeNode found*;
-    for(FreeNode candidate* = freeList;
+static FreeNode* findFreeSpace(size_t bytes) {
+    FreeNode* found = NULL;
+    for(FreeNode* candidate = freeList;
         candidate;
-        candidate = candidate->space->capacity >= bytes
+        candidate = candidate->next
     ) {
-        return candidate;
+        if(candidate->space->size >= bytes) {
+            found = candidate;
+            break;
+        }
     }
+    return found;
 }
 
-void* allocateInNode(FreeNode* found, uint64_t bytes) {
+/**
+ * Allocating in a free space node will either move the
+ * header down, or allocate all of it and replace the node
+ * (allocating more than required if remainder is < sizeof(FreeSpace)
+ *
+ *     0 FreeSpace header
+ *     1 empty
+ *     2 empty
+ *     3 empty
+ *
+ *     0 AllocatedThing
+ *     1 *cont*
+ *     2 FreeSpace header
+ *     3 empty
+ *
+ * or
+ *
+ *     0 AllocatedThing
+ *     1 *cont*
+ *     2 *cont*
+ *     3 - over allocated, unused, included in size -
+ */
+static GcObject* allocateInNode(FreeNode* found, uint64_t bytes) {
     // this has already been checked to be positive
-    uint64_t remaining = (uint64_t)(found->space->capacity - bytes);
-    void* allocatedSpace = found->space->memory;
-    found->space->memory += bytes;
-    found->space->capacity -= bytes;
-    if(remaining == 0) {
+    uint64_t remaining = (uint64_t)(found->space->size - bytes);
+
+    GcObject* allocatedAddress = found->space;
+    bool splitRequired = remaining > sizeof(FreeSpace);
+    // do we have remaining free space?
+    uint64_t allocatedSize = splitRequired
+        ? bytes
+        : found->space->size;
+
+    if(splitRequired) {
+        FreeSpace* newSpace = ((char*)found->space) + bytes;
+        *newSpace = (FreeSpace) {
+            .type = FREE_SPACE_TYPE,
+            .size = remaining,
+        };
+        found->space = newSpace;
+    } else {
         freeListDelete(found);
     }
-    return allocatedSpace;
+
+    *allocatedAddress = (GcObject) {
+        .size = allocatedSize
+    };
+
+    return allocatedAddress;
 }
 
-void* gcAllocate(size_t bytes) {
-    FreeNode* found = findFreeSpace();
+void* gcAllocate(size_t bytes, int type) {
+    FreeNode* found = findFreeSpace(bytes);
     if(found == NULL) {
         log_info("Out of memory, GC running");
         RuntimeEnvironment* runtime = runtimeGet();
         _gcRun(runtime->gcRoots, runtime->gcRootsCount);
 
-        found = findFreeSpace();
-        // out  of memory
+        found = findFreeSpace(bytes);
+        // out of memory after gc run
         assert(found != NULL);
     }
 
-    return allocateInNode(found, bytes);
+    GcObject* allocated = allocateInNode(found, bytes);
+    allocated->type = type;
+    return allocated;
 }
 
 GcStats gcStats() {
+    // TODO
+    uint64_t heapSize = configGet(HeapSizeConfig).uintValue;
     return (GcStats) {
         .used = 0,
         .remaining = 0,
+        .heapSize = heapSize,
     };
 }
 
 static uint64_t gcObjectSize(GcObject* object) {
-    assert(object->next != NULL);
-    return (uint64_t)object->next - (uint64_t)object;
+    assert(object->size != 0);
+    return object->size;
 }
 
-static GcObject* mark(GcObject* item) {
-    item->marked = true;
-    traverse(item);
-}
+static void mark(GcObject* item);
 
 static void traverse(GcObject* object) {
     switch(object->type) {
@@ -173,66 +244,73 @@ static void traverse(GcObject* object) {
     }
 }
 
-/**
- * GC uses something like the Cheny algorithm.
- *
- * Pseudo-code:
- *
- *     main([global, ...taskQueues])
- *
- *     main(roots)
- *       for each root
- *         move(root)
- *
- *       toProcess = nextHeap->bottom
- *       do 
- *         traverse(toProcess)
- *       while toProcess = toProcess->next
- *
- *     move(item)
- *       if not copied(item)
- *         copy item into new
- *         update movedTo of old
- *         clear movedTo in new
- *         update next pointer in new
- *
- *     traverse(item)
- *       for each obj reachable from item
- *          move(obj)
- *          updateReference(obj, item)
- *
- */
+static void mark(GcObject* item) {
+    item->marked = true;
+    traverse(item);
+}
+
+static void gcObjectFree(GcObject* object) {
+    //log_info("Freeing object type %i at %p", object->type, object);
+    uint64_t size = object->size;
+    memset(object, 0, object->size);
+    FreeSpace* newSpace = (void*)object;
+    *newSpace = freeSpaceCreate(size);
+    freeListAppend(freeNodeCreate(newSpace));
+}
+
+void _gcVisualiseHeap() {
+    log_info("%p - Heap start", memory);
+    GcObject* toProcess;
+    for(toProcess = memory;
+        (void*)toProcess < memoryEnd;
+        toProcess = ((void*)toProcess) + toProcess->size
+        ) {
+        if(toProcess->type == UNITIALIZED_TYPE) {
+            log_info("%p - ERROR - Heap corruption - uninitialized memory", toProcess);
+            break;
+        } else {
+            log_info("%p - %12s %2i %llu", toProcess, gcObjectReflect(toProcess).name, toProcess->type, toProcess->size);
+        }
+    }
+    if(toProcess != memoryEnd) {
+        log_info("%p - ERROR - Unexpected scan end", toProcess);
+    }
+    log_info("%p - Heap end", memoryEnd);
+}
 
 // roots: global environment
 //        task queues pointing to ExecuableFunctions (which point to environments)
 void _gcRun(JsValue** roots, uint64_t rootCount) {
-    GcStats before = gcStats();
+    log_info("GC starting on %llu roots", rootCount);
 
     // For item in roots
     for(uint64_t i = 0;
         i < rootCount;
         i++) {
-        (JsValue*)mark((GcObject*)roots[i]);
+        mark((GcObject*)roots[i]);
     }
     log_info("GC fully traversed %llu roots", rootCount);
 
-    for(char* toProcess = memory;
-        toProcess->type != _UNITIALIZED_TYPE;
-        toProcess += toProcess->size
+    uint64_t freed = 0;
+
+    // scan entire heap
+    GcObject* toProcess;
+    for(toProcess = memory;
+        toProcess != memoryEnd && toProcess->type != UNITIALIZED_TYPE;
+        toProcess = ((void*)toProcess) + toProcess->size
         ) {
+        if(toProcess->marked) {
+            toProcess->marked = false;
+        } else {
+            gcObjectFree(toProcess);
+            freed += toProcess->size;
+        }
     }
 
-    Heap* oldHeap = activeHeap;
-    activeHeap = nextHeap;
-    heapFree(oldHeap);
-    nextHeap = oldHeap;
+    log_info("End of GC, memory end %p and got to %p", memoryEnd, toProcess);
+    // we should have scanned whole heap, all memory is
+    // either allocated or in a FreeSpace
+    assert(toProcess == memoryEnd);
 
-    GcStats after = gcStats();
-    // TODO - do this more safely?
-    int64_t saved = (int64_t)(before.used - after.used);
-    log_info("GC complete, %lli bytes collected", saved);
-}
-
-void* _gcMovedTo(GcObject* object) {
-    return object->movedTo;
+    log_info("GC complete, %lli bytes collected", freed);
 }
