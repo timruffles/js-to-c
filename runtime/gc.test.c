@@ -1,3 +1,4 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 #include "objects.h"
 #include "strings.h"
 #include "config.h"
+#include "runtime.h"
 
 #define JS_SET(O,P,V) objectSet(O,stringCreateFromCString(P),V)
 #define JS_GET(O,P) objectGet(O,stringCreateFromCString(P))
@@ -27,26 +29,31 @@ void itCanTestInitAfterInit() {
     _gcTestInit();
 }
 
-void itCanAllocate() {
+void itAllocates() {
     _gcTestInit();
-    void* value = gcAllocate(sizeof(uint64_t)); 
+    void* value = gcAllocate(sizeof(uint64_t), 1); 
     assert(value != NULL);
-    // should be zeroed
-    uint64_t* values = value;
-    assert(*values == 0);
 }
 
-void itSetsNextPointerToPositionOfObjectAllocatedNext() {
+void itSetsSizeAndType() {
     _gcTestInit();
 
-    TestStruct* valueA = gcAllocate(sizeof(TestStruct)); 
-    TestStruct* valueB = gcAllocate(sizeof(TestStruct)); 
-    valueB->number = 42;
+    TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
 
-    assert(((TestStruct*)valueA->next)->number == 42);
+    assert(valueA->size == sizeof(TestStruct));
+    assert(valueA->type == 1);
 }
 
-void itReusesFreeSpace() {
+void itTracksSpace() {
+    _gcTestInit();
+
+    TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
+    GcObject* freeSpace = ((void*)valueA) + sizeof(TestStruct);
+
+    assert(valueA->size == sizeof(TestStruct));
+    assert(freeSpace->type == FREE_SPACE_TYPE);
+    GcStats stats = gcStats();
+    assert(freeSpace->size == stats.heapSize - sizeof(TestStruct));
 }
 
 void itGarbageCollectsCorrectly() {
@@ -72,11 +79,11 @@ void itGarbageCollectsCorrectly() {
     JS_SET(liveTwo, "liveDeepOne", liveDeepOne);
     JS_SET(liveDeepOne, "id", jsValueCreateNumber(2002));
 
-    GcStats before = gcStats();
-
     JsValue* roots[] = {root};
 
+    _gcVisualiseHeap();
     _gcRun(roots, 1);
+    _gcVisualiseHeap();
 
     JsValue* newLiveOne = JS_GET(root, "liveOne");
     JsValue* newLiveTwo = JS_GET(root, "liveTwo");
@@ -87,14 +94,9 @@ void itGarbageCollectsCorrectly() {
     assert(JS_GET(root, "liveOne")
         == JS_GET(root, "liveOneSecondRef"));
 
-    // garbage is zeroed
-    assert(jsValueType(garbageOne) == 0);
-    GcObject* garbageTwoGc = (void*)garbageTwo;
-    assert(garbageTwoGc->next == 0);
-
-    GcStats after = gcStats();
-    int64_t saved = (int64_t)(before.used - after.used);
-    assert(saved > 0);
+    // garbage is zeroed, with a FreeSpace header appended
+    assert(jsValueType(garbageOne) == FREE_SPACE_TYPE);
+    assert(jsValueType(garbageTwo) == FREE_SPACE_TYPE);
 }
 
 
@@ -103,9 +105,9 @@ int main() {
 
     test(itCanTestInitWithoutInit); 
     test(itCanTestInitAfterInit); 
-    test(itCanAllocate); 
-    test(itSetsNextPointerToPositionOfObjectAllocatedNext);
+    test(itAllocates); 
+    test(itSetsSizeAndType);
+    test(itTracksSpace); 
 
-    test(itMovesRoots);
     test(itGarbageCollectsCorrectly);
 }

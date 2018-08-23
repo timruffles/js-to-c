@@ -7,18 +7,18 @@
 
 // our string primitive - can be boxed by toObject
 typedef struct StringData {
+    GcHeader;
     char* cString;
-    const uint64_t length;
+    uint64_t length;
 } StringData;
 
 JsValue* stringCreateFromCString(char* string) {
-    StringData* jsString = gcAllocate(sizeof(StringData));
+    StringData* jsString = gcAllocate(sizeof(StringData), STRING_VALUE_TYPE);
     uint64_t l = strlen(string);
 
-    *jsString = (StringData) {
-        .cString = string,
-        .length = l,
-    };
+    jsString->cString = string;
+    jsString->length = l;
+
     JsValue *val = jsValueCreatePointer(STRING_TYPE, jsString);
     return val;
 }

@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "language.h"
+#include "environments.h"
 
 typedef struct RuntimeEnvironment {
     JsValue** gcRoots;

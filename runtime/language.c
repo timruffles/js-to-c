@@ -30,6 +30,8 @@ typedef struct JsValue {
     union JsValueValue value;
 } JsValue;
 
+GcObjectReflection gcObjectReflectType(int type);
+
 static JsValue *const TRUE = &(JsValue) {
         .type = BOOLEAN_TYPE,
         .value = {
@@ -82,13 +84,13 @@ JsValue *getFalse() {
 }
 
 JsValue *jsValueCreateNumber(double number) {
-    JsValue* val = gcAllocate2(sizeof(JsValue), NUMBER_TYPE);
+    JsValue* val = gcAllocate(sizeof(JsValue), NUMBER_TYPE);
     val->value.number = number;
     return val;
 }
 
 JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
-    JsValue* val = gcAllocate2(sizeof(JsValue), type);
+    JsValue* val = gcAllocate(sizeof(JsValue), type);
     val->value.pointer = pointer;
     return val;
 }
@@ -180,12 +182,13 @@ GcObjectReflection jsValueReflect(JsValue* object) {
         REFLECT(STRING_TYPE, "string");
         REFLECT(FUNCTION_TYPE, "function");
         default:
+            log_err("Non JSValue %i", object->type);
             assert(false);
     }
 }
 
-GcObjectReflection gcObjectReflect(GcObject* object) {
-    switch(object->type) {
+GcObjectReflection gcObjectReflectType(int type) {
+    switch(type) {
         REFLECT(UNDEFINED_TYPE, "undefined");
         REFLECT(NULL_TYPE, "null");
         REFLECT(NUMBER_TYPE, "number");
@@ -197,9 +200,17 @@ GcObjectReflection gcObjectReflect(GcObject* object) {
         REFLECT(STRING_VALUE_TYPE, "stringValue");
         REFLECT(OBJECT_VALUE_TYPE, "objectValue");
         REFLECT(PROPERTY_DESCRIPTOR_TYPE, "propertyDescriptor");
+        REFLECT(FUNCTION_RECORD_TYPE, "functionRecord");
+
+        REFLECT(FREE_SPACE_TYPE, "free space");
 
         default:
+            log_err("Unknown type %i", type);
             assert(false);
     }
+
+}
+GcObjectReflection gcObjectReflect(GcObject* object) {
+    return gcObjectReflectType(object->type);
 }
 

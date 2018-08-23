@@ -1,5 +1,38 @@
 # Notes
 
+## 23 August 2018
+
+The non-moving GC cleans up the traversing code nicely.
+
+I'm starting to fear large powers of 2, for they suggest I've screwed up, e.g: 
+
+        [INFO] (gc.c:259:_gcVisualiseHeap:) 0x100600000 - Heap start
+        [INFO] (gc.c:269:_gcVisualiseHeap:) 0x100600000 -  objectValue 48
+        [INFO] (gc.c:269:_gcVisualiseHeap:) 0x100600030 -       object 24
+        [INFO] (gc.c:269:_gcVisualiseHeap:) 0x100600048 -  objectValue 48
+        [INFO] (gc.c:269:_gcVisualiseHeap:) 0x100600078 -       object 24
+        [INFO] (gc.c:269:_gcVisualiseHeap:) 0x100600090 -     function 4294986170
+        [INFO] (gc.c:273:_gcVisualiseHeap:) 0x200604a4a - ERROR - Unexpected scan end
+        [INFO] (gc.c:275:_gcVisualiseHeap:) 0x1006fa000 - Heap end
+
+After some fun, I tracked down this bug to stomping some memory by initiaising a struct directly:
+
+        *jsString = (StringData) {
+            .cString = string,
+            .length = l,
+        };
+
+This forgets to reinitialize the `type` field from the `GcHeader` (also, StringData originally didn't have the `GcHeader` anyway). A tricky one - need to ponder whether there's a general rule here.
+
+After fixing this:
+
+![gc fix](notes/gc debugging/03 - the culprit.png)
+
+I was left with a happy heap, with contiguous GC objects and FreeSpace nodes throughout:
+
+![gc fix](notes/gc debugging/04 - happy heap.png)
+    
+
 ## 21 August 2018
 
 Ah... GC moves environments mid function execution! In the compiled code this is disasterous, e.g:
