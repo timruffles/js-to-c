@@ -1,0 +1,74 @@
+["global exceptions"]
+
+example="""
+throw Error("Test");
+"""
+
+outputMatch="Error: Test"
+
+
+["call stacks"]
+
+example="""
+function A() {
+  B();
+}
+
+function B() {
+  throw Error("B threw");
+}
+
+A();
+"""
+
+outputMatch="Error: B threw[\s\n]+at B[\s\n]+at A"
+
+
+["catching"]
+
+example="""
+function A() {
+    try {
+      B();
+    } catch(e) {
+      return 'A caught';
+    }
+}
+
+function B() {
+  throw Error("B threw");
+}
+
+console.log(A());
+"""
+
+output="A caught"
+
+["calling non function"]
+
+example="""
+var A = '';
+A();
+"""
+
+outputMatch="TypeError: A is not a function"
+
+
+["reference error"]
+
+example="""
+A();
+"""
+
+outputMatch="ReferenceError: A is not defined"
+
+
+["dereference undefined"]
+
+
+example="""
+var A;
+A.thingy;
+"""
+
+outputMatch="TypeError: Cannot read property 'thingy' of undefined"
