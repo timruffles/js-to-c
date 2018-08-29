@@ -1,5 +1,52 @@
 # Notes
 
+## 29 August 2018
+
+Exceptions:
+
+- reified call-stacks
+- some internal methods to throw different types of exceptions
+- other things being thrown
+- call-stack API + stringification
+- catching
+- scope for catch blocks
+  - interestingly - same as ES6 block scope
+
+Function call - likely modify current `envCreateForCall` to stack up the `FunctionRecord`. Just a linked list? Also - need to have a chain of exception handlers that switch on/off as calls return.
+
+
+    function A() {
+      try {
+        catcher(noop)
+      } catch(e) {
+      }
+
+      try {
+        runner(boom)
+      } catch(e) {
+      } 
+
+      try {
+        unrelatedCatch(boom)
+      } catch(e) {
+      } 
+    }
+
+    function catcher(f) {
+      try { f() } catch(e) {} 
+    }
+
+    function runner(f) { f() }
+
+    function unrelatedCatch(f) {
+      try { noop() } catch(e) {}
+      f();
+      try { noop() } catch(e) {}
+    }
+
+    function noop() {}
+    function boom() {throw Error()}
+
 ## 23 August 2018
 
 The non-moving GC cleans up the traversing code nicely.

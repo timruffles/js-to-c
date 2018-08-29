@@ -36,6 +36,10 @@ exports.assertOutputEqual = function(actual, expected) {
     assert.equal(actual.trim(), expected.trim());
 }
 
+exports.assertOutputMatch = function(actual, pattern) {
+    assert(pattern.test(expected));
+}
+
 function pathInFixtures(fn) {
     return `${__dirname}/fixtures/${fn}`;
 }

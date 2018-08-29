@@ -38,12 +38,21 @@ function updateFixture({ name, tests, testFile }) {
         fs.writeFileSync(fixtureFile, example);
     }
 
-    const testsSrc = tests.map(({name,fixtureFile, output, env = {}}) => {
+    const testsSrc = tests.map(({name,fixtureFile, output, outputMatch, env = {}}) => {
+
+        if(output && outputMatch) {
+            throw Error(`${fixtureFile}/${name} specifies both output + output match, only one can be used`);
+        }
+
+        const assertion = output
+          ? `assertOutputEqual(output, \`${output}\`);`
+          : `assertOutputMatch(output, /${outputMatch}/);`;
+
         return `it("${name}", () => {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
             const { stdout: output } = runExecutable(executable, { env: ${JSON.stringify(env)} });
-            assertOutputEqual(output, \`${output}\`);
+            ${assertion}
           });`
     }).join('\n\n');
 
