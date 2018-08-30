@@ -63,7 +63,8 @@ static void setHeapSize() {
     }
 
     ConfigValue value = { .uintValue = (uint64_t)heapSize * 1024 };
-    return configSet(HeapSizeConfig, value);
+    configSet(HeapSizeConfig, value);
+    return;
 
 setDefault:;
     ConfigValue defaultValue = { .uintValue = HEAP_SIZE_DEFAULT };
