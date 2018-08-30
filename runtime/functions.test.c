@@ -20,12 +20,12 @@ static JsValue** argumentNames;
 static JsValue** argumentValues;
 static Env* exampleEnv;
 
-void itCanCreateAFunction() {
+static void itCanCreateAFunction() {
     JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2, exampleEnv);
     assert(fn != NULL);
 }
 
-void itCanCallAFunction() {
+static void itCanCallAFunction() {
     JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2, exampleEnv);
     assert(fn != NULL);
 

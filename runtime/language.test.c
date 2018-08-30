@@ -8,17 +8,17 @@
 #include "gc.h"
 #include "test.h"
 
-void itCanCreateNumber() {
+static void itCanCreateNumber() {
     JsValue* val = jsValueCreateNumber(42.42);
     assert(val != NULL);
 }
 
-void itCanAccessNumberValue() {
+static void itCanAccessNumberValue() {
     JsValue* val = jsValueCreateNumber(42.42);
     assert(jsValueNumber(val) == 42.42);
 }
 
-void itCanAccessPointerValue() {
+static void itCanAccessPointerValue() {
     char a = 'Y';
 
     // just checking if the pointers end up pointing to the right place
@@ -29,7 +29,7 @@ void itCanAccessPointerValue() {
     assert(ptr == &a);
 }
 
-void itHasDefinedTruthiness() {
+static void itHasDefinedTruthiness() {
     assert(isTruthy(getTrue()));
     assert(isTruthy(stringCreateFromCString("hello")));
     assert(isTruthy(jsValueCreateNumber(7)));

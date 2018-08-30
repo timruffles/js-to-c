@@ -8,20 +8,20 @@
 #include "test.h"
 #include "gc.h"
 
-void itCanCreateAStringFromACString() {
+static void itCanCreateAStringFromACString() {
     char* theContent = "Hello";
     JsValue* str = stringCreateFromCString(theContent);
 
     assert(str != NULL);
 }
 
-void itGetsJsStringFromValue() {
+static void itGetsJsStringFromValue() {
     char* theContent = "Hello";
     JsValue* str = stringCreateFromCString(theContent);
     assert(strcmp(stringGetCString(str), theContent) == 0);
 }
 
-void itGetsStringLength() {
+static void itGetsStringLength() {
     char* theContent = "Hello";
     JsValue* str = stringCreateFromCString(theContent);
     assert(stringLength(str) == 5);

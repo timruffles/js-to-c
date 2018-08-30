@@ -116,7 +116,7 @@ void gcInit() {
     ensureCalloc(memory, heapSize);
 
     FreeSpace* space = memory;
-    memoryEnd = memory + heapSize;
+    memoryEnd = (void*)((char*)memory + heapSize);
 
     *space = freeSpaceCreate(heapSize);
 
@@ -174,7 +174,7 @@ static GcObject* allocateInNode(FreeNode* found, uint64_t bytes) {
     // this has already been checked to be positive
     uint64_t remaining = (uint64_t)(found->space->size - bytes);
 
-    GcObject* allocatedAddress = found->space;
+    GcObject* allocatedAddress = (void*)found->space;
     bool splitRequired = remaining > sizeof(FreeSpace);
     // do we have remaining free space?
     uint64_t allocatedSize = splitRequired
@@ -182,7 +182,7 @@ static GcObject* allocateInNode(FreeNode* found, uint64_t bytes) {
         : found->space->size;
 
     if(splitRequired) {
-        FreeSpace* newSpace = ((char*)found->space) + bytes;
+        FreeSpace* newSpace = (void*)(((char*)found->space) + bytes);
         *newSpace = (FreeSpace) {
             .type = FREE_SPACE_TYPE,
             .size = remaining,
@@ -226,11 +226,6 @@ GcStats gcStats() {
     };
 }
 
-static uint64_t gcObjectSize(GcObject* object) {
-    assert(object->size != 0);
-    return object->size;
-}
-
 static void mark(GcObject* item);
 
 static void traverse(GcObject* object) {
@@ -263,7 +258,7 @@ void _gcVisualiseHeap() {
     GcObject* toProcess;
     for(toProcess = memory;
         (void*)toProcess < memoryEnd;
-        toProcess = ((void*)toProcess) + toProcess->size
+        toProcess = (void*)((char*)(toProcess) + toProcess->size)
         ) {
         if(toProcess->type == UNITIALIZED_TYPE) {
             log_info("%p - ERROR - Heap corruption - uninitialized memory", toProcess);
@@ -297,7 +292,7 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
     GcObject* toProcess;
     for(toProcess = memory;
         toProcess != memoryEnd && toProcess->type != UNITIALIZED_TYPE;
-        toProcess = ((void*)toProcess) + toProcess->size
+        toProcess = (void*)((char*)(toProcess) + toProcess->size)
         ) {
         if(toProcess->marked) {
             toProcess->marked = false;

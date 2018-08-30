@@ -19,23 +19,23 @@ typedef struct {
     uint64_t number;
 } TestStruct;
 
-void itCanTestInitWithoutInit() {
+static void itCanTestInitWithoutInit() {
     _gcTestInit();
 }
 
-void itCanTestInitAfterInit() {
+static void itCanTestInitAfterInit() {
     // this inits twice, freeing first time
     _gcTestInit();
     _gcTestInit();
 }
 
-void itAllocates() {
+static void itAllocates() {
     _gcTestInit();
     void* value = gcAllocate(sizeof(uint64_t), 1); 
     assert(value != NULL);
 }
 
-void itSetsSizeAndType() {
+static void itSetsSizeAndType() {
     _gcTestInit();
 
     TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
@@ -44,11 +44,11 @@ void itSetsSizeAndType() {
     assert(valueA->type == 1);
 }
 
-void itTracksSpace() {
+static void itTracksSpace() {
     _gcTestInit();
 
     TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
-    GcObject* freeSpace = ((void*)valueA) + sizeof(TestStruct);
+    GcObject* freeSpace = (void*)((char*)valueA + sizeof(TestStruct));
 
     assert(valueA->size == sizeof(TestStruct));
     assert(freeSpace->type == FREE_SPACE_TYPE);
@@ -56,7 +56,7 @@ void itTracksSpace() {
     assert(freeSpace->size == stats.heapSize - sizeof(TestStruct));
 }
 
-void itGarbageCollectsCorrectly() {
+static void itGarbageCollectsCorrectly() {
     // note - this will crash nastily if we force a GC before
     // manually running GC - as it'll use runtime env
     _gcTestInit();

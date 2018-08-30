@@ -9,12 +9,12 @@
 #include "objects.h"
 #include "gc.h"
 
-void itCreatesTheGlobalObject() {
+static void itCreatesTheGlobalObject() {
     JsValue* global = createGlobalObject();
     assert(global != NULL);
 }
 
-void itLogsJsValuesToOutput() {
+static void itLogsJsValuesToOutput() {
     JsValue* global = createGlobalObject();
     Env* env = envCreateRoot();
     JsValue* name = stringCreateFromCString("arg0");
@@ -29,7 +29,7 @@ void itLogsJsValuesToOutput() {
     _functionRun(consoleLogJsv, env);
 }
 
-void itWorksWithEnv() {
+static void itWorksWithEnv() {
     JsValue* global = createGlobalObject();
     Env* env = envFromGlobal(global);
 
@@ -40,7 +40,7 @@ void itWorksWithEnv() {
 int main() {
     testLanguageAndGcInit();
 
-    FILE* fp = fopen("/tmp/globaltest", "w+")
+    FILE* fp = fopen("/tmp/globaltest", "w+");
     assert(fp != NULL);
     _setOutStream(fp);
 

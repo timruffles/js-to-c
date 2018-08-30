@@ -12,27 +12,27 @@
 #define DECLARE_AND_SET(E,K,V) envDeclare(E,K); envSet(E,K,V)
 #define STRICT_EQUAL(A,B) strictEqualOperator(A,B) == getTrue()
 
-JsValue* idOne;
+static JsValue* idOne;
 
-void itCanCreateRootEnv() {
+static void itCanCreateRootEnv() {
     Env* env = envCreateRoot();
     assert(env != NULL);
 }
 
-void itCanDestroyAnEnv() {
+static void itCanDestroyAnEnv() {
     Env* env = envCreateRoot();
     assert(env != NULL);
     envDestroy(env);
 }
 
-void itCanDeclareAVariable() {
+static void itCanDeclareAVariable() {
     Env* env = envCreateRoot();
     envDeclare(env, idOne);
 
     envDestroy(env);
 }
 
-void itReturnsUndefinedForDeclareButUndefined() {
+static void itReturnsUndefinedForDeclareButUndefined() {
     Env* env = envCreateRoot();
     envDeclare(env, idOne);
     JsValue* val = envGet(env, idOne);
@@ -41,7 +41,7 @@ void itReturnsUndefinedForDeclareButUndefined() {
     envDestroy(env);
 }
 
-void itCanAssignAVariable() {
+static void itCanAssignAVariable() {
     Env* env = envCreateRoot();
     envDeclare(env, idOne);
     envSet(env, idOne, getTrue());
@@ -49,7 +49,7 @@ void itCanAssignAVariable() {
     envDestroy(env);
 }
 
-void itCanGetAVariableValue() {
+static void itCanGetAVariableValue() {
     Env* env = envCreateRoot();
     envDeclare(env, idOne);
     envSet(env, idOne, getTrue());
@@ -60,7 +60,7 @@ void itCanGetAVariableValue() {
     envDestroy(env);
 }
 
-void itUsesStringValueNotIdentifyForGet() {
+static void itUsesStringValueNotIdentifyForGet() {
     Env* env = envCreateRoot();
 
     envDeclare(env, stringCreateFromCString("x"));
@@ -72,7 +72,7 @@ void itUsesStringValueNotIdentifyForGet() {
     );
 }
 
-void itUsesStringValueNotIdentifyForSet() {
+static void itUsesStringValueNotIdentifyForSet() {
     Env* env = envCreateRoot();
 
     envDeclare(env, stringCreateFromCString("x"));
@@ -84,7 +84,7 @@ void itUsesStringValueNotIdentifyForSet() {
     );
 }
 
-void itSetsUpArgumentValuesInCallEnv() {
+static void itSetsUpArgumentValuesInCallEnv() {
     Env* env = envCreateRoot();
     JsValue* names[] = {stringCreateFromCString("one"), stringCreateFromCString("two")};
     JsValue* values[] = {getTrue(), stringCreateFromCString("twoValue")};
@@ -96,7 +96,7 @@ void itSetsUpArgumentValuesInCallEnv() {
     assert(stringComparison(envGet(callEnv, stringCreateFromCString("two")), stringCreateFromCString("twoValue")) == 0);
 }
 
-void itAffectsNearestAncestorWithDeclaredVar() {
+static void itAffectsNearestAncestorWithDeclaredVar() {
     Env* env = envCreateRoot();
     JsValue* varA = stringCreateFromCString("one");
 
@@ -114,7 +114,7 @@ void itAffectsNearestAncestorWithDeclaredVar() {
                 envGet(childB, varA)));
 }
 
-int main(int argc, char** argv) {
+int main() {
     testLanguageAndGcInit();
 
     idOne = stringCreateFromCString("one");
@@ -126,6 +126,7 @@ int main(int argc, char** argv) {
     test(itCanAssignAVariable);
     test(itUsesStringValueNotIdentifyForGet);
     test(itUsesStringValueNotIdentifyForSet);
+    test(itCanGetAVariableValue);
 
     test(itSetsUpArgumentValuesInCallEnv);
     test(itAffectsNearestAncestorWithDeclaredVar);

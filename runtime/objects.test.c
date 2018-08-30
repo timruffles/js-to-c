@@ -8,31 +8,31 @@
 #include "test.h"
 #include "gc.h"
 
-JsValue* idOne;
-JsValue* idOneB;
-JsValue* idOneC;
-JsValue* idTwo;
+static JsValue* idOne;
+static JsValue* idOneB;
+static JsValue* idOneC;
+static JsValue* idTwo;
 
-void itCreatesPlainObjects() {
+static void itCreatesPlainObjects() {
     JsValue* object = objectCreatePlain();
     assert(object != NULL);
 }
 
-void itDestroysObjects() {
+static void itDestroysObjects() {
     JsValue* object = objectCreatePlain();
     assert(object != NULL);
     objectDestroy(object);
 }
 
 
-void itAssignsProperties() {
+static void itAssignsProperties() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
 
     objectDestroy(object);
 }
 
-void itGetsPropertyValues() {
+static void itGetsPropertyValues() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
 
@@ -42,7 +42,7 @@ void itGetsPropertyValues() {
     objectDestroy(object);
 }
 
-void itGetsPropertyValuesWithMultiple() {
+static void itGetsPropertyValuesWithMultiple() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
     objectSet(object, idTwo, getTrue());
@@ -50,7 +50,7 @@ void itGetsPropertyValuesWithMultiple() {
     assert(objectGet(object, idTwo) == getTrue());
 }
 
-void itLooksUpByStringValueNotIdentity() {
+static void itLooksUpByStringValueNotIdentity() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
 
@@ -60,7 +60,7 @@ void itLooksUpByStringValueNotIdentity() {
     objectDestroy(object);
 }
 
-void itReturnsUndefinedForMissingKeys() {
+static void itReturnsUndefinedForMissingKeys() {
     JsValue* object = objectCreatePlain();
     objectSet(object, idOne, getTrue());
 
@@ -69,7 +69,7 @@ void itReturnsUndefinedForMissingKeys() {
     objectDestroy(object);
 }
 
-void itUpdatesPropertyValues() {
+static void itUpdatesPropertyValues() {
     JsValue* object = objectCreatePlain();
 
     objectSet(object, idOne, getTrue());
@@ -81,14 +81,14 @@ void itUpdatesPropertyValues() {
     objectDestroy(object);
 }
 
-void itCreatesObjectsWithPrototype() {
+static void itCreatesObjectsWithPrototype() {
     JsValue* prototype = objectCreatePlain();
     JsValue* object = objectCreate(prototype);
 
     assert(object != NULL);
 }
 
-void itFindsPrototypeProperties() {
+static void itFindsPrototypeProperties() {
     JsValue* prototype = objectCreatePlain();
     objectSet(prototype, idOne, getTrue());
     JsValue* object = objectCreate(prototype);
@@ -98,7 +98,7 @@ void itFindsPrototypeProperties() {
     assert(object != NULL);
 }
 
-void itPrefersOwnPropertiesToPrototype() {
+static void itPrefersOwnPropertiesToPrototype() {
     JsValue* prototype = objectCreatePlain();
     objectSet(prototype, idOne, getTrue());
     JsValue* object = objectCreate(prototype);
