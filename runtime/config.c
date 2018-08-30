@@ -45,7 +45,7 @@ ConfigValue configGet(ConfigKey key) {
             return head->value;
         }
     }
-    assert(!"failed to find config value");
+    fail("failed to find config value");
 }
 
 static void setHeapSize() {

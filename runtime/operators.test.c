@@ -11,38 +11,37 @@
 #include "lib/debug.h"
 
 // float equality - within acceptable error
-#define outputComparison(X,Y) printf("%f %f %f\n", jsValueNumber(X), jsValueNumber(Y), fabs(jsValueNumber(X) - jsValueNumber(Y)));
 #define assertDoublesEqual(X,Y) assert(fabs(jsValueNumber(X) - jsValueNumber(Y)) < 0.00000001);
 #define jsNum(X) (jsValueCreateNumber(X))
 
-JsValue* five;
-JsValue* ten;
+static JsValue* five;
+static JsValue* ten;
 
-void itIdentifiesLessThanOperands() {
+static void itIdentifiesLessThanOperands() {
     assert(LTOperator(five, ten) == getTrue());
     assert(LTOperator(ten, five) == getFalse());
     assert(LTOperator(ten, ten) == getFalse());
 }
 
-void itIdentifiesLessThanOrEqualOperands() {
+static void itIdentifiesLessThanOrEqualOperands() {
     assert(LTEOperator(five, ten) == getTrue());
     assert(LTEOperator(ten, five) == getFalse());
     assert(LTEOperator(ten, ten) == getTrue());
 }
 
-void itIdentifiesGreaterThanOperands() {
+static void itIdentifiesGreaterThanOperands() {
     assert(GTOperator(five, ten) == getFalse());
     assert(GTOperator(ten, five) == getTrue());
     assert(GTOperator(ten, ten) == getFalse());
 }
 
-void itIdentifiesGreaterThanOrEqualOperands() {
+static void itIdentifiesGreaterThanOrEqualOperands() {
     assert(GTEOperator(five, ten) == getFalse());
     assert(GTEOperator(ten, five) == getTrue());
     assert(GTEOperator(ten, ten) == getTrue());
 }
 
-void itHasMultiplyOperator() {
+static void itHasMultiplyOperator() {
     assertDoublesEqual(multiplyOperator(five, ten), jsNum(50));
     assertDoublesEqual(multiplyOperator(ten, five), jsNum(50));
 
@@ -51,7 +50,7 @@ void itHasMultiplyOperator() {
     assertDoublesEqual(multiplyOperator(jsNum(-3), jsNum(-3)), jsNum( 9));
 }
 
-void itImplementsStrictEquality() {
+static void itImplementsStrictEquality() {
     assert(strictEqualOperator(getTrue(), getTrue()) == getTrue());
     assert(strictEqualOperator(getTrue(), getFalse()) == getFalse());
 

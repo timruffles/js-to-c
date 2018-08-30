@@ -1,6 +1,7 @@
 all_source_including_tests=$(wildcard *.h *.c)
 source_files=$(filter-out %.test.c %.h, $(all_source_including_tests))
 source_with_headers=$(filter-out %.test.c, $(all_source_including_tests))
+all_tests=$(filter %.test.c, $(all_source_including_tests))
 
 CC=clang
 CLANG_OPTS=-O0 -g -Weverything -Wno-format-security -Wno-format-pedantic -Wno-float-equal -Wno-padded -Wno-gnu-folding-constant -Wno-gnu-folding-constant -Wno-missing-noreturn
@@ -26,9 +27,6 @@ out/global_test: global.test.c $(source_with_headers)
 out/operators_test: operators.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) operators.test.c -o $@
 
-out/heap_test: heap.test.c $(source_with_headers)
-	$(CC) $(CLANG_OPTS) $(source_files) heap.test.c -o $@
-
 out/gc_test: gc.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) gc.test.c -o $@
 
@@ -39,16 +37,11 @@ out/config_test: config.test.c $(source_with_headers)
 # manually ordered for dependencies - i.e objects aren't going to work if we can't allocate
 # or have reliable strings
 .PHONY: test
-test: out/environments_test out/language_test out/objects_test out/strings_test out/operators_test out/heap_test
-	out/heap_test && \
-	out/language_test && \
-	out/strings_test && \
-	out/objects_test && \
-	out/environments_test && \
-	out/operators_test
+test: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/heap_test out/functions_test out/global_test out/gc_test out/config_test
+	out/*_test
 
-.PHONY: test
-test_debug: out/environments_test out/language_test out/objects_test out/strings_test out/operators_test out/heap_test
+.PHONY: test_debug
+test_debug: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/heap_test out/functions_test out/global_test out/gc_test out/config_test
 	set -e; for t in out/*_test; do echo TESTING $$t; lldb -o run ./$$t || break; done
 
 

@@ -1,8 +1,9 @@
+#pragma once
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
-#pragma once
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -31,4 +32,10 @@
 
 #define todo(M) log_err(M); goto fail;
 
+#define fail(M, ...)  { log_err(M, ##__VA_ARGS__); exit(1); }
+
+
+
+
 #pragma clang diagnostic pop
+
