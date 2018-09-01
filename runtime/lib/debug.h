@@ -32,6 +32,10 @@
 
 #define todo(M) log_err(M); goto fail;
 
+#define ensure(T) if(!(T)) { log_err(#T); exit(1); }
+
+#define ensureAlloced(V) if((V) == NULL) { log_err("Could not allocate memory for '%s'", #V); exit(1); }
+
 #define fail(M, ...)  { log_err(M, ##__VA_ARGS__); exit(1); }
 
 

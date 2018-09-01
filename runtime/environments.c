@@ -44,7 +44,7 @@ JsValue *envGet(Env *env, JsValue *name) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
         log_info("Looked up undeclared %s", stringGetCString(name));
-        throwError("Attempted to lookup undeclared variable");
+        exceptionsThrowReferenceError(env, name);
     }
     log_info("Looked up %s got type %s", stringGetCString(name), jsValueReflect(found).name);
     return found;
@@ -63,7 +63,7 @@ void envSet(Env *env, JsValue *name, JsValue *value) {
     }
 
     log_info("Setting undeclared %s", stringGetCString(name));
-    throwError("Attempted to assign undeclared variable");
+    exceptionsThrowReferenceError(env, name);
 }
 
 void envDeclare(Env *env, JsValue *name) {
