@@ -1,5 +1,98 @@
 # Notes
 
+## 30 August 2018
+
+### Async
+
+Since exceptions etc are tied into the concept of task queues, should roughly sketch them to avoid coding myself into a corner.
+
+- IO will schedule a callback
+- Task queue will wait for resolved callbacks
+- Each callback will kick off a new execution
+- RuntimeEnvironment will need to be setup for this
+- Then go back to task queue and wait
+
+Exceptions etc will work in the queue as per usual.
+
+Seems sensible to use libuv.
+
+So effectively program becomes:
+
+- run initial program
+- start loop
+-   run stuff
+- out of loop - exit 0
+
+The task queues are GC roots, walking the environment hierarchies of any callback scheduled.
+
+    struct JsCallback {
+      FunctionRecord* jsFunction;
+    }
+
+might need to think about varargs a bit too.
+
+### Exceptions thinking
+
+Example compilation:
+
+    var a = 'start';
+    try {
+      a += ' try';
+      if(Math.random() > 0.5) throw Error("A");
+      a += ' after try';
+    } catch(e) {
+      a += ' in catch';
+      console.log(e);
+    }
+    console.log('after catch', a);
+
+could compile to something like:
+
+    void userFunctionEg(Env* env) {
+      // var a = 'start';
+      exceptionStackPush()
+      if(setjmp(exceptionsJmpBuf) == 0) {
+          // a+ ' try';
+          // if(Math.random() > 0.5)
+          // throw Error("A");
+          longjmp(expectionsJmpBuf, 1);
+          // a += ' after try';
+      } else {
+        cleanupEnv(runtime->throwingEnv, catchingEnv);
+        // exception caught
+        goto catch1;
+      }
+
+    afterTryCatch1:
+      exceptionStackPop();
+      // console.log('after catch', a);
+
+    // catche
+    catch1:
+      // a += ' in catch';
+      // console.log(e);
+      goto afterTryCatch1;
+    }
+
+with defintions
+
+    void exceptionStackPush() {
+      if(expectionsJmpBuf) {
+          exceptionStackAppend();
+      }
+    }
+
+    void exceptionStackPop() {
+      if(exceptionStack == NULL) {
+        fail("Popping exception stack when empty");
+      }
+      exceptionStack = exceptionStack->parent;
+    }
+
+macros:
+
+    #define exceptionCatch(label)
+
 ## 29 August 2018
 
 Exceptions:
@@ -408,17 +501,14 @@ or
   explicit getters - certainly abstracts the storage anyhow
 - why isn't `const char* const` something we can assign to
   at compile time?
-  - 
 - why 'no previous extern declaration for non-static variable'
   - what's the harm of not making it explicit the var is
     just for use in a file/compilation unit - would be the
     default assumption?
-
 - eh?
   my-bad-pointer-idea.c:44:8: error: expected parameter declarator
 assert(sizeof JsValueContent == sizeof void *);
-  - ah crap, I put it outside a function so it was interpreted
-    as some type level stuff(?)
+  - ah crap, I put it outside a function so it was interpreted as some type level stuff(?)
 - given a variable of type T, and a variable of a type U, both
   n bytes, how do I do this:
     - T t1 = <valid value for T>
