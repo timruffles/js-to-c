@@ -18,7 +18,8 @@ import {
     VariableDeclarator,
     WhileStatement,
     BinaryOperator,
-    AssignmentOperator, ObjectExpression, Expression,
+    AssignmentOperator, ObjectExpression, Expression, ThrowStatement, CatchClause,
+    TryStatement,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -37,12 +38,14 @@ export class InternedString {
 export type JsIdentifier = string;
 
 export class IntermediateVariableTarget {
-    readonly type: 'IntermediateVariableTarget' = 'IntermediateVariableTarget';
+    static readonly type = 'IntermediateVariableTarget';
+    readonly type: typeof IntermediateVariableTarget.type = IntermediateVariableTarget.type;
     constructor(readonly id: JsIdentifier) {}
 }
 
 export class PredefinedVariableTarget {
-    readonly type: 'PredefinedVariableTarget' = 'PredefinedVariableTarget';
+    static readonly type = 'PredefinedVariableTarget';
+    readonly type: typeof PredefinedVariableTarget.type = PredefinedVariableTarget.type;
     constructor(readonly id: JsIdentifier) {}
 }
 
@@ -121,7 +124,7 @@ function getCompilers(): NodeCompilerLookup {
         BlockStatement: compileBlockStatement,
         BreakStatement: unimplemented('BreakStatement'),
         CallExpression: compileCallExpression,
-        CatchClause: unimplemented('CatchClause'),
+        CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
         ClassBody: unimplemented('ClassBody'),
         ClassDeclaration: unimplemented('ClassDeclaration'),
         ClassExpression: unimplemented('ClassExpression'),
@@ -169,8 +172,8 @@ function getCompilers(): NodeCompilerLookup {
         TemplateElement: unimplemented('TemplateElement'),
         TemplateLiteral: unimplemented('TemplateLiteral'),
         ThisExpression: unimplemented('ThisExpression'),
-        ThrowStatement: unimplemented('ThrowStatement'),
-        TryStatement: unimplemented('TryStatement'),
+        ThrowStatement: compileThrowStatement,
+        TryStatement: compileTryStatement,
         UnaryExpression: unimplemented('UnaryExpression'),
         UpdateExpression: unimplemented('UpdateExpression'),
         VariableDeclaration: compileVariableDeclaration,
@@ -203,6 +206,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/objects.h"
         #include "../../runtime/functions.h"
         #include "../../runtime/runtime.h"
+        #include "../../runtime/exceptions.h"
         #include "../../runtime/lib/debug.h"
         
         ${interned}
@@ -278,13 +282,14 @@ function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeS
     }
 }
 
+// used by any node that evaluates to a value to assign that value to the target
 function assignToTarget(cExpression: string, target: CompileTarget) {
     switch(target.type) {
         case 'SideEffectTarget':
-            return cExpression;
-        case 'IntermediateVariableTarget':
+            return `${cExpression};`;
+        case IntermediateVariableTarget.type:
             return `JsValue* ${target.id} = (${cExpression});`;
-        case 'PredefinedVariableTarget':
+        case PredefinedVariableTarget.type:
             return `${target.id} = (${cExpression});`;
         case 'ReturnTarget':
             return `return (${cExpression});`;
@@ -346,7 +351,7 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
                 ${calleeTarget.id}, 
                 ${argsArrayVar},
                 ${argsWithTargets.length}
-            );`, state.target)}
+            )`, state.target)}
             `;
 }
 
@@ -578,6 +583,33 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
             ${compile(node.right, state.childState({ target: result }))}
             ${update}
             envSet(env, ${variable.id}, ${result.id});`
+}
+
+function compileThrowStatement(node: ThrowStatement, state: CompileTimeState) {
+    const errorTarget = new IntermediateVariableTarget(state.getNextSymbol('error'));
+    return `${compile(node.argument, state.childState({ target: errorTarget}))}
+            exceptionsThrow(env, ${errorTarget.id});`;
+}
+
+// when we know t is a T, but the typings doesn't (e.g a CatchClause is always present or parsing fails)
+function specifyType<T>(t: any): T {
+    return t;
+}
+
+function compileTryStatement(node: TryStatement, state: CompileTimeState) {
+    const trySrc = compile(node.block, state);
+
+    const catchSrc = `
+    {
+        Env* env = envCreate(env);
+        ${compile(specifyType<CatchClause>(node.handler).body, state)}
+    }`;
+
+    return `if(exceptionsTry(env)) {
+        ${trySrc}
+    } else {
+        ${catchSrc}
+    }`;
 }
 
 function getBinaryOperatorFunction(operator: BinaryOperator): string {

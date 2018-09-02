@@ -21,7 +21,7 @@ function B() {
 A();
 """
 
-outputMatch="Error: B threw[\s\n]+at B[\s\n]+at A"
+outputMatch="Error: B threw[\s\\n]+at B[\s\\n]+at A"
 
 
 ["catching"]

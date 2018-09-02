@@ -1,4 +1,4 @@
-["object literal, simple properties"]
+["simple object properties"]
 
 example = """
 var a = {

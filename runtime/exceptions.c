@@ -67,7 +67,7 @@ void exceptionsThrow(Env* callEnv, JsValue* error) {
 }
 
 void exceptionsThrowReferenceError(Env* env, JsValue* error) {
-    // TODO
+    exceptionsThrow(env, error);
 }
 
 
