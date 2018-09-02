@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# compiles JS to an executable program
+# compiles JS to an executable program via C
 
 set -euo pipefail
 
 source lib.sh
 
 main() {
+    mkdir -p out/compiled
     local exe=$2
-    local cTarget=out/$(basename $2).c
+    local cTarget=out/compiled/$(basename $2).c
     JsToC $1 > $cTarget
     CToExec $cTarget $exe
 }

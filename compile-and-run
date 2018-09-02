@@ -3,7 +3,8 @@
 set -euo pipefail
 
 main() {
-    local target="${1/.js/}"
+    local defaultTarget="${1/.js/}"
+    local target=${2:-$defaultTarget}
     ./compile-js $1 $target
     ./${target}
 }
