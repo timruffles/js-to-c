@@ -46,7 +46,9 @@ function updateFixture({ name, tests, testFile }) {
 
         const assertion = output
           ? `assertOutputEqual(output, \`${output}\`);`
-          : `assertOutputMatch(output, /${outputMatch}/);`;
+          : outputMatch
+              ? `assertOutputMatch(output, /${outputMatch.replace(/\\/g, '\\')}/);`
+              : '';
 
         return `it("${name}", () => {
             const cFile = compile('${fixtureFile}');
