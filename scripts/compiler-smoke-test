@@ -1,0 +1,4 @@
+#!/bin/bash
+
+output=$(./compile-and-run scripts/smoke-test.js out/compiled/smoke-test 2>/dev/null)
+diff <(echo $output) <(echo "Hello world")
