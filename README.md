@@ -2,6 +2,10 @@
 
 A compiled implementation of ES5, targetting C.
 
+Master branch is likely working, [dev](https://github.com/timruffles/js-to-c/tree/dev) branch is likely more recent and broken.
+
+Read my [notes](https://github.com/timruffles/js-to-c/blob/dev/NOTES.md) for a rough development blog.
+
 ## Example
 
 The following JS
