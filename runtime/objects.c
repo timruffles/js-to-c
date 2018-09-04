@@ -57,7 +57,8 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
     JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
     return val;
 }
-
+ 
+// used from compiled code
 JsValue* objectGet(JsValue *val, JsValue *name) {
     JsValue* found = objectLookup(val, name);
     return found == NULL
@@ -89,9 +90,21 @@ JsValue* objectInternalOwnProperty(JsValue* value, JsValue* name) {
 }
 
 
+// https://www.ecma-international.org/ecma-262/5.1/#sec-9.9
+bool* isCoercibleToObject(JsValue* val) {
+    switch(jsValueType(val)) {
+        case UNDEFINED_TYPE:
+        case NULL_TYPE:
+            return false;
+
+        default:
+            return true;
+    }
+}
+
+
 // returns NULL or pointer to JsValue*
 JsValue* objectLookup(JsValue *val, JsValue *name) {
-    // TODO type assertion on val
     char* cString = stringGetCString(name);
 
     // starting with object, and going up prototype chain, find a matching
@@ -126,6 +139,7 @@ static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
     object->tailProperty = pd;
 }
 
+// used from compiled code
 JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
     // TODO type assertion on object
     JsObject* object = jsValuePointer(objectVal);
@@ -170,5 +184,4 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
 void objectDestroy() {
     // NOOP
 }
-
 

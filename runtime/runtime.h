@@ -12,6 +12,8 @@ typedef struct RuntimeEnvironment {
     Env* globalEnv;
 
     JsCatch* catchStack;
+
+    JsValue* thrownError;
 } RuntimeEnvironment;
 
 RuntimeEnvironment* runtimeInit(void);

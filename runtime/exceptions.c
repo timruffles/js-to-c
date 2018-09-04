@@ -54,7 +54,8 @@ void exceptionsCatchEnd() {
     catchStackPop();
 }
 
-void exceptionsThrow(Env* callEnv, JsValue* error) {
+// TODO remove ENV
+void exceptionsThrow(JsValue* error) {
     RuntimeEnvironment* runtime = runtimeGet();
     if(runtime->catchStack == NULL) {
         unhandledException(error);
@@ -66,8 +67,13 @@ void exceptionsThrow(Env* callEnv, JsValue* error) {
     }
 }
 
-void exceptionsThrowReferenceError(Env* env, JsValue* error) {
-    exceptionsThrow(env, error);
+// TODO remove ENV
+void exceptionsThrowReferenceError(JsValue* error) {
+    exceptionsThrow(error);
+}
+
+void exceptionsThrowReferenceError(JsValue* error) {
+    exceptionsThrow(error);
 }
 
 

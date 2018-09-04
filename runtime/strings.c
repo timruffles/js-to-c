@@ -43,3 +43,6 @@ uint64_t stringLength(JsValue* value) {
     StringData* jsString = jsValuePointer(value);
     return jsString->length;
 }
+
+JsValue* stringToString(JsValue* value) {
+}

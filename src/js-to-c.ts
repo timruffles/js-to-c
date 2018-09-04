@@ -364,11 +364,7 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
     }));
 
     // TODO identifier here is strange - would expect it to be property?
-    const propertySrc = node.property.type === 'Identifier'
-        ? assignToTarget(wrapStringAsJsValueString(node.property.name), propertyTarget)
-        : compile(node.property, state.childState({
-           target: propertyTarget,
-        }));
+    const propertySrc = compileProperty(node.property, state.childState({ target: propertyTarget }));
 
     const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
     return `${objectSrc}
@@ -570,19 +566,51 @@ function compileObjectExpression(node: ObjectExpression, state: CompileTimeState
     return `${objectCreateSrc}\n${propertiesSrc}\n${objectSrc}`
 }
 
+function compileProperty(property: Expression, state: CompileTimeState) {
+    return property.type === 'Identifier'
+        ? assignToTarget(wrapStringAsJsValueString(property.name), state.target)
+        : compile(property, state.childState({
+           target: state.target,
+        }));
+}
+
 function compileAssignmentExpression(node: AssignmentExpression, state: CompileTimeState) {
     const target = node.left;
     const result = new PredefinedVariableTarget(state.getNextSymbol('result'));
-    if(target.type !== 'Identifier') {
-        return unimplemented('MemberExpression')();
-    }
-    const variable = state.internString(target.name);
-    const update = node.operator === '=' ? '' : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(envGet(env, ${variable.id}), ${result.id});`;
+    switch(target.type) {
+        case 'Identifier': {
+            const variable = state.internString(target.name);
+            const update = node.operator === '=' 
+                ? '' 
+                : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(envGet(env, ${variable.id}), ${result.id});`;
 
-    return `JsValue* ${result.id};
-            ${compile(node.right, state.childState({ target: result }))}
-            ${update}
-            envSet(env, ${variable.id}, ${result.id});`
+            return `JsValue* ${result.id};
+                    ${compile(node.right, state.childState({ target: result }))}
+                    ${update}
+                    envSet(env, ${variable.id}, ${result.id});`
+        }
+        case 'MemberExpression': {
+            // order of execution - target, prop, value
+            const objectTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
+            const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
+
+            const propertySrc = compileProperty(target.property, state.childState({ target: propertyTarget }));
+            const targetValueSrc = compile(target, state.childState({ target: objectTarget }));
+            const update = node.operator === '='
+                ? '' 
+                : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(objectGet(${objectTarget.id}, ${propertyTarget.id}), ${result.id});`;
+
+
+            return `JsValue* ${result.id};
+                    ${targetValueSrc}
+                    ${propertySrc}
+                    ${compile(node.right, state.childState({ target: result }))}
+                    ${update}
+                    objectSet(${objectTarget.id}, ${propertyTarget.id}, ${result.id});`
+        }
+        default:
+            return unimplemented(target.type)();
+    }
 }
 
 function compileThrowStatement(node: ThrowStatement, state: CompileTimeState) {
@@ -599,10 +627,14 @@ function specifyType<T>(t: any): T {
 function compileTryStatement(node: TryStatement, state: CompileTimeState) {
     const trySrc = compile(node.block, state);
 
+    const catchClause = specifyType<CatchClause>(node.handler);
+    const errorName = state.internString(getIdentifierName(catchClause.param));
     const catchSrc = `
     {
-        Env* env = envCreate(env);
-        ${compile(specifyType<CatchClause>(node.handler).body, state)}
+        JsValue* errorVars[1] = { runtimeGet()->thrownError };
+        JsValue* errorNames[1] = { ${errorName.id} };
+        Env* env = envCreateForCall(env, errorNames, errorVars, 1);
+        ${compile(catchClause.body, state)}
     }`;
 
     return `if(exceptionsTry(env)) {

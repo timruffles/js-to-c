@@ -4,6 +4,9 @@
 #include "functions.h"
 #include "gc.h"
 
+#define JS_SET_DYNAMIC(O,S,V) objectSet(O, stringCreateFromCString(S), V);
+
+
 typedef struct JsObject JsObject;
 
 JsValue* objectCreate(JsValue* prototype);
