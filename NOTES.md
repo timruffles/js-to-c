@@ -1,5 +1,11 @@
 # Notes
 
+## 4 September 2018
+
+A lot of operations can throw errors in JS! I was originally passing env to throw methods, but now I think I'll have to avoid doing so.
+
+So many features are inter-related: for instance exceptions would make it nice to have dynamic strings for proper error messages. I've often felt like I'm implementing this by walking the dependency graph between various language features.
+
 ## 30 August 2018
 
 ### Async
