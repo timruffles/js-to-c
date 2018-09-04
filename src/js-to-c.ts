@@ -458,6 +458,8 @@ function compileConditionalExpression(node: ConditionalExpression, state: Compil
 }
 
 function wrapStringAsJsValueString(str: string) {
+    // TODO these should be interned! everything we have here is by definitions
+    // known at compile-time
     return `stringCreateFromCString(${wrapAsCStringLiteral(str)})`
 }
 
