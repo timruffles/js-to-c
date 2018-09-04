@@ -11,7 +11,7 @@
 #include "global.h"
 #include "runtime.h"
 
-#define ensureCalloc(V, M) V = calloc(1, M); assert(V != NULL);
+#define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
 
 typedef struct FreeSpace {
   GcHeader;
@@ -66,7 +66,7 @@ static void* memoryEnd;
 
 static FreeNode* freeNodeCreate(FreeSpace* space) {
     FreeNode* node;
-    ensureCalloc(node, sizeof(FreeNode));
+    ensureCallocBytes(node, sizeof(FreeNode));
     *node = (FreeNode) {
         .space = space,
     };
@@ -113,7 +113,7 @@ void gcInit() {
 
     log_info("initialised gc with heap size %llu", heapSize);
 
-    ensureCalloc(memory, heapSize);
+    ensureCallocBytes(memory, heapSize);
 
     FreeSpace* space = memory;
     memoryEnd = (void*)((char*)memory + heapSize);

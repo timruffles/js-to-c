@@ -117,13 +117,13 @@ void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
 }
 
 void* jsValuePointer(JsValue* val) {
-    assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE);
+    precondition(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE, "Expected pointer value, got %s", gcObjectReflectType(jsValueType(val)).name);
     // note: this will either be object or string
     return val->value.pointer;
 }
 
 void jsValuePointerSet(JsValue* val, void* ptr) {
-    assert(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE);
+    precondition(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE, "Expected pointer value, got %s", gcObjectReflectType(jsValueType(val)).name);
     // note: this will either be object or string
     val->value.pointer = ptr;
 }
