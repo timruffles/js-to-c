@@ -1,0 +1,31 @@
+["constructors"]
+
+example = """
+function A(name) {
+  this.name = name;
+}
+
+var a = new A('a');
+var b = new A('b');
+
+console.log(a);
+console.log(b);
+"""
+
+output = "a\nb"
+
+["constructors and prototypes"]
+
+example = """
+function A(name) {}
+
+A.prototype = {
+  data: 12,  
+};
+
+var a = new A;
+
+console.log(a.data);
+"""
+
+output = "12"

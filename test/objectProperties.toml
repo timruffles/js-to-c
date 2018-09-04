@@ -31,4 +31,35 @@ console.log(a[2]);
 
 output = ""
 
+["setting properties"]
+
+example = """
+var a = {};
+a.testK = 'testV';
+console.log(a.testK);
+"""
+
+output = "testV"
+
+["setting properties multiple times"]
+
+example = """
+var a = {};
+a.testK = 'testV';
+a.testK = 'secondValue';
+console.log(a.testK);
+"""
+
+output = "secondValue"
+
+["functions are objects"]
+
+example = """
+function a() {}
+a.testK = 'testV';
+console.log(a.testK);
+"""
+
+output = "testK"
+
 
