@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# compiles JS to an equivalent C program
+# compiles JS to an equivalent C program, to stdout
 
 source lib.sh
 
 main() {
-    JsToC $1 > $2
+    JsToC $1
 }
 
 main $@
