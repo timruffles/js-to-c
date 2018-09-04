@@ -44,6 +44,26 @@ console.log(A());
 
 output="A caught"
 
+["throwing errors"]
+
+example="""
+function A() {
+    try {
+      B();
+    } catch(e) {
+      return e.message;
+    }
+}
+
+function B() {
+  throw Error("B threw");
+}
+
+console.log(A());
+"""
+
+output="B threw"
+
 ["calling non function"]
 
 example="""
