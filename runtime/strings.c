@@ -10,6 +10,8 @@ typedef struct StringData {
     GcHeader;
     char* cString;
     uint64_t length;
+    // if string is interned, we don't manage the memory
+    bool interned;
 } StringData;
 
 JsValue* stringCreateFromCString(char* string) {
@@ -21,6 +23,10 @@ JsValue* stringCreateFromCString(char* string) {
 
     JsValue *val = jsValueCreatePointer(STRING_TYPE, jsString);
     return val;
+}
+
+JsValue* stringCreateFromTemplate(char* string, ...) {
+    // TODO sprintf etc, allocate enough on heap for string
 }
 
 StringData* stringGet(JsValue* value) {
@@ -42,4 +48,8 @@ char* stringGetCString(JsValue* value) {
 uint64_t stringLength(JsValue* value) {
     StringData* jsString = jsValuePointer(value);
     return jsString->length;
+}
+
+JsValue* stringFromTemplate(char* template, ...) {
+
 }
