@@ -10,7 +10,6 @@
 
 #define TEMPLATE_BUFFER_SIZE 4096
 
-// our string primitive - can be boxed by toObject
 typedef struct StringData {
     GcHeader;
     const char* internedString;
