@@ -9,6 +9,7 @@
 #include "gc.h"
 
 #define INTERNED_STRING(S) stringCreateFromInternedString(S, strlen(S))
+#define assertCStringValue(S,CS) assert(strcmp(stringGetCString(S), CS) == 0);
 
 static void itCanCreateAStringFromACString() {
     JsValue* str = INTERNED_STRING("Hello");
@@ -34,6 +35,13 @@ static void itCreatesStringsFromTemplate() {
       
 }
 
+static void itJoinsStrings() {
+    JsValue* joined = stringConcat(INTERNED_STRING("One"), INTERNED_STRING("Two"));
+    assertCStringValue(joined, "OneTwo");
+    assert(stringComparison(joined, INTERNED_STRING("OneTwo")));
+    assert(stringLength(joined) == 6);
+}
+
 int main() {
     testLanguageAndGcInit();
 
@@ -41,5 +49,6 @@ int main() {
     test(itGetsJsStringFromValue);
     test(itGetsStringLength);
     test(itCreatesStringsFromTemplate);
+    test(itJoinsStrings);
 }
 
