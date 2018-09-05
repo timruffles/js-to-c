@@ -3,9 +3,10 @@
 
 #include "language.h"
 
+#define stringFromLiteral(S) stringCreateFromInternedString(S, sizeof(S))
+
 typedef struct StringData StringData;
 
-JsValue* stringCreateFromCString(char*);
 JsValue* stringCreateFromInternedString(const char* const, uint64_t size);
 StringData* stringGet(JsValue*);
 uint64_t stringLength(JsValue*);

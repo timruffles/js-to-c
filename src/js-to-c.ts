@@ -233,19 +233,17 @@ function compileProgram(node: Program, state: CompileTimeState) {
 
 
 function compileInternedStrings(interned: InternedString[]): string {
-    return joinNodeOutput(interned.map(({id, value}) => (
-        `static char ${id}_cstring[] = "${value}";
-         static JsValue* ${id};`
+    return joinNodeOutput(interned.map(({id}) => (
+        `static JsValue* ${id};`
     )));
 }
 
 function compileInternInitialisation(interned: InternedString[]): string {
-    const initialisers = joinNodeOutput(interned.map(({id}) => (
-        `${id} = stringCreateFromCString(${id}_cstring);`
+    const initialisers = joinNodeOutput(interned.map(({id, value}) => (
+        `${id} = stringFromLiteral("${value.replace(/"/g, '"')}");`
     )));
 
-    return `void initialiseInternedStrings(void);
-    void initialiseInternedStrings() {
+    return `static void initialiseInternedStrings() {
         ${initialisers}
     }`;
 }
@@ -365,7 +363,7 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
 
     // TODO identifier here is strange - would expect it to be property?
     const propertySrc = node.property.type === 'Identifier'
-        ? assignToTarget(wrapStringAsJsValueString(node.property.name), propertyTarget)
+        ? assignToTarget(internString(node.property.name, state), propertyTarget)
         : compile(node.property, state.childState({
            target: propertyTarget,
         }));
@@ -412,10 +410,6 @@ function createCFunction(name: string, bodySrc: string) {
         ${bodySrc}
     }`
 }
-function wrapAsCStringLiteral(string: string) {
-    return `"${string}"`
-}
-
 
 function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState) {
     const targetLeft = new IntermediateVariableTarget(state.getNextSymbol('left'))
@@ -457,10 +451,8 @@ function compileConditionalExpression(node: ConditionalExpression, state: Compil
             }`
 }
 
-function wrapStringAsJsValueString(str: string) {
-    // TODO these should be interned! everything we have here is by definitions
-    // known at compile-time
-    return `stringCreateFromCString(${wrapAsCStringLiteral(str)})`
+function internString(str: string, state: CompileTimeState) {
+    return state.internString(str).id;
 }
 
 function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTimeState) {
@@ -472,7 +464,7 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
     const functionId = state.getNextSymbol(name);
     const argumentNames = node.params.map(getIdentifierName);
     const argumentNamesSrc = argumentNames
-        .map(wrapStringAsJsValueString)
+        .map(s => internString(s, state))
         .join(", ");
     const argsArrayName = `${functionId}_args`;
 
@@ -491,7 +483,7 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
 
     // TODO proper hoisting
     return `${argsArraySrc}
-            JsValue* ${fnName} = stringCreateFromCString("${name}");
+            JsValue* ${fnName} = ${internString(name, state)};
             envDeclare(env, ${fnName});
             envSet(env, ${fnName}, functionCreate(${functionId}, ${argsArrayName}, ${argCount}, env));`
 }
@@ -530,7 +522,7 @@ function compileLiteral(node: Literal, state: CompileTimeState) {
     if("regex" in node) return unimplemented("Literal<regex>")();
     const getValue = () => {
         if(typeof node.value === 'string') {
-            return `stringCreateFromCString(${wrapAsCStringLiteral(node.value)})`;
+            return internString(node.value, state)
         } else if(typeof node.value === 'number') {
             return `jsValueCreateNumber(${node.value})`
         } else if(node.value === null) {

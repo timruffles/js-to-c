@@ -37,7 +37,7 @@ JsValue* consoleLog(Env* env) {
     FILE* stream = getOutStream();
     assert(stream != NULL);
 
-    jsValueToCString(envGet(env, stringCreateFromCString("arg0")), outputBuffer, sizeof(outputBuffer));
+    jsValueToCString(envGet(env, stringFromLiteral("arg0")), outputBuffer, sizeof(outputBuffer));
     ensureWrite(outputBuffer, stream);
     ensureWrite("\n", stream);
     fflush(stream);
@@ -52,7 +52,7 @@ JsValue* createGlobalObject() {
     Env* globalEnv = envFromGlobal(global);
 
     JsValue* console = objectCreatePlain();
-    JsValue* str = stringCreateFromCString("console");
+    JsValue* str = stringFromLiteral("console");
     _gcVisualiseHeap();
     log_info("post");
     objectSet(global, str,
@@ -60,13 +60,13 @@ JsValue* createGlobalObject() {
 
     // TODO varargs
     JsValue** consoleArgs = calloc(sizeof(JsValue*), 1);
-    consoleArgs[0] = stringCreateFromCString("arg0");
+    consoleArgs[0] = stringFromLiteral("arg0");
     JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1, globalEnv);
-    objectSet(console, stringCreateFromCString("log"),
+    objectSet(console, stringFromLiteral("log"),
             consoleLogJsv);
 
     // setup reference to self (important when used as an env)
-    objectSet(global, stringCreateFromCString("global"),
+    objectSet(global, stringFromLiteral("global"),
             global);
 
     return global;

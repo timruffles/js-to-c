@@ -21,7 +21,7 @@ static bool isInterned(StringData* jsString) {
     return jsString->internedString != NULL;
 }
 
-static char* getCString(StringData* jsString) {
+static const char* getCString(StringData* jsString) {
     return isInterned(jsString)
         ? jsString->internedString
         : jsString->heapString;
@@ -38,11 +38,6 @@ JsValue* stringCreateFromInternedString(const char* const interned, uint64_t log
     jsString->length = logicalLength;
 
     return jsValueCreatePointer(STRING_TYPE, jsString);
-}
-
-// TODO replace all usages with stringCreateFromInternedString
-JsValue* stringCreateFromCString(char* string) {
-    return stringCreateFromInternedString(string, strlen(string));
 }
 
 typedef struct AllocatedString {
