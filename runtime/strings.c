@@ -1,32 +1,89 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <stdbool.h>
 
+#include "lib/debug.h"
 #include "strings.h"
 #include "language.h"
 #include "gc.h"
 
+#define TEMPLATE_BUFFER_SIZE 4096
+
 // our string primitive - can be boxed by toObject
 typedef struct StringData {
     GcHeader;
-    char* cString;
+    const char* internedString;
     uint64_t length;
-    // if string is interned, we don't manage the memory
-    bool interned;
+    char heapString[];
 } StringData;
 
-JsValue* stringCreateFromCString(char* string) {
-    StringData* jsString = gcAllocate(sizeof(StringData), STRING_VALUE_TYPE);
-    uint64_t l = strlen(string);
-
-    jsString->cString = string;
-    jsString->length = l;
-
-    JsValue *val = jsValueCreatePointer(STRING_TYPE, jsString);
-    return val;
+static bool isInterned(StringData* jsString) {
+    return jsString->internedString != NULL;
 }
 
-JsValue* stringCreateFromTemplate(char* string, ...) {
-    // TODO sprintf etc, allocate enough on heap for string
+static char* getCString(StringData* jsString) {
+    return isInterned(jsString)
+        ? jsString->internedString
+        : jsString->heapString;
+}
+
+char* stringGetCString(JsValue* value) {
+    return getCString(jsValuePointer(value));
+}
+
+JsValue* stringCreateFromInternedString(const char* const interned, uint64_t logicalLength) {
+    StringData* jsString = gcAllocate(sizeof(StringData), STRING_VALUE_TYPE);
+
+    jsString->internedString = interned;
+    jsString->length = logicalLength;
+
+    return jsValueCreatePointer(STRING_TYPE, jsString);
+}
+
+// TODO replace all usages with stringCreateFromInternedString
+JsValue* stringCreateFromCString(char* string) {
+    return stringCreateFromInternedString(string, strlen(string));
+}
+
+typedef struct AllocatedString {
+    JsValue* const string;
+    StringData* const data;
+} AllocatedString;
+
+static AllocatedString createHeapString(uint64_t stringLength) {
+    StringData* data = gcAllocate(sizeof(StringData) + stringLength, STRING_VALUE_TYPE);
+    data->length = stringLength;
+    data->internedString = NULL;
+    JsValue* value = jsValueCreatePointer(STRING_TYPE, data);
+    return (AllocatedString) {
+        .string = value,
+        .data = data,
+    };
+}
+
+JsValue* stringCreateFromTemplate(const char* format, ...) {
+    char buffer[TEMPLATE_BUFFER_SIZE];
+    va_list args;
+    va_start(args, format);
+    uint64_t charsWritten = (uint64_t)vsprintf(buffer, format, args);
+    va_end(args);
+
+    AllocatedString allocation = createHeapString(charsWritten);
+    strcpy(allocation.data->heapString, buffer);
+
+    return allocation.string;
+}
+
+JsValue* stringConcat(JsValue* one, JsValue* two) {
+    uint64_t newLength = stringLength(one) + stringLength(two);
+    AllocatedString allocated = createHeapString(newLength);
+    char* destination = allocated.data->heapString;
+
+    strcat(destination, stringGetCString(one));
+    strcat(destination, stringGetCString(two));
+
+    return allocated.string;
 }
 
 StringData* stringGet(JsValue* value) {
@@ -34,22 +91,19 @@ StringData* stringGet(JsValue* value) {
     return jsString;
 }
 
-int stringComparison(JsValue* left, JsValue* right) {
-    StringData* leftString = jsValuePointer(left);
-    StringData* rightString = jsValuePointer(right);
-    return strcmp(leftString->cString, rightString->cString);
+bool stringComparison(JsValue* left, JsValue* right) {
+    if(left == right) {
+        return true;
+    }
+
+    StringData* leftData = jsValuePointer(left);
+    StringData* rightData = jsValuePointer(right);
+    return leftData->length == rightData->length
+        && strcmp(getCString(leftData), getCString(rightData)) == 0;
 }
 
-char* stringGetCString(JsValue* value) {
-    StringData* jsString = jsValuePointer(value);
-    return jsString->cString;
-}
 
 uint64_t stringLength(JsValue* value) {
     StringData* jsString = jsValuePointer(value);
     return jsString->length;
-}
-
-JsValue* stringFromTemplate(char* template, ...) {
-
 }
