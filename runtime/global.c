@@ -12,8 +12,8 @@
 
 static FILE* outStream;
 
-static const uintptr_t oneMeg = 1024 * 1024;
-static char outputBuffer[oneMeg];
+#define ONE_MIBI 1048576
+static char outputBuffer[ONE_MIBI];
 
 static FILE* getOutStream() {
     if(outStream == NULL) {
