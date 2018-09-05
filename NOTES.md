@@ -1,5 +1,9 @@
 # Notes
 
+## 5 September 2018
+
+Read compiler warnings! Had 15 minutes of fun trying to work out why a pointer returning function was returning half a pointer. It was because I hadn't exposed its prototype in the header, so it was only returning an int's worth of space.
+
 ## 4 September 2018
 
 A lot of operations can throw errors in JS! I was originally passing env to throw methods, but now I think I'll have to avoid doing so.
