@@ -1,0 +1,2 @@
+#!/bin/bash
+clang -std=c11 -Weverything $1 -o /tmp/notes && /tmp/notes
