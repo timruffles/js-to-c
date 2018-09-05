@@ -8,23 +8,30 @@
 #include "test.h"
 #include "gc.h"
 
-static void itCanCreateAStringFromACString() {
-    char* theContent = "Hello";
-    JsValue* str = stringCreateFromCString(theContent);
+#define INTERNED_STRING(S) stringCreateFromInternedString(S, strlen(S))
 
+static void itCanCreateAStringFromACString() {
+    JsValue* str = INTERNED_STRING("Hello");
     assert(str != NULL);
 }
 
 static void itGetsJsStringFromValue() {
     char* theContent = "Hello";
-    JsValue* str = stringCreateFromCString(theContent);
+    JsValue* str = INTERNED_STRING("Hello");
     assert(strcmp(stringGetCString(str), theContent) == 0);
 }
 
 static void itGetsStringLength() {
     char* theContent = "Hello";
-    JsValue* str = stringCreateFromCString(theContent);
+    JsValue* str = INTERNED_STRING("Hello");
+    assert(strcmp(stringGetCString(str), theContent) == 0);
     assert(stringLength(str) == 5);
+}
+
+static void itCreatesStringsFromTemplate() {
+    JsValue* str = stringCreateFromTemplate("Hello '%s'", "Javascript");
+    assert(stringComparison(str, INTERNED_STRING("Hello 'Javascript'")));
+      
 }
 
 int main() {
@@ -33,5 +40,6 @@ int main() {
     test(itCanCreateAStringFromACString);
     test(itGetsJsStringFromValue);
     test(itGetsStringLength);
+    test(itCreatesStringsFromTemplate);
 }
 
