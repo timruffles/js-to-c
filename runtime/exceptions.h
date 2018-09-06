@@ -11,11 +11,12 @@ typedef struct JsCatch JsCatch;
 
 extern jmp_buf exceptionsJumpBuf;
 
-void exceptionsThrow(Env* env, JsValue* error);
+void exceptionsThrow(JsValue* error);
 
 void exceptionsCatchStart(Env* env);
 void exceptionsCatchEnd(void);
 
-void exceptionsThrowReferenceError(Env* env, JsValue* name);
+void exceptionsThrowReferenceError(JsValue* msg);
+void exceptionsThrowTypeError(JsValue* msg);
 
 void exceptionsTryStart(Env* env);

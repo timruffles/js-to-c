@@ -44,7 +44,8 @@ JsValue *envGet(Env *env, JsValue *name) {
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
         log_info("Looked up undeclared %s", stringGetCString(name));
-        exceptionsThrowReferenceError(env, name);
+        exceptionsThrowReferenceError(
+            stringCreateFromTemplate("%s is not defined", stringGetCString(name)));
     }
     log_info("Looked up %s got type %s", stringGetCString(name), jsValueReflect(found).name);
     return found;
@@ -63,7 +64,8 @@ void envSet(Env *env, JsValue *name, JsValue *value) {
     }
 
     log_info("Setting undeclared %s", stringGetCString(name));
-    exceptionsThrowReferenceError(env, name);
+    exceptionsThrowReferenceError(
+        stringCreateFromTemplate("%s is not defined", stringGetCString(name)));
 }
 
 void envDeclare(Env *env, JsValue *name) {

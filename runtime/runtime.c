@@ -29,6 +29,7 @@ static RuntimeEnvironment* runtimeCreate() {
         .gcRoots = gcRoots,
         .gcRootsCount = gcRootsCount,
         .globalEnv = globalEnv,
+        .global = global,
     };
 
     return runtime;

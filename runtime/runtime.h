@@ -10,8 +10,11 @@ typedef struct RuntimeEnvironment {
     uint64_t gcRootsCount;
 
     Env* globalEnv;
+    JsValue* global;
 
     JsCatch* catchStack;
+
+    JsValue* thrownError;
 } RuntimeEnvironment;
 
 RuntimeEnvironment* runtimeInit(void);

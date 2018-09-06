@@ -4,6 +4,9 @@
 #include "functions.h"
 #include "gc.h"
 
+#define JS_SET_LITERAL(O,S,V) objectSet(O, stringFromLiteral(S), V);
+
+
 typedef struct JsObject JsObject;
 
 JsValue* objectCreate(JsValue* prototype);
