@@ -170,14 +170,14 @@ bool jsValueIsPrimitive(JsValue* value) {
     switch(value->type) {
         case OBJECT_TYPE:
         case FUNCTION_TYPE:
-            return true;
+            return false;
 
         case UNDEFINED_TYPE:
         case NULL_TYPE:
         case NUMBER_TYPE:
         case BOOLEAN_TYPE:
         case STRING_TYPE:
-            return false;
+            return true;
 
         default:
             fail("Non JSValue %s", gcObjectReflectType(value->type).name);

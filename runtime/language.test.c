@@ -31,7 +31,7 @@ static void itCanAccessPointerValue() {
 
 static void itHasDefinedTruthiness() {
     assert(isTruthy(getTrue()));
-    assert(isTruthy(stringCreateFromCString("hello")));
+    assert(isTruthy(stringFromLiteral("hello")));
     assert(isTruthy(jsValueCreateNumber(7)));
     assert(isTruthy(objectCreatePlain()));
 
@@ -39,7 +39,16 @@ static void itHasDefinedTruthiness() {
     assert(!isTruthy(getFalse()));
     assert(!isTruthy(getUndefined()));
     assert(!isTruthy(getNull()));
-    assert(!isTruthy(stringCreateFromCString("")));
+    assert(!isTruthy(stringFromLiteral("")));
+}
+
+static void itIdentifiesPrimitives() {
+    assert(jsValueIsPrimitive(getTrue()));
+    assert(jsValueIsPrimitive(getUndefined()));
+    assert(jsValueIsPrimitive(getNull()));
+    assert(jsValueIsPrimitive(stringFromLiteral("hi")));
+
+    assert(!jsValueIsPrimitive(objectCreatePlain()));
 }
 
 int main() {
@@ -50,5 +59,6 @@ int main() {
     test(itCanAccessPointerValue);
 
     test(itHasDefinedTruthiness);
+    test(itIdentifiesPrimitives);
 }
 

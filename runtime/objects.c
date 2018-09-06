@@ -37,7 +37,6 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
-    assert(!"Need to fix properties - run objectProperties.toml tests");
     // TODO set pt
     JsObject *obj = gcAllocate(sizeof(JsObject), OBJECT_VALUE_TYPE);
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
@@ -101,6 +100,7 @@ static JsValue* coerceForObjectReadWrite(JsValue* raw, const char* const verb, J
 
 // used from compiled code
 JsValue* objectGet(JsValue *rawVal, JsValue *name) {
+    log_info("Getting %s", stringGetCString(name));
     JsValue* val = coerceForObjectReadWrite(rawVal, "read", name);
     JsValue* found = objectLookup(val, name);
     return found == NULL
@@ -215,7 +215,6 @@ JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64
     JsValue* this = objectCreatePlain();
 
     JsValue* returned = functionRunWithArguments(function, argumentValues, argumentCount, this);
-    log_info("Returned obj");
     return jsValueIsPrimitive(returned)
         ? this
         : returned;

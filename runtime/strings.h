@@ -3,7 +3,7 @@
 
 #include "language.h"
 
-#define stringFromLiteral(S) stringCreateFromInternedString(S, sizeof(S))
+#define stringFromLiteral(S) stringCreateFromInternedString(S, sizeof(S) - 1)
 
 typedef struct StringData StringData;
 
