@@ -37,6 +37,7 @@ typedef struct JsObject {
  * A 'plain' object - with Object as prototype
  */
 JsValue* objectCreatePlain() {
+    assert(!"Need to fix properties - run objectProperties.toml tests");
     // TODO set pt
     JsObject *obj = gcAllocate(sizeof(JsObject), OBJECT_VALUE_TYPE);
     JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
