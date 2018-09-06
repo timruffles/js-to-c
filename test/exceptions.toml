@@ -4,7 +4,7 @@ example="""
 throw Error("Test");
 """
 
-outputMatch="Error: Test"
+errorOutMatch="Error: Test"
 
 
 ["call stacks"]
@@ -21,7 +21,7 @@ function B() {
 A();
 """
 
-outputMatch="Error: B threw[\s\\n]+at B[\s\\n]+at A"
+errorOutMatch="Error: B threw[\s\\n]+at B[\s\\n]+at A"
 
 
 ["catching"]
@@ -71,7 +71,9 @@ var A = '';
 A();
 """
 
-outputMatch="TypeError: A is not a function"
+errorOutMatch="Uncaught TypeError: A is not a function"
+
+expectedStatus="1"
 
 
 ["reference error"]
@@ -80,7 +82,9 @@ example="""
 A();
 """
 
-outputMatch="ReferenceError: A is not defined"
+errorOutMatch="Uncaught ReferenceError: A is not defined"
+
+expectedStatus="1"
 
 
 ["dereference undefined"]
@@ -91,4 +95,6 @@ var A;
 A.thingy;
 """
 
-outputMatch="TypeError: Cannot read property 'thingy' of undefined"
+errorOutMatch="Uncaught TypeError: Cannot read property 'thingy' of undefined"
+
+expectedStatus="1"

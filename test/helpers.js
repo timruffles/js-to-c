@@ -1,7 +1,7 @@
 'use strict';
 const { writeFileSync, unlinkSync } = require('fs');
-const { execSync, execFileSync } = require('child_process');
-const assert = require('assert');
+const { execSync, spawnSync } = require('child_process');
+const assert = require('chai').assert;
 const { compileFile } = require('..');
 const path = require('path');
 
@@ -28,16 +28,43 @@ exports.link = function(cFile) {
 }
 
 exports.runExecutable = function(path, opts) {
-    const stdout = execFileSync(path, opts).toString(); 
-    return { stdout };
+    try {
+        return spawnSync(path, opts);
+    } catch(e) {
+        console.log(e);
+        
+        return e;
+    }
 }
 
-exports.assertOutputEqual = function(actual, expected) {
-    assert.equal(actual.trim(), expected.trim());
-}
-
-exports.assertOutputMatch = function(actual, pattern) {
-    assert(pattern.test(expected));
+exports.assertOutput = function({
+    stderr,
+    stdout,
+    status,
+}, {
+    // ''/Match pairs are mutually exclusive
+    output,
+    outputMatch,
+    errorOut,
+    errorOutMatch,
+    expectedStatus,
+}) {
+    // TODO make composite
+    if(output != null) {
+        assert.equal(stdout.toString().trim(), output);
+    }
+    if(outputMatch != null) {
+        assert.match(stdout.toString(), new RegExp(outputMatch, 'm'));
+    }
+    if(errorOut != null) {
+        assert.equal(stderr.toString().trim(), errorOut);
+    }
+    if(errorOutMatch != null) {
+        assert.match(stderr.toString(), new RegExp(errorOutMatch, 'm'));
+    }
+    if(expectedStatus != null) {
+        assert.equal(status, expectedStatus);
+    }
 }
 
 function pathInFixtures(fn) {
