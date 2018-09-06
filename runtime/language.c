@@ -166,6 +166,24 @@ JsValue* getValueOperation(JsValue* value) {
     }
 }
 
+bool jsValueIsPrimitive(JsValue* value) {
+    switch(value->type) {
+        case OBJECT_TYPE:
+        case FUNCTION_TYPE:
+            return true;
+
+        case UNDEFINED_TYPE:
+        case NULL_TYPE:
+        case NUMBER_TYPE:
+        case BOOLEAN_TYPE:
+        case STRING_TYPE:
+            return false;
+
+        default:
+            fail("Non JSValue %s", gcObjectReflectType(value->type).name);
+    }
+}
+
 JsValueType jsValueType(JsValue* value) {
     return value->type;
 }
@@ -182,8 +200,7 @@ GcObjectReflection jsValueReflect(JsValue* object) {
         REFLECT(STRING_TYPE, "string");
         REFLECT(FUNCTION_TYPE, "function");
         default:
-            log_err("Non JSValue %i", object->type);
-            assert(false);
+            fail("Non JSValue %s", gcObjectReflectType(object->type).name);
     }
 }
 

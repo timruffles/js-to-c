@@ -209,6 +209,16 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
     }
 }
 
+JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64_t argumentCount) {
+    // TODO prototypes
+    JsValue* this = objectCreatePlain();
+
+    JsValue* returned = functionRunWithArguments(function, argumentValues, argumentCount, this);
+    log_info("Returned obj");
+    return jsValueIsPrimitive(returned)
+        ? this
+        : returned;
+}
 
 void objectDestroy() {
     // NOOP

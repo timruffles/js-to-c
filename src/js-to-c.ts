@@ -19,7 +19,7 @@ import {
     WhileStatement,
     BinaryOperator,
     AssignmentOperator, ObjectExpression, Expression, ThrowStatement, CatchClause,
-    TryStatement,
+    TryStatement, ThisExpression, NewExpression,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -30,6 +30,7 @@ type NodeCompilerLookup = {
     [k in keyof typeof Syntax]: NodeCompiler
 }
 
+export class CompileTimeError extends Error {}
 
 export class InternedString {
    constructor(public readonly id: string, public readonly value: string) {}
@@ -156,7 +157,7 @@ function getCompilers(): NodeCompilerLookup {
         MemberExpression: compileMemberExpression,
         MetaProperty: unimplemented('MetaProperty'),
         MethodDefinition: unimplemented('MethodDefinition'),
-        NewExpression: unimplemented('NewExpression'),
+        NewExpression: compileNewExpression,
         ObjectExpression: compileObjectExpression,
         ObjectPattern: unimplemented('ObjectPattern'),
         Program: compileProgram,
@@ -171,7 +172,7 @@ function getCompilers(): NodeCompilerLookup {
         TaggedTemplateExpression: unimplemented('TaggedTemplateExpression'),
         TemplateElement: unimplemented('TemplateElement'),
         TemplateLiteral: unimplemented('TemplateLiteral'),
-        ThisExpression: unimplemented('ThisExpression'),
+        ThisExpression: compileThisExpression,
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
         UnaryExpression: unimplemented('UnaryExpression'),
@@ -341,14 +342,18 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
         : `JsValue** ${argsArrayVar} = NULL;`;
 
 
+    const isNew = node.type === 'NewExpression';
+    const runtimeOperation = isNew ? 'objectNewOperation' : 'functionRunWithArguments';
+    const thisArgumentSrc = isNew ? '' : ',NULL';
 
     return `${calleeSrc}
             ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
             ${argsArrayInit}
-            ${assignToTarget(`functionRunWithArguments(
+            ${assignToTarget(`${runtimeOperation}(
                 ${calleeTarget.id}, 
                 ${argsArrayVar},
                 ${argsWithTargets.length}
+                ${thisArgumentSrc}
             )`, state.target)}
             `;
 }
@@ -573,6 +578,10 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
     const result = new PredefinedVariableTarget(state.getNextSymbol('result'));
     switch(target.type) {
         case 'Identifier': {
+            if(target.name === 'this') {
+                throw new CompileTimeError('Invalid left-hand side in assignment (this)');
+            }
+
             const variable = state.internString(target.name);
             const update = node.operator === '=' 
                 ? '' 
@@ -652,4 +661,12 @@ function getAssignmentOperatorFunction(operator: AssignmentOperator): string {
         throw Error(`unimplemented operator '${operator}'`)
     }
     return operatorFn;
+}
+
+function compileNewExpression(node: NewExpression, state: CompileTimeState) {
+    return compileCallExpression(node, state);
+}
+
+function compileThisExpression(_node: ThisExpression, state: CompileTimeState) {
+    return assignToTarget(`envGet(env, stringFromLiteral("this"))`, state.target);
 }

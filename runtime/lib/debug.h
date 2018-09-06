@@ -30,6 +30,5 @@
 
 #define fail(M, ...)  { log_err(M, ##__VA_ARGS__); exit(1); }
 
-
 #pragma clang diagnostic pop
 
