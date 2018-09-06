@@ -7,3 +7,6 @@
   - Object.prototype -> prelude
 - prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)
 - varargs: currently stuff like console.log only takes one args
+- var hoisting
+  - variable
+  - functions
