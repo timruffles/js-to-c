@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# takes compiled C output, and turns into executable
+
+set -euo pipefail
+
+source lib.sh
+
+main() {
+    CToExec $1 $2
+    $2
+}
+
+main $@
