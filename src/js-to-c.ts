@@ -34,6 +34,10 @@ export class CompileTimeError extends Error {}
 
 export class InternedString {
    constructor(public readonly id: string, public readonly value: string) {}
+
+   get reference() {
+       return `${this.id} /* ${this.value} */`
+   }
 }
 
 export type JsIdentifier = string;
@@ -378,7 +382,7 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
 function compileIdentifier(node: Identifier, state: CompileTimeState) {
     const interned = state.internString(node.name);
    return assignToTarget(
-       `envGet(env, ${interned.id}) /* ${interned.value} */`,
+       `envGet(env, ${interned.reference})`,
        state.target,
    );
 }
@@ -453,7 +457,7 @@ function compileConditionalExpression(node: ConditionalExpression, state: Compil
 }
 
 function internString(str: string, state: CompileTimeState) {
-    return state.internString(str).id;
+    return state.internString(str).reference;
 }
 
 function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTimeState) {
@@ -594,22 +598,24 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
         }
         case 'MemberExpression': {
             // order of execution - target, prop, value
-            const objectTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
-            const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
 
+            const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
             const propertySrc = compileProperty(target.property, state.childState({ target: propertyTarget }));
-            const targetValueSrc = compile(target, state.childState({ target: objectTarget }));
+
+            const assignmentTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
+            const assignmentTargetSrc = compile(target.object, state.childState({ target: assignmentTarget }));
+
             const update = node.operator === '='
                 ? '' 
-                : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(objectGet(${objectTarget.id}, ${propertyTarget.id}), ${result.id});`;
+                : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(objectGet(${assignmentTarget.id}, ${propertyTarget.id}), ${result.id});`;
 
 
             return `JsValue* ${result.id};
-                    ${targetValueSrc}
-                    ${propertySrc}
-                    ${compile(node.right, state.childState({ target: result }))}
-                    ${update}
-                    objectSet(${objectTarget.id}, ${propertyTarget.id}, ${result.id});`
+                    ${assignmentTargetSrc} // assignment target src
+                    ${propertySrc} // property src
+                    ${compile(node.right, state.childState({ target: result }))} // RHS
+                    ${update} // any update
+                    objectSet(${assignmentTarget.id}, ${propertyTarget.id}, ${result.id}); // obj set`
         }
         default:
             return unimplemented(target.type)();
