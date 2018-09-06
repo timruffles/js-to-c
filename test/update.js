@@ -38,28 +38,30 @@ function updateFixture({ name, tests, testFile }) {
         fs.writeFileSync(fixtureFile, example);
     }
 
-    const testsSrc = tests.map(({name,fixtureFile, output, outputMatch, env = {}}) => {
+    const testsSrc = tests.map((testSetup) => {
+
+        const {name,fixtureFile, output, outputMatch, errorOut, errorOutMatch, expectedStatus = 0, env = {}} = testSetup;
 
         if(output && outputMatch) {
             throw Error(`${fixtureFile}/${name} specifies both output + output match, only one can be used`);
         }
-
-        const assertion = output
-          ? `assertOutputEqual(output, \`${output}\`);`
-          : outputMatch
-              ? `assertOutputMatch(output, /${outputMatch.replace(/\\/g, '\\')}/);`
-              : '';
+        if(errorOut && errorOutMatch) {
+            throw Error(`${fixtureFile}/${name} specifies both errorOut + errorOut match, only one can be used`);
+        }
 
         return `it("${name}", () => {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
-            const { stdout: output } = runExecutable(executable, { env: ${JSON.stringify(env)} });
-            ${assertion}
+            const spawnResult = runExecutable(executable, { env: ${JSON.stringify(env)} });
+            assertOutput(
+              spawnResult,
+              ${JSON.stringify(testSetup, null, '\t')}
+            );
           });`
     }).join('\n\n');
 
     const testFileSrc = `'use strict';
-    const { compile, runExecutable, link, assertOutputEqual } = require("../helpers.js");
+    const { compile, runExecutable, link, assertOutput } = require("../helpers.js");
 
     describe("${name}", () => {
       ${testsSrc}
