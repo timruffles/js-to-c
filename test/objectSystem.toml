@@ -8,8 +8,8 @@ function A(name) {
 var a = new A('a');
 var b = new A('b');
 
-console.log(a);
-console.log(b);
+console.log(a.name);
+console.log(b.name);
 """
 
 output = "a\nb"

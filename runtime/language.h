@@ -64,14 +64,15 @@ JsValue *jsValueCreateNumber(double);
 double jsValueNumber(JsValue* value);
 void* jsValuePointer(JsValue* value);
 void jsValuePointerSet(JsValue* val, void* ptr);
+bool jsValueIsPrimitive(JsValue* value);
 
 void jsValueToCString(JsValue*, char* buf, uint64_t bufSize);
 
 JsValueType jsValueType(JsValue* value);
-JsValue* jsValueMovedTo(JsValue* value);
 
 // https://www.ecma-international.org/ecma-262/5.1/#sec-8.7.1
 JsValue* getValueOperation(JsValue*);
 
 GcObjectReflection jsValueReflect(JsValue*);
 GcObjectReflection gcObjectReflect(GcObject*);
+
