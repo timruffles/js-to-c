@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
+#include <string.h>
 
 #include "language.h"
+#include "objects.h"
+#include "strings.h"
 #include "exceptions.h"
 #include "environments.h"
 #include "runtime.h"
@@ -18,7 +21,14 @@ typedef struct JsCatch {
 } JsCatch;
 
 static void unhandledException(JsValue* error) {
-    fail("Unhandled exception!");
+    char buffer[8192];
+
+    sprintf(buffer, "Uncaught %s: %s",
+      stringGetCString(objectGet(error, stringFromLiteral("name"))),
+      stringGetCString(objectGet(error, stringFromLiteral("message"))));
+
+    fprintf(stderr, "%s", buffer);
+    exit(1);
 }
 
 void exceptionsTryStart(Env* env) {
@@ -54,7 +64,7 @@ void exceptionsCatchEnd() {
     catchStackPop();
 }
 
-void exceptionsThrow(Env* callEnv, JsValue* error) {
+void exceptionsThrow(JsValue* error) {
     RuntimeEnvironment* runtime = runtimeGet();
     if(runtime->catchStack == NULL) {
         unhandledException(error);
@@ -66,8 +76,19 @@ void exceptionsThrow(Env* callEnv, JsValue* error) {
     }
 }
 
-void exceptionsThrowReferenceError(Env* env, JsValue* error) {
-    exceptionsThrow(env, error);
+static JsValue* errorCreate(JsValue* name, JsValue* message) {
+    JsValue* obj = objectCreatePlain();
+    JS_SET_LITERAL(obj, "name", name);
+    JS_SET_LITERAL(obj, "message", message);
+    return obj;
+}
+
+void exceptionsThrowReferenceError(JsValue* message) {
+    exceptionsThrow(errorCreate(stringFromLiteral("ReferenceError"), message));
+}
+
+void exceptionsThrowTypeError(JsValue* message) {
+    exceptionsThrow(errorCreate(stringFromLiteral("TypeError"), message));
 }
 
 

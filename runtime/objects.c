@@ -15,7 +15,7 @@ typedef struct PropertyDescriptor PropertyDescriptor;
 typedef struct PropertyDescriptor {
     GcHeader;
 
-    char* name;
+    const char* name;
     JsValue *value;
 
     PropertyDescriptor* nextProperty;
@@ -58,7 +58,49 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
     return val;
 }
 
-JsValue* objectGet(JsValue *val, JsValue *name) {
+// https://www.ecma-international.org/ecma-262/5.1/#sec-9.9
+static JsValue* coerceToObject(JsValue* val) {
+    switch(jsValueType(val)) {
+        case UNDEFINED_TYPE:
+        case NULL_TYPE: {
+            return NULL;
+        }
+
+        case OBJECT_TYPE:
+        case FUNCTION_TYPE: {
+            return val;
+        }
+
+        case NUMBER_TYPE:
+        case BOOLEAN_TYPE:
+        case STRING_TYPE: {
+            fail("Unimplemented to coerce %s to object", gcObjectReflect((void*)val).name);
+        }
+
+        default: {
+            fail("Unexpectedly got type %s for a JsValue",
+                gcObjectReflect((void*)val).name);
+        }
+    }
+    return NULL;
+}
+
+static JsValue* coerceForObjectReadWrite(JsValue* raw, const char* const verb, JsValue* property) {
+    JsValue* coerced = coerceToObject(raw);
+    if(coerced == NULL) {
+        const char* const target = isUndefined(raw) ? "undefined" : "null";
+        exceptionsThrowTypeError(
+            stringCreateFromTemplate("Cannot %s property '%s' of %s", 
+                verb, stringGetCString(property), target));
+    }
+
+    return coerced;
+}
+
+
+// used from compiled code
+JsValue* objectGet(JsValue *rawVal, JsValue *name) {
+    JsValue* val = coerceForObjectReadWrite(rawVal, "read", name);
     JsValue* found = objectLookup(val, name);
     return found == NULL
       ? getUndefined()
@@ -69,7 +111,7 @@ FunctionRecord* objectGetCallInternal(JsValue *val) {
     return OBJECT_VALUE(val)->callInternal;
 }
 
-static PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
+static PropertyDescriptor* findProperty(PropertyDescriptor *pd, const char* const name) {
     while(pd != NULL) {
         if(strcmp(pd->name, name) == 0) {
             return pd;
@@ -80,7 +122,7 @@ static PropertyDescriptor* findProperty(PropertyDescriptor *pd, char *name) {
 }
 
 JsValue* objectInternalOwnProperty(JsValue* value, JsValue* name) {
-    char* cString = stringGetCString(name);
+    const char* cString = stringGetCString(name);
     PropertyDescriptor* pd = findProperty(OBJECT_VALUE(value)->properties
             , cString);
     return pd == NULL
@@ -91,8 +133,7 @@ JsValue* objectInternalOwnProperty(JsValue* value, JsValue* name) {
 
 // returns NULL or pointer to JsValue*
 JsValue* objectLookup(JsValue *val, JsValue *name) {
-    // TODO type assertion on val
-    char* cString = stringGetCString(name);
+    const char* cString = stringGetCString(name);
 
     // starting with object, and going up prototype chain, find a matching
     // property
@@ -126,10 +167,11 @@ static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
     object->tailProperty = pd;
 }
 
-JsValue* objectSet(JsValue* objectVal, JsValue* name, JsValue* value) {
-    // TODO type assertion on object
+// used from compiled code
+JsValue* objectSet(JsValue* rawVal, JsValue* name, JsValue* value) {
+    JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", name);
     JsObject* object = jsValuePointer(objectVal);
-    char* nameString = stringGetCString(name);
+    const char* nameString = stringGetCString(name);
 
     PropertyDescriptor *descriptor = findProperty(object->properties, nameString);
     if(descriptor == NULL) {
@@ -167,8 +209,8 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
     }
 }
 
+
 void objectDestroy() {
     // NOOP
 }
-
 

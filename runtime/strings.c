@@ -27,7 +27,7 @@ static const char* getCString(StringData* jsString) {
         : jsString->heapString;
 }
 
-char* stringGetCString(JsValue* value) {
+const char* stringGetCString(JsValue* value) {
     return getCString(jsValuePointer(value));
 }
 
