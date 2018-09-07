@@ -211,8 +211,9 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
 }
 
 JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64_t argumentCount) {
-    // TODO prototypes
-    JsValue* this = objectCreatePlain();
+    JsValue* pt = JS_GET_LITERAL(function, "prototype");
+    // TODO use Object.prototype if pt is undefined
+    JsValue* this = objectCreate(pt);
 
     JsValue* returned = functionRunWithArguments(function, argumentValues, argumentCount, this);
     return jsValueIsPrimitive(returned)

@@ -17,7 +17,7 @@ output = "a\nb"
 ["constructors and prototypes"]
 
 example = """
-function A(name) {}
+function A() {}
 
 A.prototype = {
   data: 12,  
@@ -28,7 +28,7 @@ var a = new A;
 console.log(a.data);
 """
 
-output = "12"
+output = "12.000000"
 
 ["new operator returns non primitive"]
 
