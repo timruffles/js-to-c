@@ -27,6 +27,9 @@ static void itGetsStringLength() {
     JsValue* str = internedString("Hello");
     assert(strcmp(stringGetCString(str), theContent) == 0);
     assert(stringLength(str) == 5);
+
+    JsValue* emptyString = internedString("");
+    assert(stringLength(emptyString) == 0);
 }
 
 static void itCreatesStringsFromTemplate() {

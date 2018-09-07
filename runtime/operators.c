@@ -51,6 +51,10 @@ JsValue* GTEOperator(JsValue* left, JsValue* right) {
     return TO_JS_BOOLEAN(r != UD && r != LT);
 }
 
+JsValue* notOperator(JsValue* left) {
+    return isTruthy(left) ? getFalse() : getTrue();
+}
+
 JsValue* strictEqualOperator(JsValue* left, JsValue* right) {
     if(left == right) {
         return getTrue();

@@ -1,10 +1,47 @@
 ["numeric comparison"]
 
 example = """
-console.log(10>5,10>=10,5<7,5<=7);
+console.log(10>5);
+console.log(10>=10);
+console.log(5<7);
+console.log(5<=7);
 """
 
-output="true true true true true"
+output="true\ntrue\ntrue\ntrue"
+
+["unary not - true"]
+example="console.log(!true)"
+output="false"
+
+["unary not - false"]
+example="console.log(!false)"
+output="true"
+
+["unary not - empty string"]
+example="console.log(!'')"
+output="true"
+
+["unary not - double on false"]
+example="console.log(!!false)"
+output="false"
+
+["unary not - double on true"]
+example="console.log(!!true)"
+output="true"
+
+["unary not - false expression"]
+example="console.log(!(1 > 2))"
+output="true"
+
+["strict equal numbers"]
+
+example = """
+console.log(10===10);
+console.log(!(10==='10'));
+console.log(!(10===10.001));
+"""
+
+output="true\ntrue\ntrue"
 
 
 

@@ -29,3 +29,17 @@ console.log(a.data);
 """
 
 output = "12"
+
+["new operator returns non primitive"]
+
+example = """
+function A() {
+    return { testKey: "testValue" }
+}
+
+var a = new A;
+
+console.log(a.testKey);
+"""
+
+output = "testValue"

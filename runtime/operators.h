@@ -13,4 +13,6 @@ JsValue* multiplyOperator(JsValue*, JsValue*);
 JsValue* subtractOperator(JsValue*, JsValue*);
 JsValue* addOperator(JsValue*, JsValue*);
 
+JsValue* notOperator(JsValue*);
+
 

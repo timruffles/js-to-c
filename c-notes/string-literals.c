@@ -12,6 +12,8 @@ int main() {
     printMe("Hei 2");
     char* str = "hi";
     printMe(str);
+
     printf("%d\n", sizeof("hello"));
     printf("%d\n", sizeof("spo"));
+    printf("empty string sizeof %d\n", sizeof(""));
 }
