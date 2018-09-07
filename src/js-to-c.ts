@@ -19,7 +19,7 @@ import {
     WhileStatement,
     BinaryOperator,
     AssignmentOperator, ObjectExpression, Expression, ThrowStatement, CatchClause,
-    TryStatement, ThisExpression, NewExpression,
+    TryStatement, ThisExpression, NewExpression, UnaryExpression, UnaryOperator,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -73,6 +73,9 @@ export type CompileTarget =
     PredefinedVariableTarget |
     typeof ReturnTarget;
 
+const unaryOpToFunction: {[k: string]: string | undefined} = {
+    "!": "notOperator",
+}
 
 const binaryOpToFunction: {[k: string]: string | undefined} = {
     ">": "GTOperator",
@@ -82,7 +85,7 @@ const binaryOpToFunction: {[k: string]: string | undefined} = {
     "+": "addOperator",
     "-": "subtractOperator",
     "*": "multiplyOperator",
-
+    "===": "strictEqualOperator",
 };
 
 const assignmentOpToFunction: {[k: string]: string | undefined} = {
@@ -179,7 +182,7 @@ function getCompilers(): NodeCompilerLookup {
         ThisExpression: compileThisExpression,
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
-        UnaryExpression: unimplemented('UnaryExpression'),
+        UnaryExpression: compileUnaryExpression,
         UpdateExpression: unimplemented('UpdateExpression'),
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
@@ -398,6 +401,7 @@ function ensureSupportedTarget(node: Pattern): SupportedAssignmentTarget {
 
 function unimplemented(node: string) {
     return function () {
+        console.warn(`Unimplemented ${node}`)
         return `/* unimplemented ${node} */`;
     }
 }
@@ -414,6 +418,16 @@ function createCFunction(name: string, bodySrc: string) {
     return `static JsValue* ${name}(Env* env) {
         ${bodySrc}
     }`
+}
+
+function compileUnaryExpression(node: UnaryExpression, state: CompileTimeState) {
+    const operandTarget = new IntermediateVariableTarget(state.getNextSymbol('operand'));
+    const operandSrc = compile(node.argument, state.childState({ target: operandTarget });
+    const operatorFn = getUnaryOperatorFunction(node.operator);
+
+    return `${operandSrc}
+            ${assignToTarget(`${operatorFn}(${operandTarget.id})`, state.target)}`
+
 }
 
 function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState) {
@@ -651,6 +665,13 @@ function compileTryStatement(node: TryStatement, state: CompileTimeState) {
     } else {
         ${catchSrc}
     }`;
+}
+function getUnaryOperatorFunction(operator: UnaryOperator): string {
+    const operatorFn = unaryOpToFunction[operator];
+    if(!operatorFn) {
+        throw Error(`unimplemented operator '${operator}'`)
+    }
+    return operatorFn;
 }
 
 function getBinaryOperatorFunction(operator: BinaryOperator): string {

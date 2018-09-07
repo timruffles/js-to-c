@@ -20,3 +20,15 @@ console.log(add(10, 5));
 """
 
 output = "15"
+
+["calls with too few arguments pass undefined"]
+
+example = """
+function one(a) {
+    return a;
+}
+
+console.log(one() === undefined);
+"""
+
+output = "true"

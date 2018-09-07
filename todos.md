@@ -1,7 +1,6 @@
 # Todos
 
 - Object System
-  - NOW object properties 
   - new operator
     - setting `this` during function calls
   - Object.prototype -> prelude
@@ -10,3 +9,7 @@
 - var hoisting
   - variable
   - functions
+- functions passing too few arguments
+  - should pass in undefineds
+- UnaryExpression - e.g !
+- warning on missing

@@ -60,8 +60,12 @@ JsValue* stringCreateFromTemplate(const char* format, ...) {
     char buffer[TEMPLATE_BUFFER_SIZE];
     va_list args;
     va_start(args, format);
+
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wformat-nonliteral"
     uint64_t charsWritten = (uint64_t)vsprintf(buffer, format, args);
     va_end(args);
+    #pragma clang diagnostic pop
 
     AllocatedString allocation = createHeapString(charsWritten);
     strcpy(allocation.data->heapString, buffer);
