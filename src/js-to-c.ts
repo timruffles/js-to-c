@@ -19,7 +19,7 @@ import {
     WhileStatement,
     BinaryOperator,
     AssignmentOperator, ObjectExpression, Expression, ThrowStatement, CatchClause,
-    TryStatement, ThisExpression, NewExpression, UnaryExpression, UnaryOperator,
+    TryStatement, ThisExpression, NewExpression, UnaryExpression, UnaryOperator, IfStatement,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -123,62 +123,37 @@ function compile(ast: Node, state: CompileTimeState): string {
 function getCompilers(): NodeCompilerLookup {
     return {
         ArrayExpression: unimplemented('ArrayExpression'),
-        ArrayPattern: unimplemented('ArrayPattern'),
-        ArrowFunctionExpression: unimplemented('ArrowFunctionExpression'),
         AssignmentExpression: compileAssignmentExpression,
-        AssignmentPattern: unimplemented('AssignmentPattern'),
-        AwaitExpression: unimplemented('AwaitExpression'),
         BinaryExpression: compileBinaryExpression,
         BlockStatement: compileBlockStatement,
         BreakStatement: unimplemented('BreakStatement'),
         CallExpression: compileCallExpression,
         CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
-        ClassBody: unimplemented('ClassBody'),
-        ClassDeclaration: unimplemented('ClassDeclaration'),
-        ClassExpression: unimplemented('ClassExpression'),
         ConditionalExpression: compileConditionalExpression,
         ContinueStatement: unimplemented('ContinueStatement'),
         DebuggerStatement: unimplemented('DebuggerStatement'),
         DoWhileStatement: unimplemented('DoWhileStatement'),
         EmptyStatement: unimplemented('EmptyStatement'),
-        ExportAllDeclaration: unimplemented('ExportAllDeclaration'),
-        ExportDefaultDeclaration: unimplemented('ExportDefaultDeclaration'),
-        ExportNamedDeclaration: unimplemented('ExportNamedDeclaration'),
-        ExportSpecifier: unimplemented('ExportSpecifier'),
         ExpressionStatement: compileExpressionStatement,
         ForInStatement: unimplemented('ForInStatement'),
-        ForOfStatement: unimplemented('ForOfStatement'),
         ForStatement: unimplemented('ForStatement'),
         FunctionDeclaration: compileFunctionDeclaration,
         FunctionExpression: unimplemented('FunctionExpression'),
         Identifier: compileIdentifier,
-        IfStatement: unimplemented('IfStatement'),
-        Import: unimplemented('Import'),
-        ImportDeclaration: unimplemented('ImportDeclaration'),
-        ImportDefaultSpecifier: unimplemented('ImportDefaultSpecifier'),
-        ImportNamespaceSpecifier: unimplemented('ImportNamespaceSpecifier'),
-        ImportSpecifier: unimplemented('ImportSpecifier'),
+        IfStatement: compileIfStatement,
         LabeledStatement: unimplemented('LabeledStatement'),
         Literal: compileLiteral,
         LogicalExpression: unimplemented('LogicalExpression'),
         MemberExpression: compileMemberExpression,
-        MetaProperty: unimplemented('MetaProperty'),
         MethodDefinition: unimplemented('MethodDefinition'),
         NewExpression: compileNewExpression,
         ObjectExpression: compileObjectExpression,
-        ObjectPattern: unimplemented('ObjectPattern'),
         Program: compileProgram,
         Property: unimplemented('Property'),
-        RestElement: unimplemented('RestElement'),
         ReturnStatement: compileReturnStatement,
         SequenceExpression: unimplemented('SequenceExpression'),
-        SpreadElement: unimplemented('SpreadElement'),
-        Super: unimplemented('Super'),
         SwitchCase: unimplemented('SwitchCase'),
         SwitchStatement: unimplemented('SwitchStatement'),
-        TaggedTemplateExpression: unimplemented('TaggedTemplateExpression'),
-        TemplateElement: unimplemented('TemplateElement'),
-        TemplateLiteral: unimplemented('TemplateLiteral'),
         ThisExpression: compileThisExpression,
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
@@ -188,7 +163,34 @@ function getCompilers(): NodeCompilerLookup {
         VariableDeclarator: compileVariableDeclarator,
         WhileStatement: compileWhileStatement,
         WithStatement: unimplemented('WithStatement'),
-        YieldExpression: unimplemented('YieldExpression')
+
+        // ES6
+        ArrayPattern: unimplemented('ArrayPattern'),
+        ArrowFunctionExpression: unimplemented('ArrowFunctionExpression'),
+        AssignmentPattern: unimplemented('AssignmentPattern'),
+        AwaitExpression: unimplemented('AwaitExpression'),
+        ClassBody: unimplemented('ClassBody'),
+        ClassDeclaration: unimplemented('ClassDeclaration'),
+        ClassExpression: unimplemented('ClassExpression'),
+        ExportAllDeclaration: unimplemented('ExportAllDeclaration'),
+        ExportDefaultDeclaration: unimplemented('ExportDefaultDeclaration'),
+        ExportNamedDeclaration: unimplemented('ExportNamedDeclaration'),
+        ExportSpecifier: unimplemented('ExportSpecifier'),
+        ForOfStatement: unimplemented('ForOfStatement'),
+        Import: unimplemented('Import'),
+        ImportDeclaration: unimplemented('ImportDeclaration'),
+        ImportDefaultSpecifier: unimplemented('ImportDefaultSpecifier'),
+        ImportNamespaceSpecifier: unimplemented('ImportNamespaceSpecifier'),
+        ImportSpecifier: unimplemented('ImportSpecifier'),
+        MetaProperty: unimplemented('MetaProperty'),
+        ObjectPattern: unimplemented('ObjectPattern'),
+        RestElement: unimplemented('RestElement'),
+        SpreadElement: unimplemented('SpreadElement'),
+        Super: unimplemented('Super'),
+        TaggedTemplateExpression: unimplemented('TaggedTemplateExpression'),
+        TemplateElement: unimplemented('TemplateElement'),
+        TemplateLiteral: unimplemented('TemplateLiteral'),
+        YieldExpression: unimplemented('YieldExpression'),
     }
 }
 
@@ -666,6 +668,25 @@ function compileTryStatement(node: TryStatement, state: CompileTimeState) {
         ${catchSrc}
     }`;
 }
+
+function compileIfStatement(node: IfStatement, state: CompileTimeState) {
+    const testResultTarget = new IntermediateVariableTarget(state.getNextSymbol('conditionalPredicate'));
+    const testSrc = compile(node.test, state.childState({
+        target: testResultTarget,
+    }));
+
+    const consequentSrc = compile(node.consequent, state);
+    const alternateSrc = node.alternate ? compile(node.alternate, state) : '/* no else */';
+
+    return `/* if */
+            ${testSrc}
+            if(isTruthy(${testResultTarget.id})) {
+                ${consequentSrc}
+            } else {
+                ${alternateSrc}
+            }`
+}
+
 function getUnaryOperatorFunction(operator: UnaryOperator): string {
     const operatorFn = unaryOpToFunction[operator];
     if(!operatorFn) {

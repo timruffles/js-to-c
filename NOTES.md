@@ -1,5 +1,80 @@
 # Notes
 
+## 8 September 2018
+
+Looking at the top-level node types in ESTree, ES5 had 41, since ES6 there another 26 have appeared, a growth of 61%.
+
+- ES5
+  - ArrayExpression
+  - AssignmentExpression
+  - BinaryExpression
+  - BlockStatement
+  - BreakStatement
+  - CallExpression
+  - CatchClause
+  - ConditionalExpression
+  - ContinueStatement
+  - DebuggerStatement
+  - DoWhileStatement
+  - EmptyStatement
+  - ExpressionStatement
+  - ForInStatement
+  - ForStatement
+  - FunctionDeclaration
+  - FunctionExpression
+  - Identifier
+  - IfStatement
+  - LabeledStatement
+  - Literal
+  - LogicalExpression
+  - MemberExpression
+  - MethodDefinition
+  - NewExpression
+  - ObjectExpression
+  - Program
+  - Property
+  - ReturnStatement
+  - SequenceExpression
+  - SwitchCase
+  - SwitchStatement
+  - ThisExpression
+  - ThrowStatement
+  - TryStatement
+  - UnaryExpression
+  - UpdateExpression
+  - VariableDeclaration
+  - VariableDeclarator
+  - WhileStatement
+  - WithStatement
+
+- ES2015+
+  - ArrayPattern
+  - ArrowFunctionExpression
+  - AssignmentPattern
+  - AwaitExpression
+  - ClassBody
+  - ClassDeclaration
+  - ClassExpression
+  - ExportAllDeclaration
+  - ExportDefaultDeclaration
+  - ExportNamedDeclaration
+  - ExportSpecifier
+  - ForOfStatement
+  - Import
+  - ImportDeclaration
+  - ImportDefaultSpecifier
+  - ImportNamespaceSpecifier
+  - ImportSpecifier
+  - MetaProperty
+  - ObjectPattern
+  - RestElement
+  - SpreadElement
+  - Super
+  - TaggedTemplateExpression
+  - TemplateElement
+  - TemplateLiteral
+  - YieldExpression
+
 ## 6 September 2018
 
 A lot of the standard library is likely best implemented in JS - so it'd be good to setup the ability to compile a prelude. That could be precompiled and linked into the program.
