@@ -11,8 +11,8 @@
 #include "config.h"
 #include "runtime.h"
 
-#define JS_SET(O,P,V) objectSet(O,stringCreateFromCString(P),V)
-#define JS_GET(O,P) objectGet(O,stringCreateFromCString(P))
+#define JS_SET(O,P,V) objectSet(O,stringFromLiteral(P),V)
+#define JS_GET(O,P) objectGet(O,stringFromLiteral(P))
 
 typedef struct {
     GcHeader;

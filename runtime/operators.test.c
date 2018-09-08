@@ -59,10 +59,10 @@ static void itImplementsStrictEquality() {
     assert(strictEqualOperator(jsNum(5), jsValueCreateNumber(5.1)) == getFalse());
     assert(strictEqualOperator(five, five) == getTrue());
 
-    assert(strictEqualOperator(stringCreateFromCString("hello"), stringCreateFromCString("hello")) == getTrue());
-    assert(strictEqualOperator(stringCreateFromCString("bye"), stringCreateFromCString("hello")) == getFalse());
+    assert(strictEqualOperator(stringFromLiteral("hello"), stringFromLiteral("hello")) == getTrue());
+    assert(strictEqualOperator(stringFromLiteral("bye"), stringFromLiteral("hello")) == getFalse());
 
-    assert(strictEqualOperator(jsNum(5), stringCreateFromCString("5")) == getFalse());
+    assert(strictEqualOperator(jsNum(5), stringFromLiteral("5")) == getFalse());
     assert(strictEqualOperator(getUndefined(), getFalse()) == getFalse());
     assert(strictEqualOperator(getUndefined(), getNull()) == getFalse());
 }

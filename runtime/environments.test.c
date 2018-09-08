@@ -63,42 +63,42 @@ static void itCanGetAVariableValue() {
 static void itUsesStringValueNotIdentifyForGet() {
     Env* env = envCreateRoot();
 
-    envDeclare(env, stringCreateFromCString("x"));
-    envSet(env, stringCreateFromCString("x"), getTrue());
+    envDeclare(env, stringFromLiteral("x"));
+    envSet(env, stringFromLiteral("x"), getTrue());
 
     assert(
-        envGet(env, stringCreateFromCString("x")) 
-        == envGet(env, stringCreateFromCString("x"))
+        envGet(env, stringFromLiteral("x")) 
+        == envGet(env, stringFromLiteral("x"))
     );
 }
 
 static void itUsesStringValueNotIdentifyForSet() {
     Env* env = envCreateRoot();
 
-    envDeclare(env, stringCreateFromCString("x"));
-    envSet(env, stringCreateFromCString("x"), getTrue());
-    envSet(env, stringCreateFromCString("x"), getFalse());
+    envDeclare(env, stringFromLiteral("x"));
+    envSet(env, stringFromLiteral("x"), getTrue());
+    envSet(env, stringFromLiteral("x"), getFalse());
 
     assert(
-        envGet(env, stringCreateFromCString("x")) == getFalse()
+        envGet(env, stringFromLiteral("x")) == getFalse()
     );
 }
 
 static void itSetsUpArgumentValuesInCallEnv() {
     Env* env = envCreateRoot();
-    JsValue* names[] = {stringCreateFromCString("one"), stringCreateFromCString("two")};
-    JsValue* values[] = {getTrue(), stringCreateFromCString("twoValue")};
+    JsValue* names[] = {stringFromLiteral("one"), stringFromLiteral("two")};
+    JsValue* values[] = {getTrue(), stringFromLiteral("twoValue")};
     Env* callEnv = envCreateForCall(env, names, values, 2);
 
     assert(callEnv != NULL);
 
-    assert(envGet(callEnv, stringCreateFromCString("one")) == getTrue());
-    assert(stringComparison(envGet(callEnv, stringCreateFromCString("two")), stringCreateFromCString("twoValue")) == 0);
+    assert(envGet(callEnv, stringFromLiteral("one")) == getTrue());
+    assert(stringComparison(envGet(callEnv, stringFromLiteral("two")), stringFromLiteral("twoValue")) == 0);
 }
 
 static void itAffectsNearestAncestorWithDeclaredVar() {
     Env* env = envCreateRoot();
-    JsValue* varA = stringCreateFromCString("one");
+    JsValue* varA = stringFromLiteral("one");
 
     DECLARE_AND_SET(env, varA, jsValueCreateNumber(0));
     Env* childA = envCreate(env);
@@ -117,7 +117,7 @@ static void itAffectsNearestAncestorWithDeclaredVar() {
 int main() {
     testLanguageAndGcInit();
 
-    idOne = stringCreateFromCString("one");
+    idOne = stringFromLiteral("one");
 
     test(itCanCreateRootEnv);
     test(itCanDestroyAnEnv);
