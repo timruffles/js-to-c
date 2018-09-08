@@ -1,0 +1,40 @@
+["for loop"]
+
+example = """
+for(var i = 0;
+    i < 5;
+    i += 1) {
+}
+console.log(i)
+"""
+
+output="5.000000"
+
+["for loop - not starting"]
+
+example = """
+var iterations = 0;
+for(var i = 10;
+    i < 5;
+    i += 1) {
+  iterations += 100;
+}
+console.log(iterations)
+"""
+
+output="0.000000"
+
+["for loop - no update"]
+
+example = """
+for(var i = 0;
+    i < 5;
+    ) {
+  i += 1;
+}
+console.log(i)
+"""
+
+output="5.000000"
+
+
