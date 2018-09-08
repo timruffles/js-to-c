@@ -19,7 +19,7 @@ import {
     WhileStatement,
     BinaryOperator,
     AssignmentOperator, ObjectExpression, Expression, ThrowStatement, CatchClause,
-    TryStatement, ThisExpression, NewExpression, UnaryExpression, UnaryOperator, IfStatement,
+    TryStatement, ThisExpression, NewExpression, UnaryExpression, UnaryOperator, IfStatement, ForStatement,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -136,7 +136,7 @@ function getCompilers(): NodeCompilerLookup {
         EmptyStatement: unimplemented('EmptyStatement'),
         ExpressionStatement: compileExpressionStatement,
         ForInStatement: unimplemented('ForInStatement'),
-        ForStatement: unimplemented('ForStatement'),
+        ForStatement: compileForStatement,
         FunctionDeclaration: compileFunctionDeclaration,
         FunctionExpression: unimplemented('FunctionExpression'),
         Identifier: compileIdentifier,
@@ -537,6 +537,33 @@ function compileWhileStatement(node: WhileStatement, state: CompileTimeState) {
         }
         ${compile(node.body, state)}
     }`
+}
+
+function compileForStatement(node: ForStatement, state: CompileTimeState) {
+    const testVariable = new IntermediateVariableTarget(state.getNextSymbol('testResult'));
+
+    const initSrc = node.init ? compile(node.init, state) : '/* no init */';
+    const testSrc = node.test
+        ? compile(node.test, state.childState({
+            target: testVariable
+        }))
+        : `<ignored>`;
+    const testBranchSrc = node.test
+        ? `if (!isTruthy(${testVariable.id})) {
+            break;
+        }`
+        : '';
+    const updateSrc = node.update ? compile(node.update, state) : `/* no update */`;
+    const bodySrc = compile(node.body, state);
+
+    return `/* for loop */
+            ${initSrc}
+            while(1) {
+                ${testSrc}
+                ${testBranchSrc}
+                ${bodySrc}
+                ${updateSrc}
+            }`
 }
 
 function compileLiteral(node: Literal, state: CompileTimeState) {
