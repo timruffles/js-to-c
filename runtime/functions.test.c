@@ -11,8 +11,8 @@
 
 // e.g const x => { x; return true }
 JsValue* exampleUserFunction(Env* env) {
-    assert(envGet(env, stringCreateFromCString("two")) == getTrue());
-    assert(jsValueNumber(envGet(env, stringCreateFromCString("one"))) - 7 < 0.000001);
+    assert(envGet(env, stringFromLiteral("two")) == getTrue());
+    assert(jsValueNumber(envGet(env, stringFromLiteral("one"))) - 7 < 0.000001);
     return getTrue();
 }
 
@@ -40,8 +40,8 @@ int main() {
 
     argumentNames = calloc(2, sizeof(JsValue*));
     argumentValues = calloc(2, sizeof(JsValue*));
-    argumentNames[0] = stringCreateFromCString("one");
-    argumentNames[1] = stringCreateFromCString("two");
+    argumentNames[0] = stringFromLiteral("one");
+    argumentNames[1] = stringFromLiteral("two");
     argumentValues[0] = jsValueCreateNumber(7);
     argumentValues[1] = getTrue();
 
