@@ -1,0 +1,65 @@
+["if statement"]
+
+example = """
+if(true) {
+  console.log('if');
+} else {
+  console.log('else');
+}
+"""
+
+output="if"
+
+["if statement - else"]
+
+example = """
+if(false) {
+  console.log('if');
+} else {
+  console.log('else');
+}
+"""
+
+output="else"
+
+["if statement - no else truthy"]
+
+example = """
+if({}) {
+  console.log('if');
+}
+"""
+
+output="if"
+
+["if statement - no else falsy"]
+
+example = """
+if(false) {
+  console.log('if');
+}
+"""
+
+output=""
+
+["if statement - truthy expression"]
+
+example = """
+if(10 > 1) {
+  console.log('if');
+}
+"""
+
+output="if"
+
+["if statement - falsy expression"]
+
+example = """
+if(1 > 10) {
+  console.log('if');
+} else {
+  console.log('else');
+}
+"""
+
+output="else"

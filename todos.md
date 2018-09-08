@@ -1,8 +1,6 @@
 # Todos
 
 - Object System
-  - new operator
-    - setting `this` during function calls
   - Object.prototype -> prelude
 - prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)
 - varargs: currently stuff like console.log only takes one args
@@ -12,3 +10,12 @@
 - functions passing too few arguments
   - should pass in undefineds
 - warning on missing
+- control flow
+  - if
+  - loops
+    - break statement in for/while/etc
+    - continue statement
+    - for loop
+    - for in loop
+- logical expressions
+- Arrays
