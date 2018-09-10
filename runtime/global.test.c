@@ -17,14 +17,14 @@ static void itCreatesTheGlobalObject() {
 static void itLogsJsValuesToOutput() {
     JsValue* global = createGlobalObject();
     Env* env = envCreateRoot();
-    JsValue* name = stringCreateFromCString("arg0");
+    JsValue* name = stringFromLiteral("arg0");
     envDeclare(env, name);
     envSet(env, name, getTrue());
 
     JsValue* consoleLogJsv = objectGet(
         objectGet(global,
-            stringCreateFromCString("console")),
-        stringCreateFromCString("log")
+            stringFromLiteral("console")),
+        stringFromLiteral("log")
     );
     _functionRun(consoleLogJsv, env);
 }
@@ -33,7 +33,7 @@ static void itWorksWithEnv() {
     JsValue* global = createGlobalObject();
     Env* env = envFromGlobal(global);
 
-    JsValue* console = envGet(env, stringCreateFromCString("console"));
+    JsValue* console = envGet(env, stringFromLiteral("console"));
     assert(console != NULL);
 }
 
