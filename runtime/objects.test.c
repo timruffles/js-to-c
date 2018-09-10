@@ -143,5 +143,6 @@ int main() {
     test(itPrefersOwnPropertiesToPrototype);
     test(itReturnsUndefinedForMissingKeys);
     test(itLooksUpByStringValueNotIdentity);
+    test(itSupportsForOwnIteration);
 }
 
