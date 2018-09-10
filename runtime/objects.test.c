@@ -109,13 +109,28 @@ static void itPrefersOwnPropertiesToPrototype() {
     assert(object != NULL);
 }
 
+static void itSupportsForOwnIteration() {
+    JsValue* obj = objectCreatePlain();
+    objectSet(obj, stringFromLiteral("one"), jsValueCreateNumber(1.0));
+    objectSet(obj, stringFromLiteral("two"), jsValueCreateNumber(2.5));
+
+    ForOwnIterator iterator = objectForOwnPropertiesIterator(obj);
+    double result = 0;
+    while(iterator.property) {
+        result += jsValueNumber(objectGet(obj, iterator.property));
+        iterator = objectForOwnPropertiesNext(iterator);
+    }
+
+    assertFloatEqual(result, 3.5);
+}
+
 int main() {
     testLanguageAndGcInit();
 
-    idOne = stringCreateFromCString("one");
-    idOneB = stringCreateFromCString("one");
-    idOneC = stringCreateFromCString("one");
-    idTwo = stringCreateFromCString("two");
+    idOne = stringFromLiteral("one");
+    idOneB = stringFromLiteral("one");
+    idOneC = stringFromLiteral("one");
+    idTwo = stringFromLiteral("two");
 
     test(itCreatesPlainObjects)
     test(itDestroysObjects)
