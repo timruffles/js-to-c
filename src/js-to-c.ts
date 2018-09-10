@@ -18,8 +18,19 @@ import {
     VariableDeclarator,
     WhileStatement,
     BinaryOperator,
-    AssignmentOperator, ObjectExpression, Expression, ThrowStatement, CatchClause,
-    TryStatement, ThisExpression, NewExpression, UnaryExpression, UnaryOperator, IfStatement, ForStatement,
+    AssignmentOperator,
+    ObjectExpression,
+    Expression,
+    ThrowStatement,
+    CatchClause,
+    TryStatement,
+    ThisExpression,
+    NewExpression,
+    UnaryExpression,
+    UnaryOperator,
+    IfStatement,
+    ForStatement,
+    ForInStatement,
 } from 'estree';
 import {CompileTimeState} from "./CompileTimeState";
 
@@ -135,7 +146,7 @@ function getCompilers(): NodeCompilerLookup {
         DoWhileStatement: unimplemented('DoWhileStatement'),
         EmptyStatement: unimplemented('EmptyStatement'),
         ExpressionStatement: compileExpressionStatement,
-        ForInStatement: unimplemented('ForInStatement'),
+        ForInStatement: compileForInStatement,
         ForStatement: compileForStatement,
         FunctionDeclaration: compileFunctionDeclaration,
         FunctionExpression: unimplemented('FunctionExpression'),
@@ -164,7 +175,7 @@ function getCompilers(): NodeCompilerLookup {
         WhileStatement: compileWhileStatement,
         WithStatement: unimplemented('WithStatement'),
 
-        // ES6
+        // ES6+
         ArrayPattern: unimplemented('ArrayPattern'),
         ArrowFunctionExpression: unimplemented('ArrowFunctionExpression'),
         AssignmentPattern: unimplemented('AssignmentPattern'),
@@ -564,6 +575,51 @@ function compileForStatement(node: ForStatement, state: CompileTimeState) {
                 ${bodySrc}
                 ${updateSrc}
             }`
+}
+
+function compileForInStatement(node: ForInStatement, state: CompileTimeState) {
+    const objectTarget = new IntermediateVariableTarget(state.getNextSymbol('forInObject'));
+
+    const leftVariableName = internString(leftVariable(), state);
+
+    const rightSrc = compile(node.right, state.childState({ target: objectTarget }));
+    const bodySrc = compile(node.body, state);
+
+    return `/* for in loop */
+            {
+                ${leftSrc()}
+                ${rightSrc}
+                ForOwnIterator iterator = objectForOwnPropertiesIterator(${objectTarget.id});
+                while(iterator.property) {
+                    envSet(env, ${leftVariableName}, iterator.property);
+                    ${bodySrc};
+                    iterator = objectForOwnPropertiesNext(iterator);
+                }
+            }`
+
+    function leftVariable() {
+        // in ES5, left is either a single identifier `for(p in o)` or a single declaration `for(var p in o)`
+        switch(node.left.type) {
+            case "Identifier":
+                return node.left.name;
+            case "VariableDeclaration":
+                // for(var p in o)
+                return specifyType<Identifier>(node.left.declarations[0].id).name;
+            default:
+                return unimplemented(node.type)();
+        }
+    }
+
+    function leftSrc() {
+        switch(node.left.type) {
+            case "Identifier":
+                return '';
+            case "VariableDeclaration":
+                return compile(node.left, state);
+            default:
+                return unimplemented(node.type)();
+        }
+    }
 }
 
 function compileLiteral(node: Literal, state: CompileTimeState) {

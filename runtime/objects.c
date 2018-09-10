@@ -131,6 +131,33 @@ JsValue* objectInternalOwnProperty(JsValue* value, JsValue* name) {
         : pd->value;
 }
 
+ForOwnIterator objectForOwnPropertiesIterator(JsValue* value) {
+    if(jsValueIsPrimitive(value)) {
+        return (ForOwnIterator) { .property = NULL };
+    }
+
+    PropertyDescriptor* pd = OBJECT_VALUE(value)->properties;
+    if(pd == NULL) {
+        return (ForOwnIterator) { .property = NULL };
+    } 
+
+    return objectForOwnPropertiesNext((ForOwnIterator) {
+        .next = pd,
+    });
+}
+
+ForOwnIterator objectForOwnPropertiesNext(ForOwnIterator iterator) {
+    if(iterator.next == NULL) {
+        return (ForOwnIterator) { .property = NULL };
+    } else {
+        PropertyDescriptor* pd = iterator.next;
+        return (ForOwnIterator) {
+          .next = pd->nextProperty,
+          .property = stringCreateFromTemplate("%s", pd->name),
+        };
+    }
+}
+
 
 // returns NULL or pointer to JsValue*
 JsValue* objectLookup(JsValue *val, JsValue *name) {

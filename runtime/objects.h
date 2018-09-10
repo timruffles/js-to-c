@@ -30,6 +30,12 @@ FunctionRecord* objectGetCallInternal(JsValue *);
 
 void objectGcTraverse(JsValue* value, GcCallback* cb);
 
-typedef void (ForOwnCallback)(JsValue*, JsValue*);
+typedef struct ForOwnIterator {
+    JsValue* property;
+    const bool done;
+    void* next;
+} ForOwnIterator;
+ForOwnIterator objectForOwnPropertiesIterator(JsValue* value);
+ForOwnIterator objectForOwnPropertiesNext(ForOwnIterator iterator);
 
 
