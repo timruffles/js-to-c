@@ -48,3 +48,60 @@ for(var p in 'hello') { console.log(p); }
 
 output=""
 
+["for in loop - continue"]
+
+example = """
+var obj = {
+  A: 1,
+  B: 1,
+}
+
+var iterations = 0;
+for(var p in obj) {
+  if(p === 'A') {
+    continue;
+  }
+  iterations += 1;
+}
+console.log(iterations);
+"""
+
+output="1.000000"
+
+["for in loop - iteration order"]
+
+example = """
+var obj = {
+  A: 1,
+  B: 1,
+}
+
+for(var p in obj) {
+    console.log(p);
+}
+"""
+
+output="A\nB"
+
+["for in loop - break"]
+
+example = """
+var obj = {
+  A: 1,
+  B: 1,
+}
+
+var brokeOn;
+for(var p in obj) {
+  if(p === 'A') {
+    brokeOn = p;
+    break;
+  }
+  console.log('iterated');
+  console.log(p);
+}
+console.log(brokeOn);
+"""
+
+output="A"
+

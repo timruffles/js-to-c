@@ -130,6 +130,9 @@ function compile(ast: Node, state: CompileTimeState): string {
     return lookup[ast.type](ast, state);
 }
 
+function always(output: string): () => string {
+    return () => output;
+}
 
 function getCompilers(): NodeCompilerLookup {
     return {
@@ -137,14 +140,14 @@ function getCompilers(): NodeCompilerLookup {
         AssignmentExpression: compileAssignmentExpression,
         BinaryExpression: compileBinaryExpression,
         BlockStatement: compileBlockStatement,
-        BreakStatement: unimplemented('BreakStatement'),
+        BreakStatement: always('break;\n'),
         CallExpression: compileCallExpression,
         CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
         ConditionalExpression: compileConditionalExpression,
-        ContinueStatement: unimplemented('ContinueStatement'),
+        ContinueStatement: always('continue;\n'),
         DebuggerStatement: unimplemented('DebuggerStatement'),
         DoWhileStatement: unimplemented('DoWhileStatement'),
-        EmptyStatement: unimplemented('EmptyStatement'),
+        EmptyStatement: always('/* empty statement */'),
         ExpressionStatement: compileExpressionStatement,
         ForInStatement: compileForInStatement,
         ForStatement: compileForStatement,
@@ -589,11 +592,12 @@ function compileForInStatement(node: ForInStatement, state: CompileTimeState) {
             {
                 ${leftSrc()}
                 ${rightSrc}
-                ForOwnIterator iterator = objectForOwnPropertiesIterator(${objectTarget.id});
-                while(iterator.property) {
+                for(ForOwnIterator iterator = objectForOwnPropertiesIterator(${objectTarget.id});
+                    iterator.property != NULL;
+                    iterator = objectForOwnPropertiesNext(iterator)
+                ) {
                     envSet(env, ${leftVariableName}, iterator.property);
-                    ${bodySrc};
-                    iterator = objectForOwnPropertiesNext(iterator);
+                    ${bodySrc}
                 }
             }`
 
@@ -759,15 +763,17 @@ function compileIfStatement(node: IfStatement, state: CompileTimeState) {
     }));
 
     const consequentSrc = compile(node.consequent, state);
-    const alternateSrc = node.alternate ? compile(node.alternate, state) : '/* no else */';
+    const alternateSrc = node.alternate
+        ? ` else {
+          ${compile(node.alternate, state)}
+        }`
+        : '';
 
     return `/* if */
             ${testSrc}
             if(isTruthy(${testResultTarget.id})) {
                 ${consequentSrc}
-            } else {
-                ${alternateSrc}
-            }`
+            } ${alternateSrc}`
 }
 
 function getUnaryOperatorFunction(operator: UnaryOperator): string {

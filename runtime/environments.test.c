@@ -93,7 +93,7 @@ static void itSetsUpArgumentValuesInCallEnv() {
     assert(callEnv != NULL);
 
     assert(envGet(callEnv, stringFromLiteral("one")) == getTrue());
-    assert(stringComparison(envGet(callEnv, stringFromLiteral("two")), stringFromLiteral("twoValue")) == 0);
+    assert(stringIsEqual(envGet(callEnv, stringFromLiteral("two")), stringFromLiteral("twoValue")) == 0);
 }
 
 static void itAffectsNearestAncestorWithDeclaredVar() {
