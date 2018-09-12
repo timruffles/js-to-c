@@ -1,7 +1,9 @@
 # Todos
 
+- Arrays
 - Object System
   - Object.prototype -> prelude
+  - method calls - setting this in `obj.method()`
 - prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)
 - varargs: currently stuff like console.log only takes one args
 - var hoisting
@@ -15,7 +17,5 @@
   - loops
     - break statement in for/while/etc
     - continue statement
-    - for loop
-    - for in loop
 - logical expressions
-- Arrays
+- Number formatting, e.g 1 -> 1, 0.1 -> 0.1, not 1.00000 and 0.10000

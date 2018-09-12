@@ -61,6 +61,7 @@ static void itImplementsStrictEquality() {
 
     assert(strictEqualOperator(stringFromLiteral("hello"), stringFromLiteral("hello")) == getTrue());
     assert(strictEqualOperator(stringFromLiteral("bye"), stringFromLiteral("hello")) == getFalse());
+    assert(strictEqualOperator(stringFromLiteral("hello"), stringCreateFromTemplate("%s", "hello")) == getTrue());
 
     assert(strictEqualOperator(jsNum(5), stringFromLiteral("5")) == getFalse());
     assert(strictEqualOperator(getUndefined(), getFalse()) == getFalse());

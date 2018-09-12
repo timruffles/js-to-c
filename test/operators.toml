@@ -42,6 +42,3 @@ console.log(!(10===10.001));
 """
 
 output="true\ntrue\ntrue"
-
-
-

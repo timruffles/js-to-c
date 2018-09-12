@@ -89,7 +89,7 @@ StringData* stringGet(JsValue* value) {
     return jsString;
 }
 
-bool stringComparison(JsValue* left, JsValue* right) {
+bool stringIsEqual(JsValue* left, JsValue* right) {
     if(left == right) {
         return true;
     }

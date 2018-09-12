@@ -8,45 +8,50 @@
 #include "test.h"
 #include "gc.h"
 
-#define internedString(S) stringCreateFromInternedString(S, strlen(S))
 #define assertCStringValue(S,CS) assert(strcmp(stringGetCString(S), CS) == 0);
 
 static void itCanCreateAStringFromACString() {
-    JsValue* str = internedString("Hello");
+    JsValue* str = stringFromLiteral("Hello");
     assert(str != NULL);
 }
 
 static void itGetsJsStringFromValue() {
     char* theContent = "Hello";
-    JsValue* str = internedString("Hello");
+    JsValue* str = stringFromLiteral("Hello");
     assert(strcmp(stringGetCString(str), theContent) == 0);
 }
 
 static void itGetsStringLength() {
     char* theContent = "Hello";
-    JsValue* str = internedString("Hello");
+    JsValue* str = stringFromLiteral("Hello");
     assert(strcmp(stringGetCString(str), theContent) == 0);
     assert(stringLength(str) == 5);
 
-    JsValue* emptyString = internedString("");
+    JsValue* emptyString = stringFromLiteral("");
     assert(stringLength(emptyString) == 0);
+}
+
+static void itComparesStrings() {
+    assert(stringIsEqual(stringFromLiteral("hello"), stringFromLiteral("hello")));
+    assert(!stringIsEqual(stringFromLiteral("Hello"), stringFromLiteral("hello")));
+    assert(stringIsEqual(stringFromLiteral("hello"), stringCreateFromTemplate("%s", "hello")));
+    assert(stringIsEqual(stringFromLiteral("A"), stringFromLiteral("A")));
 }
 
 static void itCreatesStringsFromTemplate() {
     JsValue* str = stringCreateFromTemplate("Hello '%s'", "Javascript");
-    assert(stringComparison(str, internedString("Hello 'Javascript'")));
-      
+    assert(stringIsEqual(str, stringFromLiteral("Hello 'Javascript'")));
 }
 
 static void itJoinsStrings() {
-    JsValue* joined = stringConcat(internedString("One"), internedString("Two"));
+    JsValue* joined = stringConcat(stringFromLiteral("One"), stringFromLiteral("Two"));
     assertCStringValue(joined, "OneTwo");
-    assert(stringComparison(joined, internedString("OneTwo")));
+    assert(stringIsEqual(joined, stringFromLiteral("OneTwo")));
     assert(stringLength(joined) == 6);
 }
 
 static void itJoinsInternedAndDynamicStrings() {
-    JsValue* joined = stringConcat(internedString("One"), stringCreateFromTemplate("%s", "TwoP"));
+    JsValue* joined = stringConcat(stringFromLiteral("One"), stringCreateFromTemplate("%s", "TwoP"));
     assertCStringValue(joined, "OneTwoP");
 }
 
@@ -59,5 +64,6 @@ int main() {
     test(itCreatesStringsFromTemplate);
     test(itJoinsStrings);
     test(itJoinsInternedAndDynamicStrings);
+    test(itComparesStrings);
 }
 

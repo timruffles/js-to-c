@@ -70,7 +70,7 @@ JsValue* strictEqualOperator(JsValue* left, JsValue* right) {
     if(leftType == NUMBER_TYPE) {
         return TO_JS_BOOLEAN(deltaToComaparisonResult(jsValueNumber(left) - jsValueNumber(right)) == EQ);
     } else if(leftType == STRING_TYPE) {
-        return TO_JS_BOOLEAN(stringComparison(left, right) == 0);
+        return TO_JS_BOOLEAN(stringIsEqual(left, right));
     } else {
         // remaining types are
         // 1. objects: same pointer check already failed
