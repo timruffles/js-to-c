@@ -1,5 +1,9 @@
 # Notes
 
+## 12 September 2018
+
+It's very convenient that C and JS semantics are similar - implementing `break`/`continue` was as simple as reusing C's own break/continues, and slightly reworking `for ... in` loops.
+
 ## 8 September 2018
 
 Looking at the top-level node types in ESTree, ES5 had 41, since ES6 there another 26 have appeared, a growth of 61%.
