@@ -69,8 +69,11 @@ void exceptionsThrow(JsValue* error) {
     if(runtime->catchStack == NULL) {
         unhandledException(error);
     } else {
+        runtime->thrownError = error;
+
         jmp_buf target;
         memcpy(target, exceptionsJumpBuf, sizeof(jmp_buf));
+
         catchStackPop();
         longjmp(target, 1);
     }

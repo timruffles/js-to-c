@@ -8,9 +8,10 @@ source lib.sh
 
 main() {
     mkdir -p out/compiled
+    local jsFile=$1
     local exe=$2
     local cTarget=out/compiled/$(basename $2).c
-    JsToC $1 > $cTarget
+    JsToC $jsFile > $cTarget
     CToExec $cTarget $exe
 }
 

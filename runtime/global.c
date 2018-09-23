@@ -33,7 +33,7 @@ static void ensureWrite(char* output, FILE* stream) {
 }
 
 JsValue* consoleLog(Env* env) {
-    // TODO varargs
+    // TODO #varargs
     FILE* stream = getOutStream();
     assert(stream != NULL);
 
@@ -45,6 +45,7 @@ JsValue* consoleLog(Env* env) {
     return getUndefined();
 }
 
+
 // creates & sets the global env (note: called only once
 // except for in tests)
 JsValue* createGlobalObject() {
@@ -53,8 +54,6 @@ JsValue* createGlobalObject() {
 
     JsValue* console = objectCreatePlain();
     JsValue* str = stringFromLiteral("console");
-    _gcVisualiseHeap();
-    log_info("post");
     objectSet(global, str,
             console);
 
@@ -64,7 +63,7 @@ JsValue* createGlobalObject() {
     JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1, globalEnv);
     objectSet(console, stringFromLiteral("log"),
             consoleLogJsv);
-
+    
     // setup reference to self (important when used as an env)
     objectSet(global, stringFromLiteral("global"),
             global);

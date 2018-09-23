@@ -1,3 +1,4 @@
+# TODO would be good to move this duplication out into lib.sh
 all_source_including_tests=$(wildcard *.h *.c)
 source_files=$(filter-out %.test.c %.h, $(all_source_including_tests))
 source_with_headers=$(filter-out %.test.c, $(all_source_including_tests))

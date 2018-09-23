@@ -2,6 +2,14 @@
 
 ## 23 September 2018
 
+## Prelude
+
+I realised it'd be very useful to have a prelude - implementing bits of the system in JS, once enough of the language has been bootstrapped. e.g various flavours of errors would be boring to implement in C, but easy enough in JS.
+
+This led me to think about a dynamic library approach, ending up with a runtime.dylib. That'd be included by the target programs.
+
+## GC
+
 Another tricky issue where GC occurs while intermediary steps are being carried out:
 
     // hello = {something: i};
