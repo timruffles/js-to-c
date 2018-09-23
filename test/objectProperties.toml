@@ -60,6 +60,6 @@ a.testK = 'testV';
 console.log(a.testK);
 """
 
-output = "testK"
+output = "testV"
 
 

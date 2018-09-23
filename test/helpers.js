@@ -49,6 +49,9 @@ exports.assertOutput = function({
     errorOutMatch,
     expectedStatus,
 }) {
+    if(expectedStatus != null) {
+        assert.equal(status, expectedStatus);
+    }
     // TODO make composite
     if(output != null) {
         assert.equal(stdout.toString().trim(), output);
@@ -61,9 +64,6 @@ exports.assertOutput = function({
     }
     if(errorOutMatch != null) {
         assert.match(stderr.toString(), new RegExp(errorOutMatch, 'm'));
-    }
-    if(expectedStatus != null) {
-        assert.equal(status, expectedStatus);
     }
 }
 

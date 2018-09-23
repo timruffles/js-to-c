@@ -4,7 +4,7 @@ example = """
 console.log("hello world");
 """
 
-output="hellow world"
+output="hello world"
 
 ["factorial"] 
 
@@ -15,4 +15,4 @@ function fact(n) {
 console.log(fact(5));
 """
 
-output = "120"
+output = "120.000000"
