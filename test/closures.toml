@@ -13,4 +13,4 @@ increment();
 console.log(count);
 """
 
-output="3"
+output="3.000000"

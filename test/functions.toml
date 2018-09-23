@@ -8,7 +8,7 @@ function meaningOfLifeSquared() {
 console.log(meaningOfLifeSquared());
 """
 
-output = "1764"
+output = "1764.000000"
 
 ["simple call"]
 example = """
@@ -19,7 +19,7 @@ function add(a,b) {
 console.log(add(10, 5));
 """
 
-output = "15"
+output = "15.000000"
 
 ["calls with too few arguments pass undefined"]
 
