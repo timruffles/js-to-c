@@ -12,8 +12,6 @@
 #define DECLARE_AND_SET(E,K,V) envDeclare(E,K); envSet(E,K,V)
 #define STRICT_EQUAL(A,B) strictEqualOperator(A,B) == getTrue()
 
-static JsValue* idOne;
-
 static void itCanCreateRootEnv() {
     Env* env = envCreateRoot();
     assert(env != NULL);
@@ -27,15 +25,15 @@ static void itCanDestroyAnEnv() {
 
 static void itCanDeclareAVariable() {
     Env* env = envCreateRoot();
-    envDeclare(env, idOne);
+    envDeclare(env, stringFromLiteral("one"));
 
     envDestroy(env);
 }
 
 static void itReturnsUndefinedForDeclareButUndefined() {
     Env* env = envCreateRoot();
-    envDeclare(env, idOne);
-    JsValue* val = envGet(env, idOne);
+    envDeclare(env, stringFromLiteral("one"));
+    JsValue* val = envGet(env, stringFromLiteral("one"));
 
     assert(val == getUndefined());
     envDestroy(env);
@@ -43,19 +41,19 @@ static void itReturnsUndefinedForDeclareButUndefined() {
 
 static void itCanAssignAVariable() {
     Env* env = envCreateRoot();
-    envDeclare(env, idOne);
-    envSet(env, idOne, getTrue());
+    envDeclare(env, stringFromLiteral("one"));
+    envSet(env, stringFromLiteral("one"), getTrue());
 
     envDestroy(env);
 }
 
 static void itCanGetAVariableValue() {
     Env* env = envCreateRoot();
-    envDeclare(env, idOne);
-    envSet(env, idOne, getTrue());
+    envDeclare(env, stringFromLiteral("one"));
+    envSet(env, stringFromLiteral("one"), getTrue());
 
-    assert(envGet(env, idOne) == getTrue());
-    assert(envGet(env, idOne) != getFalse());
+    assert(envGet(env, stringFromLiteral("one")) == getTrue());
+    assert(envGet(env, stringFromLiteral("one")) != getFalse());
 
     envDestroy(env);
 }
@@ -93,7 +91,7 @@ static void itSetsUpArgumentValuesInCallEnv() {
     assert(callEnv != NULL);
 
     assert(envGet(callEnv, stringFromLiteral("one")) == getTrue());
-    assert(stringIsEqual(envGet(callEnv, stringFromLiteral("two")), stringFromLiteral("twoValue")) == 0);
+    assert(stringIsEqual(envGet(callEnv, stringFromLiteral("two")), stringFromLiteral("twoValue")));
 }
 
 static void itAffectsNearestAncestorWithDeclaredVar() {
@@ -116,8 +114,6 @@ static void itAffectsNearestAncestorWithDeclaredVar() {
 
 int main() {
     testLanguageAndGcInit();
-
-    idOne = stringFromLiteral("one");
 
     test(itCanCreateRootEnv);
     test(itCanDestroyAnEnv);
