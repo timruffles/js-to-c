@@ -54,3 +54,9 @@ JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint
     JsValue* val = objectCreateFunction(record);
     return val;
 }
+
+void functionGcTraverse(GcObject* value, GcCallback* cb) {
+    FunctionRecord* record = jsValuePointer((void*)value);
+    cb(record);
+    cb(record->env);
+}

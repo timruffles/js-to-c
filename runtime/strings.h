@@ -2,7 +2,9 @@
 #include <stdbool.h>
 
 #include "language.h"
+#include "gc.h"
 
+// sizeof("x") is 2, as it includes the room for NULL byte
 #define stringFromLiteral(S) stringCreateFromInternedString(S, sizeof(S) - 1)
 
 typedef struct StringData StringData;
@@ -15,3 +17,5 @@ bool stringIsEqual(JsValue* left, JsValue* right);
 JsValue* stringCreateFromTemplate(const char* fmt, ...);
 
 JsValue* stringConcat(JsValue*, JsValue*);
+
+void stringGcTraverse(GcObject*, GcCallback*);

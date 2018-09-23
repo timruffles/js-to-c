@@ -105,3 +105,7 @@ uint64_t stringLength(JsValue* value) {
     StringData* jsString = jsValuePointer(value);
     return jsString->length;
 }
+
+void stringGcTraverse(GcObject* value, GcCallback* cb) {
+    cb(jsValuePointer((void*)value));
+}
