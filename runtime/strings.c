@@ -40,17 +40,17 @@ JsValue* stringCreateFromInternedString(const char* const interned, uint64_t log
     return jsValueCreatePointer(STRING_TYPE, jsString);
 }
 
-typedef struct AllocatedString {
+typedef struct StringAllocation {
     JsValue* const string;
     StringData* const data;
-} AllocatedString;
+} StringAllocation;
 
-static AllocatedString createHeapString(uint64_t stringLength) {
+static StringAllocation createHeapString(uint64_t stringLength) {
     StringData* data = gcAllocate(sizeof(StringData) + stringLength, STRING_VALUE_TYPE);
     data->length = stringLength;
     data->internedString = NULL;
     JsValue* value = jsValueCreatePointer(STRING_TYPE, data);
-    return (AllocatedString) {
+    return (StringAllocation) {
         .string = value,
         .data = data,
     };
@@ -67,7 +67,7 @@ JsValue* stringCreateFromTemplate(const char* format, ...) {
     va_end(args);
     #pragma clang diagnostic pop
 
-    AllocatedString allocation = createHeapString(charsWritten);
+    StringAllocation allocation = createHeapString(charsWritten);
     strcpy(allocation.data->heapString, buffer);
 
     return allocation.string;
@@ -75,7 +75,7 @@ JsValue* stringCreateFromTemplate(const char* format, ...) {
 
 JsValue* stringConcat(JsValue* one, JsValue* two) {
     uint64_t newLength = stringLength(one) + stringLength(two);
-    AllocatedString allocated = createHeapString(newLength);
+    StringAllocation allocated = createHeapString(newLength);
     char* destination = allocated.data->heapString;
 
     strcat(destination, stringGetCString(one));
