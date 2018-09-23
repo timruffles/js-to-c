@@ -1,21 +1,22 @@
 # Todos
 
-- Arrays
+- Fix GC
+  - strings not traversed
+  - object string keys not traversed!
+  - uh... not working very well full stop
 - Object System
   - Object.prototype -> prelude
+  - prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)
+      - * immediate use case - implement `new Error` (see exceptions.toml)
   - method calls - setting this in `obj.method()`
-- prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)
+- Arrays
 - varargs: currently stuff like console.log only takes one args
-- var hoisting
-  - variable
-  - functions
 - functions passing too few arguments
   - should pass in undefineds
 - warning on missing
-- control flow
-  - if
-  - loops
-    - break statement in for/while/etc
-    - continue statement
 - logical expressions
 - Number formatting, e.g 1 -> 1, 0.1 -> 0.1, not 1.00000 and 0.10000
+- var hoisting
+  - variable
+  - functions
+- GC optimisation - at the mo free list fragments in a way that'd be trivial to defrag while processing (as lots of it is likely continugous)
