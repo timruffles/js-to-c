@@ -22,7 +22,7 @@ static void itRunsCatchWhenExceptionThrown() {
 
     bool caught = false;
     if(exceptionsTry(env)) {
-        exceptionsThrow(env, objectCreatePlain());
+        exceptionsThrow(objectCreatePlain());
     } else {
         caught = true;
     }

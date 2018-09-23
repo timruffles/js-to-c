@@ -10,7 +10,7 @@
 #include "gc.h"
 
 // e.g const x => { x; return true }
-JsValue* exampleUserFunction(Env* env) {
+static JsValue* exampleUserFunction(Env* env) {
     assert(envGet(env, stringFromLiteral("two")) == getTrue());
     assert(jsValueNumber(envGet(env, stringFromLiteral("one"))) - 7 < 0.000001);
     return getTrue();
