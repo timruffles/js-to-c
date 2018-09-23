@@ -2,6 +2,6 @@
 
 set -euo pipefail
 
-clang -Weverything $1 -o /tmp/out
+clang -Weverything -O0 --std=c11 $1 -o /tmp/out
 chmod +x /tmp/out
 /tmp/out
