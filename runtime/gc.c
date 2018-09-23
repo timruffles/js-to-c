@@ -10,6 +10,8 @@
 #include "config.h"
 #include "global.h"
 #include "runtime.h"
+#include "strings.h"
+#include "functions.h"
 
 #define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
 
@@ -233,6 +235,12 @@ static void traverse(GcObject* object) {
         case OBJECT_TYPE:
             objectGcTraverse((void*)object, (GcCallback*)mark);
             break;
+        case STRING_TYPE:
+            stringGcTraverse(object, (GcCallback*)mark);
+            break;
+        case FUNCTION_TYPE:
+            functionGcTraverse(object, (GcCallback*)mark);
+            break;
         // TODO - strings copy over string
         default:
             break;
@@ -240,8 +248,10 @@ static void traverse(GcObject* object) {
 }
 
 static void mark(GcObject* item) {
-    item->marked = true;
-    traverse(item);
+    if(!item->marked) {
+        item->marked = true;
+        traverse(item);
+    }
 }
 
 static void gcObjectFree(GcObject* object) {

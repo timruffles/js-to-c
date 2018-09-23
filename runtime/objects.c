@@ -15,7 +15,7 @@ typedef struct PropertyDescriptor PropertyDescriptor;
 typedef struct PropertyDescriptor {
     GcHeader;
 
-    const char* name;
+    JsValue *name;
     JsValue *value;
 
     PropertyDescriptor* nextProperty;
@@ -114,7 +114,7 @@ FunctionRecord* objectGetCallInternal(JsValue *val) {
 
 static PropertyDescriptor* findProperty(PropertyDescriptor *pd, const char* const name) {
     while(pd != NULL) {
-        if(strcmp(pd->name, name) == 0) {
+        if(strcmp(stringGetCString(pd->name), name) == 0) {
             return pd;
         }
         pd = pd->nextProperty;
@@ -153,7 +153,7 @@ ForOwnIterator objectForOwnPropertiesNext(ForOwnIterator iterator) {
         PropertyDescriptor* pd = iterator.next;
         return (ForOwnIterator) {
           .next = pd->nextProperty,
-          .property = stringCreateFromTemplate("%s", pd->name),
+          .property = pd->name
         };
     }
 }
@@ -197,14 +197,16 @@ static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
 
 // used from compiled code
 JsValue* objectSet(JsValue* rawVal, JsValue* name, JsValue* value) {
+    log_info("Setting %s", stringGetCString(name));
     JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", name);
     JsObject* object = jsValuePointer(objectVal);
+    // this should be using the JS string value
     const char* nameString = stringGetCString(name);
 
     PropertyDescriptor *descriptor = findProperty(object->properties, nameString);
     if(descriptor == NULL) {
         descriptor = propertyCreate();
-        descriptor->name = nameString;
+        descriptor->name = name;
         appendProperty(object, descriptor);
     }
 
@@ -233,6 +235,7 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
         pd = pd->nextProperty
     ) {
         cb(pd);
+        cb(pd->name);
         cb(pd->value);
     }
 }
