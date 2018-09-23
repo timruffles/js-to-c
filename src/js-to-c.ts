@@ -32,7 +32,7 @@ import {
     ForStatement,
     ForInStatement,
 } from 'estree';
-import {CompileTimeState} from "./CompileTimeState";
+import {CompileTimeState, CompileOptions} from "./CompileTimeState";
 
 
 type NodeCompiler = (n: any, s: CompileTimeState) => string;
@@ -105,6 +105,7 @@ const assignmentOpToFunction: {[k: string]: string | undefined} = {
     "-=": "subtractOperator",
 };
 
+
 const compileExpressionStatement: NodeCompiler = (node, state) => compile(node.expression, state);
 const lookup = getCompilers();
 
@@ -113,17 +114,19 @@ if(require.main === module) {
 }
 
 function main() {
-    console.log(compileFile(process.argv[2]));
+    console.log(compileFile(process.argv[2], {
+        outputLibraryName: process.env.JSC_OUTPUT_LIBRARY,
+    }));
 }
 
-export function compileFile(fn: string) {
+export function compileFile(fn: string, options: CompileOptions) {
     const input = fs.readFileSync(fn, { encoding: 'utf8'});
-    return compileString(input);
+    return compileString(input, options);
 }
 
-export function compileString(src: string) {
+export function compileString(src: string, compileOptions: CompileOptions) {
     const ast = parseScript(src);
-    return compile(ast, new CompileTimeState);
+    return compile(ast, new CompileTimeState(compileOptions));
 }
 
 function compile(ast: Node, state: CompileTimeState): string {
@@ -232,6 +235,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/runtime.h"
         #include "../../runtime/exceptions.h"
         #include "../../runtime/lib/debug.h"
+
         
         ${interned}
         
@@ -243,16 +247,35 @@ function compileProgram(node: Program, state: CompileTimeState) {
         
         ${compileInternInitialisation(internedStrings)}
         
-        int main() {
-            RuntimeEnvironment* runtime = runtimeInit();
-            
-            initialiseInternedStrings();
-            
-            log_info("Running user program");
-            userProgram(runtime->globalEnv);
-            return 0;
-        }
+        ${state.outputLibraryName ? bodyForLibrary(state.outputLibraryName) : bodyForMain()}
 `
+}
+
+function bodyForLibrary(name: string) {
+    return `extern void ${name}LibraryInit() {
+        initialiseInternedStrings();
+        RuntimeEnvironment* runtime = runtimeGet();
+        
+        log_info("Initializing JS library '${name}'");
+        userProgram(runtime->globalEnv);
+    }`
+}
+
+function bodyForMain() {
+    return `
+    // #include "../../runtime/prelude.h"
+
+    int main() {
+        RuntimeEnvironment* runtime = runtimeInit();
+        initialiseInternedStrings();
+
+        // preludeLibraryInit();
+        
+        log_info("Running user program");
+        userProgram(runtime->globalEnv);
+        return 0;
+    }
+    `;
 }
 
 
@@ -438,7 +461,7 @@ function createCFunction(name: string, bodySrc: string) {
 
 function compileUnaryExpression(node: UnaryExpression, state: CompileTimeState) {
     const operandTarget = new IntermediateVariableTarget(state.getNextSymbol('operand'));
-    const operandSrc = compile(node.argument, state.childState({ target: operandTarget });
+    const operandSrc = compile(node.argument, state.childState({ target: operandTarget }));
     const operatorFn = getUnaryOperatorFunction(node.operator);
 
     return `${operandSrc}
@@ -745,7 +768,8 @@ function compileTryStatement(node: TryStatement, state: CompileTimeState) {
     {
         JsValue* errorVars[1] = { runtimeGet()->thrownError };
         JsValue* errorNames[1] = { ${errorName.id} };
-        Env* env = envCreateForCall(env, errorNames, errorVars, 1);
+        Env* parentEnv = env;
+        Env* env = envCreateForCall(parentEnv, errorNames, errorVars, 1);
         ${compile(catchClause.body, state)}
     }`;
 

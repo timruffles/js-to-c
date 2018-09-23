@@ -6,6 +6,10 @@ import {CompileTarget, InternedString, SideEffectTarget} from "./js-to-c";
  **/
 type JsFunctionBody = string;
 
+export interface CompileOptions {
+    outputLibraryName?: string,
+}
+
 export class CompileTimeState {
     // shared between all state objects for a given compilation
     functions: JsFunctionBody[] = [];
@@ -14,6 +18,12 @@ export class CompileTimeState {
     private counter = { id: 0 };
 
     target: CompileTarget = SideEffectTarget;
+
+    readonly outputLibraryName?: string
+
+    constructor({ outputLibraryName }: CompileOptions = {}) {
+        this.outputLibraryName = outputLibraryName;
+    }
 
     /**
      * When evaluating sub-expressions etc, aspects of the state

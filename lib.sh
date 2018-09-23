@@ -2,24 +2,37 @@ JsToC() {
     node js-build/js-to-c.js $1
 }
 
-CToExec() {
-    local cTarget=$1
-    local exe=$2
-
+ClangOptions() {
     # string format warnings: ignored as we're compiling to C
     # float-equal: fine, JS float semantics too
     # padding: something to consider much later
     # gnu stuff: research and consider later
-    clang -g -Weverything \
-             -Wno-format-security \
-             -Wno-format-pedantic \
-             -Wno-float-equal \
-             -Wno-padded \
-             -Wno-gnu-folding-constant \
-             -Wno-gnu-folding-constant \
-             -Wno-missing-noreturn \
-             -Wno-newline-eof \
-             $cTarget $(GetRuntimeLibs) -o $exe
+    echo -g  \
+         -std=c11 \
+         -O0 \
+         -Weverything \
+         -Wno-format-security \
+         -Wno-format-pedantic \
+         -Wno-float-equal \
+         -Wno-padded \
+         -Wno-gnu-folding-constant \
+         -Wno-gnu-folding-constant \
+         -Wno-missing-noreturn \
+         -Wno-newline-eof
+}
+
+CToExec() {
+    local cTarget=$1
+    local exe=$2
+
+    clang $(ClangOptions) $cTarget out/runtime.dylib -o $exe
+}
+
+CToLib() {
+    local cTarget=$1
+    local out=$2
+
+    clang -dynamiclib $(ClangOptions) $cTarget -o $out
 }
 
 GetRuntimeLibs() {
