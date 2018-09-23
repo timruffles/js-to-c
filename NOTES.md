@@ -1,8 +1,37 @@
 # Notes
 
+## 23 September 2018
+
+Another tricky issue where GC occurs while intermediary steps are being carried out:
+
+    // hello = {something: i};
+    JsValue *objectLiteral_9 = objectCreatePlain();
+    JsValue *value_10 = (envGet(env, interned_1 /* i */));
+    objectSet(objectLiteral_9, interned_11, value_10);
+    result_8 = (objectLiteral_9);
+    // if GC occured between the object literal creation and here, we could
+    // be setting env to an empty object
+    envSet(env, interned_3, result_8);
+
+the root is this:
+
+1. make GC able thing
+2. other steps that may trigger a GC
+3. link object to GC root
+
+Time to consider how to fix this. First thing that jumps to mind is having the compiler mark values that are being used in an intermediary process, e.g
+
+    JsValue *objectLiteral_9 = INTERMEDIATE(objectCreatePlain());
+    // other stuff 
+    FINISH(objectLiteral_9);
+
+Where `INTERMEDIATE(...)` sets a flag and `FINISH(...)` clears it.
+
+Is there a way to avoid this? GC only knows to walk routes - the intermediary values in the compiled code are invisible to it.
+
 ## 12 September 2018
 
-It's very convenient that C and JS semantics are similar - implementing `break`/`continue` was as simple as reusing C's own break/continues, and slightly reworking `for ... in` loops.
+It's very convenient that C and JS semantics are similar - implementing `break`/`continue` was as simple as reusing C's own break/continues, and slightly reworking `for ... in` loops so the keywords would have the desired effect.
 
 ## 8 September 2018
 
