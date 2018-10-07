@@ -32,7 +32,7 @@ import {
     ForStatement,
     ForInStatement,
 } from 'estree';
-import {CompileTimeState, CompileOptions} from "./CompileTimeState";
+import {CompileTimeState, CompileOptions, LibraryTarget} from "./CompileTimeState";
 
 
 type NodeCompiler = (n: any, s: CompileTimeState) => string;
@@ -116,6 +116,7 @@ if(require.main === module) {
 function main() {
     console.log(compileFile(process.argv[2], {
         outputLibraryName: process.env.JSC_OUTPUT_LIBRARY,
+        outputLibraryHeader: process.env.JSC_LIBRARY_HEADER,
     }));
 }
 
@@ -247,12 +248,15 @@ function compileProgram(node: Program, state: CompileTimeState) {
         
         ${compileInternInitialisation(internedStrings)}
         
-        ${state.outputLibraryName ? bodyForLibrary(state.outputLibraryName) : bodyForMain()}
+        ${state.outputTarget.type === 'Library' ? bodyForLibrary(state.outputTarget) : bodyForMain()}
 `
 }
 
-function bodyForLibrary(name: string) {
-    return `extern void ${name}LibraryInit() {
+function bodyForLibrary({ name, header }: LibraryTarget) {
+    return `
+    #include "${header}"
+    
+    extern void ${name}LibraryInit() {
         initialiseInternedStrings();
         RuntimeEnvironment* runtime = runtimeGet();
         
@@ -263,13 +267,13 @@ function bodyForLibrary(name: string) {
 
 function bodyForMain() {
     return `
-    // #include "../../runtime/prelude.h"
+    #include "../../runtime/prelude.h"
 
     int main() {
         RuntimeEnvironment* runtime = runtimeInit();
         initialiseInternedStrings();
 
-        // preludeLibraryInit();
+        preludeLibraryInit();
         
         log_info("Running user program");
         userProgram(runtime->globalEnv);

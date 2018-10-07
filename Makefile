@@ -1,13 +1,12 @@
 
-
 js-build/js-to-c.js: src/*.ts
 	tsc
-
 
 out/runtime.dylib: runtime/*.c
 	./runtime/scripts/compile-dylib
 
-out/prelude.dylib: out/runtime.dylib
-	./compile-js-lib prelude runtime/prelude.js out
+out/prelude.dylib: js-build/js-to-c.js runtime/prelude.js out/runtime.dylib
+	./compile-js-lib prelude runtime/prelude.js out/prelude.dylib
 
-default: prelude
+.PHONY: clean
+clean: js-build/js-to-c.js out/runtime.dylib out/prelude.dylib
