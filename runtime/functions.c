@@ -11,14 +11,18 @@
 #include "gc.h"
 #include "lib/debug.h"
 
+// TODO this is just a quick hacky way of doing this, really should make function
+// records variable length and handle it with a final array. Maybe could be handled
+// in a similar way to strings
+#define MAX_ARG_NAMES 10
 
 // compiled function
 typedef struct FunctionRecord {
     GcHeader;
     TargetFunction* function;
-    JsValue** argumentNames;
     uint64_t argumentCount;
     Env* env;
+    JsValue* argumentNames[MAX_ARG_NAMES];
 } FunctionRecord;
 
 JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint64_t argumentCount, JsValue* thisValue) {
@@ -46,9 +50,10 @@ JsValue* _functionRun(JsValue* val, Env* env) {
 }
 
 JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint64_t argCount, Env* env) {
+    precondition(argCount <= MAX_ARG_NAMES, "Arg count of %llu above max of %i", argCount, MAX_ARG_NAMES);
     FunctionRecord* record = gcAllocate(sizeof(FunctionRecord), FUNCTION_RECORD_TYPE);
     record->function = function;
-    record->argumentNames = argumentNames;
+    memcpy(record->argumentNames, argumentNames, sizeof(JsValue*) * argCount);
     record->argumentCount = argCount;
     record->env = env;
     JsValue* val = objectCreateFunction(record);

@@ -30,9 +30,9 @@ Env *envCreate(Env* parent) {
 
 Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount) {
     Env* callEnv = envCreate(parent);
-    log_info("Created call env, now looping over %llu args", argCount);
+    log_info("Created call env %p parent %p, now looping over %llu args", callEnv, parent, argCount);
     for(uint64_t i = 0; i < argCount; i++) {
-        log_info("Env name %p", argumentNames[0]);
+        log_info("Env name %s", stringGetCString(argumentNames[0]));
         envDeclare(callEnv, argumentNames[i]);
         envSet(callEnv, argumentNames[i], argumentValues[i]);
     }
@@ -47,7 +47,7 @@ JsValue *envGet(Env *env, JsValue *name) {
         exceptionsThrowReferenceError(
             stringCreateFromTemplate("%s is not defined", stringGetCString(name)));
     }
-    log_info("Looked up %s got type %s", stringGetCString(name), jsValueReflect(found).name);
+    log_info("Looked up %s in %p got type %s", stringGetCString(name), env, jsValueReflect(found).name);
     return found;
 }
 

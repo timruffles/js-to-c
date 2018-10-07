@@ -25,14 +25,14 @@ CToExec() {
     local cTarget=$1
     local exe=$2
 
-    clang $(ClangOptions) $cTarget out/runtime.dylib -o $exe
+    clang $(ClangOptions) $cTarget out/runtime.dylib out/prelude.dylib -o $exe
 }
 
 CToLib() {
     local cTarget=$1
     local out=$2
 
-    clang -dynamiclib $(ClangOptions) $cTarget -o $out
+    clang -dynamiclib $(ClangOptions) out/runtime.dylib $cTarget -o $out
 }
 
 GetRuntimeLibs() {
