@@ -1,9 +1,6 @@
 # Todos
 
-- Fix GC
-  - strings not traversed
-  - object string keys not traversed!
-  - uh... not working very well full stop
+- The array of pointers to function argument names needs to be heap allocated (or stored somewhere)
 - Object System
   - Object.prototype -> prelude
   - prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)

@@ -10,7 +10,7 @@
     "start": "nodemon --ext ts -w src/ --exec 'make js-build/js-to-c.js && ./scripts/compiler-smoke-test '",
     "setup": "tsc",
     "test:update": "node test/update.js",
-    "test": "npm run -s test:update && mocha"
+    "test": "make clean && npm run -s test:update && mocha"
   },
   "keywords": [],
   "author": "Tim Ruffles <timruffles@googlemail.com>",

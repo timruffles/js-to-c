@@ -8,7 +8,33 @@ type JsFunctionBody = string;
 
 export interface CompileOptions {
     outputLibraryName?: string,
+    outputLibraryHeader?: string,
 }
+
+class ExecutableTarget {
+   readonly type: 'Executable' = 'Executable';
+}
+
+export class LibraryTarget {
+    readonly type: 'Library' = 'Library';
+    constructor(
+        readonly header: string,
+        readonly name: string,
+    ) {}
+}
+
+function getTarget({ outputLibraryHeader: header, outputLibraryName: name}: CompileOptions)  {
+    if(!header && !name) {
+        return new ExecutableTarget;
+    } else {
+        if(!header || !name) {
+            throw Error("Must supply both library header and name");
+        }
+        return new LibraryTarget(header, name);
+    }
+}
+
+export type OutputTarget = ExecutableTarget | LibraryTarget;
 
 export class CompileTimeState {
     // shared between all state objects for a given compilation
@@ -19,10 +45,10 @@ export class CompileTimeState {
 
     target: CompileTarget = SideEffectTarget;
 
-    readonly outputLibraryName?: string
+    readonly outputTarget: OutputTarget;
 
-    constructor({ outputLibraryName }: CompileOptions = {}) {
-        this.outputLibraryName = outputLibraryName;
+    constructor(options: CompileOptions = {}) {
+        this.outputTarget = getTarget(options);
     }
 
     /**
