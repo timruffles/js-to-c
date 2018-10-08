@@ -240,6 +240,21 @@ void objectGcTraverse(JsValue* value, GcCallback* cb) {
     }
 }
 
+char* objectDebug(JsValue* target) {
+    JsObject* object = jsValuePointer(target);
+    // TODO this can likely go away once arrays are in
+    char* debugString = calloc(4096, 1);
+    for(PropertyDescriptor* pd = object->properties;
+        pd != NULL;
+        pd = pd->nextProperty
+    ) {
+        char buffer[1024];
+        sprintf(buffer, "%s,%s", stringGetCString(pd->name), gcObjectReflect((void*)pd->value).name);
+        strcat(debugString, buffer);
+    }
+    return debugString;
+}
+
 JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64_t argumentCount) {
     JsValue* pt = JS_GET_LITERAL(function, "prototype");
     // TODO use Object.prototype if pt is undefined
