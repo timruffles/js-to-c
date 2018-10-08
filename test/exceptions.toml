@@ -1,7 +1,7 @@
 ["global exceptions"]
 
 example="""
-throw Error("Test");
+throw new Error("Test");
 """
 
 errorOutMatch="Error: Test"
@@ -15,7 +15,7 @@ function A() {
 }
 
 function B() {
-  throw Error("B threw");
+  throw new Error("B threw");
 }
 
 A();
@@ -36,7 +36,7 @@ function A() {
 }
 
 function B() {
-  throw Error("B threw");
+  throw new Error("B threw");
 }
 
 console.log(A());
@@ -56,7 +56,7 @@ function A() {
 }
 
 function B() {
-  throw Error("B threw");
+  throw new Error("B threw");
 }
 
 console.log(A());
@@ -98,3 +98,25 @@ A.thingy;
 errorOutMatch="Uncaught TypeError: Cannot read property 'thingy' of undefined"
 
 expectedStatus="1"
+
+["Error works identically without 'new'"]
+
+example="""
+function A() {
+    try {
+      B();
+    } catch(e) {
+      return e.message;
+    }
+}
+
+function B() {
+  throw Error("B threw");
+}
+
+console.log(A());
+"""
+
+output="B threw"
+
+

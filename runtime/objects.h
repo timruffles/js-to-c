@@ -22,6 +22,7 @@ void objectDestroy(JsValue* object);
 JsValue* objectLookup(JsValue* object, JsValue* property);
 JsValue* objectInternalOwnProperty(JsValue* value, JsValue* property);
 JsValue* objectEnvGetParent(JsValue* env);
+char* objectDebug(JsValue* env);
 
 JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64_t argumentCount);
 

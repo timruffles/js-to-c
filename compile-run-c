@@ -7,8 +7,9 @@ set -euo pipefail
 source lib.sh
 
 main() {
-    CToExec $1 $2
-    $2
+    local target=${2:-/tmp/js-c-comp-run}
+    CToExec $1 $target
+    $target
 }
 
 main $@
