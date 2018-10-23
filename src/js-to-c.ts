@@ -30,7 +30,7 @@ import {
     UnaryOperator,
     IfStatement,
     ForStatement,
-    ForInStatement,
+    ForInStatement, SimpleLiteral,
 } from 'estree';
 import {CompileTimeState, CompileOptions, LibraryTarget} from "./CompileTimeState";
 
@@ -680,8 +680,22 @@ function collapseExpressionToSupportedType<T extends Expression>(t: Expression, 
    }
 }
 
-function isIdentifier(t: Expression): t is Identifier {
-   return t.type === 'Identifier';
+// es5 only supports string + number as object keys, no support for key expressions
+type Es5ObjectKey = Identifier | SimpleLiteral;
+
+function isEs5ObjectKey(t: Expression): t is Es5ObjectKey {
+    return t.type === 'Identifier' || (t.type === 'Literal' && !('regex' in t));
+}
+
+
+function objectKeyToString(key: Expression): string {
+    const es5Key = collapseExpressionToSupportedType(key, isEs5ObjectKey);
+    switch(es5Key.type) {
+        case 'Literal':
+            return `${es5Key.value}`;
+        case 'Identifier':
+            return es5Key.name;
+    }
 }
 
 function compileObjectExpression(node: ObjectExpression, state: CompileTimeState) {
@@ -691,7 +705,7 @@ function compileObjectExpression(node: ObjectExpression, state: CompileTimeState
 
     const propertiesSrc = node.properties.map(property => {
         const valueTarget = new IntermediateVariableTarget(state.getNextSymbol('value'));
-        const key = state.internString(collapseExpressionToSupportedType(property.key, isIdentifier).name);
+        const key = state.internString(objectKeyToString(property.key));
         return `${compile(property.value, state.childState({ target: valueTarget }))}
             objectSet(${objectVar}, ${key.id}, ${valueTarget.id});`;
     }).join('\n')
