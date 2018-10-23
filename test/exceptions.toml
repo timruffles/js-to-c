@@ -9,6 +9,8 @@ errorOutMatch="Error: Test"
 
 ["call stacks"]
 
+todo="implement stack traces"
+
 example="""
 function A() {
   B();
@@ -100,6 +102,8 @@ errorOutMatch="Uncaught TypeError: Cannot read property 'thingy' of undefined"
 expectedStatus="1"
 
 ["Error works identically without 'new'"]
+
+todo='spec compliance work'
 
 example="""
 function A() {

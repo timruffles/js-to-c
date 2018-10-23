@@ -40,7 +40,7 @@ function updateFixture({ name, tests, testFile }) {
 
     const testsSrc = tests.map((testSetup) => {
 
-        const {name,fixtureFile, output, outputMatch, errorOut, errorOutMatch, expectedStatus = 0, env = {}} = testSetup;
+        const {name,todo,fixtureFile, output, outputMatch, errorOut, errorOutMatch, expectedStatus = 0, env = {}} = testSetup;
 
         if(output && outputMatch) {
             throw Error(`${fixtureFile}/${name} specifies both output + output match, only one can be used`);
@@ -49,7 +49,9 @@ function updateFixture({ name, tests, testFile }) {
             throw Error(`${fixtureFile}/${name} specifies both errorOut + errorOut match, only one can be used`);
         }
 
-        return `it("${name}", () => {
+        const skip = todo ? '.skip' : '';
+
+        return `it${skip}("${name}", () => {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
             const spawnResult = runExecutable(executable, { env: ${JSON.stringify(env)} });
