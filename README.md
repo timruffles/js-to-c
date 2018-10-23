@@ -6,6 +6,8 @@ Master branch is likely working, [dev](https://github.com/timruffles/js-to-c/tre
 
 Read my [notes](https://github.com/timruffles/js-to-c/blob/dev/NOTES.md) for a rough development blog.
 
+Next thing to do - see TODO.md.
+
 ## Example
 
 The following JS
