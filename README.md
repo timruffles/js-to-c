@@ -2,6 +2,8 @@
 
 A compiled implementation of ES5, targetting C.
 
+Todos - see TODO.md.
+
 ## Example
 
 The following JS

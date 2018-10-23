@@ -1,6 +1,6 @@
 # Todos
 
-Next action:
+Next action: why is `npm test -- --grep='global garbage'` failing?
 
 ## List
 
