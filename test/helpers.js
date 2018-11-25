@@ -41,30 +41,59 @@ exports.assertOutput = function({
     stderr,
     stdout,
     status,
+    error,
+    signal,
 }, {
     // ''/Match pairs are mutually exclusive
     output,
     outputMatch,
     errorOut,
     errorOutMatch,
-    expectedStatus,
+    expectedStatus = 0,
 }) {
-    if(expectedStatus != null) {
-        assert.equal(status, expectedStatus);
-    }
-    // TODO make composite
-    if(output != null) {
-        assert.equal(stdout.toString().trim(), output);
-    }
-    if(outputMatch != null) {
-        assert.match(stdout.toString(), new RegExp(outputMatch, 'm'));
-    }
-    if(errorOut != null) {
-        assert.equal(stderr.toString().trim(), errorOut);
-    }
-    if(errorOutMatch != null) {
-        assert.match(stderr.toString(), new RegExp(errorOutMatch, 'm'));
-    }
+    const errors = compositeErrors(
+        () => assert.isUndefined(error),
+        () => assert.isUndefined(signal),
+        () => {
+            if(expectedStatus != null) {
+                assert.equal(status, expectedStatus);
+            }
+        },
+        () => {
+            if(output != null) {
+                assert.equal(stdout.toString().trim(), output);
+            }
+        },
+        () => {
+            if(outputMatch != null) {
+                assert.match(stdout.toString(), new RegExp(outputMatch, 'm'));
+            }
+        },
+        () => {
+            if(errorOut != null) {
+                assert.equal(stderr.toString().trim(), errorOut);
+            }
+        },
+        () => {
+            if(errorOutMatch != null) {
+                assert.match(stderr.toString(), new RegExp(errorOutMatch, 'm'));
+            }
+        },
+    )
+
+    assert.deepEqual(errors, []);
+}
+
+function compositeErrors(...tests) {
+    return tests.reduce((es, t) => {
+        try {
+            t()
+        } catch(e) {
+            es.push(e)
+        }
+        return es
+    }, [])
+  
 }
 
 function pathInFixtures(fn) {

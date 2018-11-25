@@ -1,3 +1,5 @@
+__dirname=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
 JsToC() {
     node js-build/js-to-c.js $1
 }
@@ -36,5 +38,5 @@ CToLib() {
 }
 
 GetRuntimeLibs() {
-    find runtime -depth 1 -name '*.c' -not -name '*.test.c'
+    find $__dirname/runtime -depth 1 -name '*.c' -not -name '*.test.c'
 }

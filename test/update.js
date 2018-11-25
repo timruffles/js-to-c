@@ -55,6 +55,7 @@ function updateFixture({ name, tests, testFile }) {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
             const spawnResult = runExecutable(executable, { env: ${JSON.stringify(env)} });
+            
             assertOutput(
               spawnResult,
               ${JSON.stringify(testSetup, null, '\t')}
