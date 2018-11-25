@@ -99,6 +99,20 @@ static void itGarbageCollectsCorrectly() {
     assert(jsValueType(garbageTwo) == FREE_SPACE_TYPE);
 }
 
+static void itCanGcObjectProperties() {
+    _gcTestInit();
+    runtimeInit();
+
+    JsValue* garbageOne = objectCreatePlain();
+
+    JsValue* root = objectCreatePlain();
+    JS_SET(garbageOne, "someProp", jsValueCreateNumber(10));
+
+    JsValue* roots[] = {root};
+
+    _gcRun(roots, 1);
+}
+
 
 int main() {
     configInitFromEnv();
@@ -110,4 +124,5 @@ int main() {
     test(itTracksSpace); 
 
     test(itGarbageCollectsCorrectly);
+    test(itCanGcObjectProperties);
 }

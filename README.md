@@ -58,3 +58,31 @@ Run `npm test` to update the tests, then use mocha as usual.
 ### Unit
 
 The runtime has unit tests - use the Makefile in `./runtime` to run them.
+
+## Runtime
+
+Runtime C libraries for js-to-c.
+
+### Installing
+
+Dependencies:
+
+- clang
+- Make
+
+### Developing
+
+Builds and runs all tests:
+
+    make test
+
+### Libraries
+
+See `lib` - currently just
+
+- debug.h 
+  - debug macros
+
+## Dynamic libraries
+
+The runtime is built into a dynamic library to avoid recompiling. There's also a prelude, which allows langauge features to be implemented in JS that's pre-compiled to C. 
