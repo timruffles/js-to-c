@@ -5,6 +5,7 @@
 #include "gcObject.h"
 #include "language.h"
 
+typedef int GcAtomicId;
 
 typedef struct {
     uint64_t used;
@@ -16,8 +17,12 @@ void gcInit(void);
 void* gcAllocate(size_t, int type);
 GcStats gcStats(void);
 
+GcAtomicId gcAtomicGroupStart(void);
+void gcAtomicGroupEnd(GcAtomicId*);
+
 void _gcTestInit(void);
 
+void _gcRunGlobal(void);
 void _gcRun(JsValue** roots, uint64_t rootCount);
 void _gcVisualiseHeap(void);
 

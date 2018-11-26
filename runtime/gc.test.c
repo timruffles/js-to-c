@@ -113,6 +113,25 @@ static void itCanGcObjectProperties() {
     _gcRun(roots, 1);
 }
 
+static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
+    // We often need to do a set of operations atomically - e.g
+    // setup a call environment. If GC occured midway we could end
+    // up with an inconsistent state
+    _gcTestInit();
+    runtimeInit();
+
+    GcAtomicId id = gcAtomicGroupStart();
+    JsValue* itemOne = objectCreatePlain();
+    JS_SET(itemOne, "someProp", jsValueCreateNumber(10.3));
+    JsValue* itemTwo = objectCreatePlain();
+
+    _gcRunGlobal();
+    JS_SET(itemTwo, "itemOne", itemOne);
+    gcAtomicGroupEnd(id);
+
+    assert(jsValueNumber(JS_GET(JS_GET(itemTwo, "itemOne"), "someProp")) == 10.3);
+}
+
 
 int main() {
     configInitFromEnv();
@@ -125,4 +144,5 @@ int main() {
 
     test(itGarbageCollectsCorrectly);
     test(itCanGcObjectProperties);
+    test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
 }
