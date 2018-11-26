@@ -31,6 +31,7 @@ static RuntimeEnvironment* runtimeCreate() {
         .gcRootsCount = gcRootsCount,
         .globalEnv = globalEnv,
         .global = global,
+        .gcAtomicGroupCount = 0,
     };
 
     return runtime;

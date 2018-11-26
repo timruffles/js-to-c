@@ -8,9 +8,12 @@
 
 #define RUNTIME_MAX_STACK_DEPTH 256
 
+#define RUNTIME_GC_ATOMIC_GROUP_MAX 64
+
 typedef struct RuntimeStackPointer {
     Env* env;
 } RuntimeStackPointer;
+
 
 typedef struct RuntimeEnvironment {
     JsValue** gcRoots;
@@ -25,6 +28,10 @@ typedef struct RuntimeEnvironment {
 
     RuntimeStackPointer callStack[RUNTIME_MAX_STACK_DEPTH];
     int stackDepth;
+
+    GcAtomicId gcAtomicGroupIds[RUNTIME_GC_ATOMIC_GROUP_MAX];
+    int gcAtomicGroupCount;
+
 } RuntimeEnvironment;
 
 

@@ -201,12 +201,16 @@ static GcObject* allocateInNode(FreeNode* found, uint64_t bytes) {
     return allocatedAddress;
 }
 
+void _gcRunGlobal(void) {
+    RuntimeEnvironment* runtime = runtimeGet();
+    _gcRun(runtime->gcRoots, runtime->gcRootsCount);
+}
+
 void* gcAllocate(size_t bytes, int type) {
     FreeNode* found = findFreeSpace(bytes);
     if(found == NULL) {
         log_info("Out of memory, GC running");
-        RuntimeEnvironment* runtime = runtimeGet();
-        _gcRun(runtime->gcRoots, runtime->gcRootsCount);
+        _gcRunGlobal();
 
         found = findFreeSpace(bytes);
         // out of memory after gc run
@@ -329,4 +333,20 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
     assert(toProcess == memoryEnd);
 
     log_info("GC complete, %lli bytes collected", freed);
+}
+
+GcAtomicId gcAtomicGroupStart() {
+    //RuntimeEnvironment* rt = runtimeGet();
+    //rt->gcAtomicGroupIds[rt->gcAtomicGroupCount] = rt->gcAtomicGroupId;
+    //rt->gcAtomicGroupId += 1;
+    //rt->gcAtomicGroupCount += 1;
+    //precondition(rt->gcAtomicGroupCount < RUNTIME_GC_ATOMIC_GROUP_MAX, "too many gc groups");
+    return 4;
+}
+
+void gcAtomicGroupEnd(GcAtomicId* id) {
+    //precondition(rt->gcAtomicGroupCount > 0, "exit before enter");
+    //GcAtomicId current = rt->gcAtomicGroupIds[rt->gcAtomicGroupCount - 1];
+    //precondition(current == id, "group %i did not exit before nested group %i", id);
+    //rt->gcAtomicGroupCount -= 1;
 }
