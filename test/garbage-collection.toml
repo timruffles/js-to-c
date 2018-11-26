@@ -9,6 +9,7 @@ var thing;
 while(i < 1000) {
   thing = {hiThere: i}; 
   i = i + 1;
+  console.log(i)
 }
 console.log(i)
 """

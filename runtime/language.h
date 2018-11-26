@@ -8,6 +8,7 @@
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
 #define DEBUG_VALUE_N(M, X, O) char* op##O = calloc(1, 1024); jsValueToCString(X, op##O, 1000); printf(M, op##O);
 
+
 enum TypeTag {
     // reserve 0 for cases where a JsValue is uninitialized, or pointing to cleared memory
     UNITIALIZED_TYPE,
@@ -75,4 +76,9 @@ JsValue* getValueOperation(JsValue*);
 
 GcObjectReflection jsValueReflect(JsValue*);
 GcObjectReflection gcObjectReflect(GcObject*);
+GcObjectReflection gcObjectReflectType(int type);
+
+// debugging macro to ensure a typeX() function is called on something sensible
+#define languageAssertType(V,T) precondition(V != NULL, "null pointer"); if(jsValueType((void*)V) != T) { fail("expected %s got %s", jsValueReflect((void*)V).name, gcObjectReflectType(T).name); }
+
 

@@ -26,23 +26,22 @@ typedef struct FunctionRecord {
 } FunctionRecord;
 
 JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint64_t argumentCount, JsValue* thisValue) {
-    log_info("Asserting function type");
-    if(jsValueType(val) != FUNCTION_TYPE) {
-      log_err("Expected function got %s\n", jsValueReflect(val).name);
-      assert(false);
-    }
+    languageAssertType(val, FUNCTION_TYPE);
     log_info("Getting fn record");
     FunctionRecord* record = objectGetCallInternal(val);
     log_info("Fn record %p", record);
     assert(record->argumentCount == argumentCount);
     Env* callEnv = envCreateForCall(record->env, record->argumentNames, argumentValues, record->argumentCount);
 
+    runtimeEnterEnv(callEnv);
+
     // setup this - either passed from context, or unset, meaning global
     envDeclare(callEnv, stringFromLiteral("this"));
     envSet(callEnv, stringFromLiteral("this"), thisValue == NULL ? runtimeGet()->global : thisValue);
 
-    log_info("Executing");
-    return _functionRun(val, callEnv);
+    JsValue* returnVal = _functionRun(val, callEnv);
+    runtimeExitEnv();
+    return returnVal;
 }
 
 JsValue* _functionRun(JsValue* val, Env* env) {
@@ -61,7 +60,10 @@ JsValue* functionCreate(TargetFunction* function, JsValue* argumentNames[], uint
 }
 
 void functionGcTraverse(GcObject* value, GcCallback* cb) {
-    FunctionRecord* record = jsValuePointer((void*)value);
+    languageAssertType(value, FUNCTION_TYPE);
+    JsValue* object = (JsValue*)value;
+    objectGcTraverse((void*)object, cb);
+    FunctionRecord* record = objectGetCallInternal(object);
     cb(record);
     cb(record->env);
 }

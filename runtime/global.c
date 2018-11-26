@@ -61,6 +61,7 @@ JsValue* createGlobalObject() {
     JsValue** consoleArgs = calloc(sizeof(JsValue*), 1);
     consoleArgs[0] = stringFromLiteral("arg0");
     JsValue* consoleLogJsv = functionCreate(consoleLog, consoleArgs, 1, globalEnv);
+    log_info("log fn %p env %p", consoleLogJsv, globalEnv);
     objectSet(console, stringFromLiteral("log"),
             consoleLogJsv);
     

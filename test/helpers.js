@@ -81,7 +81,10 @@ exports.assertOutput = function({
         },
     )
 
-    assert.deepEqual(errors, []);
+    assert.deepEqual(errors, [], 
+        process.env.TEST_DEBUG
+          ? `failed - stdout:\n${stdout}\n\nstderr:\n${stderr}`
+          : undefined);
 }
 
 function compositeErrors(...tests) {

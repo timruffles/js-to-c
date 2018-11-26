@@ -117,7 +117,7 @@ void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
 }
 
 void* jsValuePointer(JsValue* val) {
-    precondition(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE, "Expected pointer value, got %s", gcObjectReflectType(jsValueType(val)).name);
+    precondition(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE, "Expected pointer value, got %s at %p", gcObjectReflectType(jsValueType(val)).name, val);
     // note: this will either be object or string
     return val->value.pointer;
 }
@@ -188,7 +188,6 @@ JsValueType jsValueType(JsValue* value) {
     return value->type;
 }
 
-
 #define REFLECT(T, S) case T: return (GcObjectReflection) { .name = S };
 GcObjectReflection jsValueReflect(JsValue* object) {
     switch(object->type) {
@@ -227,7 +226,7 @@ GcObjectReflection gcObjectReflectType(int type) {
     }
 
 }
+
 GcObjectReflection gcObjectReflect(GcObject* object) {
     return gcObjectReflectType(object->type);
 }
-
