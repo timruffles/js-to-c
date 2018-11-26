@@ -231,6 +231,12 @@ GcStats gcStats() {
 static void mark(GcObject* item);
 
 static void traverse(GcObject* object) {
+    if(object->type == STRING_TYPE) {
+        log_info("traverse string %p value '%s'", object, stringGetCString((void*)object));
+    } else {
+        log_info("traverse %s %p", gcObjectReflect(object).name, object);
+    }
+
     switch(object->type) {
         case OBJECT_TYPE:
             objectGcTraverse((void*)object, (GcCallback*)mark);
@@ -245,6 +251,7 @@ static void traverse(GcObject* object) {
         default:
             break;
     }
+    log_info("traversed %p", object);
 }
 
 static void mark(GcObject* item) {
@@ -255,7 +262,7 @@ static void mark(GcObject* item) {
 }
 
 static void gcObjectFree(GcObject* object) {
-    //log_info("Freeing object type %i at %p", object->type, object);
+    log_info("Freeing %s at %p", gcObjectReflect(object).name, object);
     uint64_t size = object->size;
     memset(object, 0, object->size);
     FreeSpace* newSpace = (void*)object;
@@ -292,8 +299,12 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
     for(uint64_t i = 0;
         i < rootCount;
         i++) {
+        log_info("GC mark loop");
         mark((GcObject*)roots[i]);
     }
+
+    runtimeGcTraverse((GcCallback*)mark);
+
     log_info("GC fully traversed %llu roots", rootCount);
 
     uint64_t freed = 0;

@@ -25,7 +25,6 @@ typedef struct JsObject {
     GcHeader;
 
     PropertyDescriptor* properties;
-    PropertyDescriptor* tailProperty;
 
     JsValue* prototype;
 
@@ -182,22 +181,19 @@ JsValue* objectLookup(JsValue *val, JsValue *name) {
 }
 
 static PropertyDescriptor* propertyCreate() {
-    PropertyDescriptor *pd = gcAllocate(sizeof(PropertyDescriptor), PROPERTY_DESCRIPTOR_TYPE);
-    return pd;
+    return gcAllocate(sizeof(PropertyDescriptor), PROPERTY_DESCRIPTOR_TYPE);
 }
 
 static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
-    if(object->properties == NULL) {
-        object->properties = pd;
-    } else {
-        object->tailProperty->nextProperty = pd;
+    if(object->properties != NULL) {
+        pd->nextProperty = object->properties;
     }
-    object->tailProperty = pd;
+    object->properties = pd;
 }
 
 // used from compiled code
 JsValue* objectSet(JsValue* rawVal, JsValue* name, JsValue* value) {
-    log_info("Setting %s", stringGetCString(name));
+    log_info("Setting %s in %s at %p", stringGetCString(name), jsValueReflect(rawVal).name, rawVal);
     JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", name);
     JsObject* object = jsValuePointer(objectVal);
     // this should be using the JS string value

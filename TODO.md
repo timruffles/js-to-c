@@ -2,6 +2,22 @@
 
 Next action: why is `npm test -- --grep='global garbage'` failing?
 
+- console.log fn env is NULL
+- not freeing anything before bug runs
+- ahh - are we freeing the call env!
+- okay, nasty thing
+  - many operations in the compiler that are atomic
+    from the POV of GC (creating a call env) can trigger GC,
+    so we'll need to mark this as a 'in progress' operation, and
+    keep these objects in a GC buffer to avoid freeing half of them
+
+
+```
+int id = gcAtomicAllocationGroupEnter()
+...
+gcAtomicAllocationGroupExit(id)
+```
+
 ## List
 
 - Why is Error undefined when thrown?

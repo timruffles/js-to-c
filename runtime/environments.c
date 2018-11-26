@@ -29,6 +29,7 @@ Env *envCreate(Env* parent) {
 }
 
 Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount) {
+    // argh shiiiiiiite how do we protect against GC here?!
     Env* callEnv = envCreate(parent);
     log_info("Created call env %p parent %p, now looping over %llu args", callEnv, parent, argCount);
     for(uint64_t i = 0; i < argCount; i++) {
