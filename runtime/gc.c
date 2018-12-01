@@ -15,6 +15,8 @@
 
 #define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
 
+static int gcAtomicGroupId = 0;
+
 typedef struct FreeSpace {
   GcHeader;
 } FreeSpace;
@@ -67,8 +69,7 @@ static void* memoryEnd;
  */
 
 static inline bool isAllocatingGroup() {
-    RuntimeEnvironment* rt = runtimeGet();
-    return rt->gcAtomicGroupId > 0;
+    return gcAtomicGroupId > 0;
 }
 
 
@@ -139,6 +140,7 @@ void _gcTestInit() {
         free(memory);
     }
     runtimeInit();
+    gcInit();
 }
 
 
@@ -345,16 +347,13 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 }
 
 GcAtomicId gcAtomicGroupStart() {
-    RuntimeEnvironment* rt = runtimeGet();
-    int id = rt->gcAtomicGroupId;
-    rt->gcAtomicGroupId += 1;
-    return id;
+    gcAtomicGroupId += 1;
+    return gcAtomicGroupId;
 }
 
 void gcAtomicGroupEnd(GcAtomicId id) {
-    RuntimeEnvironment* rt = runtimeGet();
-    precondition(rt->gcAtomicGroupId > 0, "exit before enter");
-    GcAtomicId current = rt->gcAtomicGroupId;
+    precondition(gcAtomicGroupId > 0, "exit before enter");
+    GcAtomicId current = gcAtomicGroupId;
     precondition(current == id, "group %i did not exit before nested group %i", id, current);
-    rt->gcAtomicGroupId -= 1;
+    gcAtomicGroupId -= 1;
 }

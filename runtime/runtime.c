@@ -20,7 +20,17 @@ RuntimeEnvironment* runtimeGet() {
 static RuntimeEnvironment* runtimeCreate() {
     RuntimeEnvironment* runtime = calloc(1, sizeof(RuntimeEnvironment));
 
+    uint64_t gcRootsCount = 1;
+    JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
+    JsValue* global = createGlobalObject();
+    Env* globalEnv = envFromGlobal(global);
+    gcRoots[0] = (JsValue*)globalEnv;
+
     *runtime = (RuntimeEnvironment) {
+        .gcRoots = gcRoots,
+        .gcRootsCount = gcRootsCount,
+        .globalEnv = globalEnv,
+        .global = global,
         .gcAtomicGroupId = 0,
     };
 
@@ -31,26 +41,11 @@ RuntimeEnvironment* runtimeInit() {
     configInitFromEnv();
     log_info("read config");
 
-    // there's a circular dep between GC and runtime, so: bootstrap minimum of runtime... we need the gcAtomicGroupId
-    runtimeEnv = runtimeCreate();
-    log_info("created runtime environment");
-
-    // then prep gc - if we run GC now we'll crash
     gcInit();
     log_info("setup gc");
-    
-    // now we're ready to allocate some stuff
-    uint64_t gcRootsCount = 1;
-    JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
-    JsValue* global = createGlobalObject();
-    Env* globalEnv = envFromGlobal(global);
-    gcRoots[0] = (JsValue*)globalEnv;
 
-    runtimeEnv->globalEnv = globalEnv,
-    runtimeEnv->global = global,
-    runtimeEnv->gcRoots = gcRoots;
-    runtimeEnv->gcRootsCount = gcRootsCount;
-
+    runtimeEnv = runtimeCreate();
+    log_info("created runtime environment");
     return runtimeEnv;
 }
 
