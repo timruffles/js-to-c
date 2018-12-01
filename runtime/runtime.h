@@ -29,8 +29,7 @@ typedef struct RuntimeEnvironment {
     RuntimeStackPointer callStack[RUNTIME_MAX_STACK_DEPTH];
     int stackDepth;
 
-    GcAtomicId gcAtomicGroupIds[RUNTIME_GC_ATOMIC_GROUP_MAX];
-    int gcAtomicGroupCount;
+    int gcAtomicGroupId;
 
 } RuntimeEnvironment;
 

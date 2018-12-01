@@ -18,7 +18,7 @@ void* gcAllocate(size_t, int type);
 GcStats gcStats(void);
 
 GcAtomicId gcAtomicGroupStart(void);
-void gcAtomicGroupEnd(GcAtomicId*);
+void gcAtomicGroupEnd(GcAtomicId);
 
 void _gcTestInit(void);
 
