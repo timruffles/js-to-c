@@ -66,6 +66,12 @@ static void* memoryEnd;
  *     i += item.size
  */
 
+static inline bool isAllocatingGroup() {
+    RuntimeEnvironment* rt = runtimeGet();
+    return rt->gcAtomicGroupId > 0;
+}
+
+
 static FreeNode* freeNodeCreate(FreeSpace* space) {
     FreeNode* node;
     ensureCallocBytes(node, sizeof(FreeNode));
@@ -132,7 +138,7 @@ void _gcTestInit() {
         freeListFreeAll();
         free(memory);
     }
-    gcInit();
+    runtimeInit();
 }
 
 
@@ -219,6 +225,9 @@ void* gcAllocate(size_t bytes, int type) {
 
     GcObject* allocated = allocateInNode(found, bytes);
     allocated->type = type;
+    if(isAllocatingGroup()) {
+        allocated->inGroup = true;
+    }
     return allocated;
 }
 
@@ -319,7 +328,7 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
         toProcess != memoryEnd && toProcess->type != UNITIALIZED_TYPE;
         toProcess = (void*)((char*)(toProcess) + toProcess->size)
         ) {
-        if(toProcess->marked) {
+        if(toProcess->marked || toProcess->inGroup) {
             toProcess->marked = false;
         } else {
             gcObjectFree(toProcess);
@@ -336,17 +345,16 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 }
 
 GcAtomicId gcAtomicGroupStart() {
-    //RuntimeEnvironment* rt = runtimeGet();
-    //rt->gcAtomicGroupIds[rt->gcAtomicGroupCount] = rt->gcAtomicGroupId;
-    //rt->gcAtomicGroupId += 1;
-    //rt->gcAtomicGroupCount += 1;
-    //precondition(rt->gcAtomicGroupCount < RUNTIME_GC_ATOMIC_GROUP_MAX, "too many gc groups");
-    return 4;
+    RuntimeEnvironment* rt = runtimeGet();
+    int id = rt->gcAtomicGroupId;
+    rt->gcAtomicGroupId += 1;
+    return id;
 }
 
-void gcAtomicGroupEnd(GcAtomicId* id) {
-    //precondition(rt->gcAtomicGroupCount > 0, "exit before enter");
-    //GcAtomicId current = rt->gcAtomicGroupIds[rt->gcAtomicGroupCount - 1];
-    //precondition(current == id, "group %i did not exit before nested group %i", id);
-    //rt->gcAtomicGroupCount -= 1;
+void gcAtomicGroupEnd(GcAtomicId id) {
+    RuntimeEnvironment* rt = runtimeGet();
+    precondition(rt->gcAtomicGroupId > 0, "exit before enter");
+    GcAtomicId current = rt->gcAtomicGroupId;
+    precondition(current == id, "group %i did not exit before nested group %i", id, current);
+    rt->gcAtomicGroupId -= 1;
 }
