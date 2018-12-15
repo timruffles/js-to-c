@@ -31,6 +31,9 @@ JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint6
     FunctionRecord* record = objectGetCallInternal(val);
     log_info("Fn record %p", record);
     assert(record->argumentCount == argumentCount);
+
+    GcAtomicId gid = gcAtomicGroupStart();
+
     Env* callEnv = envCreateForCall(record->env, record->argumentNames, argumentValues, record->argumentCount);
 
     runtimeEnterEnv(callEnv);
@@ -41,6 +44,9 @@ JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint6
 
     JsValue* returnVal = _functionRun(val, callEnv);
     runtimeExitEnv();
+
+    gcAtomicGroupEnd(gid);
+
     return returnVal;
 }
 
