@@ -200,11 +200,13 @@ JsValue* objectSet(JsValue* rawVal, JsValue* name, JsValue* value) {
     const char* nameString = stringGetCString(name);
 
     PropertyDescriptor *descriptor = findProperty(object->properties, nameString);
+    log_info("found prop");
     if(descriptor == NULL) {
         descriptor = propertyCreate();
         descriptor->name = name;
         appendProperty(object, descriptor);
     }
+    log_info("done");
 
     descriptor->value = value;
 

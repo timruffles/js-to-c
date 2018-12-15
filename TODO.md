@@ -1,15 +1,19 @@
 # Todos
 
-Next action: why is `npm test -- --grep='global garbage'` failing?
+Next action: why is `npm test -- --grep='global garbage'` (still) failing? Recent to old log:
 
-- console.log fn env is NULL
-- not freeing anything before bug runs
-- ahh - are we freeing the call env!
+- mm, now it seems like we're allocating over objs still referenced...
+  - 
+  - `[ERROR] (/Users/timruffles/dev/p/js-to-c/runtime/language.c:120:jsValuePointer) Expected pointer value, got objectValue at 0x7fd243001678`
+- added working atomic operator and passing `itCanPreventGcInTheMiddleOfAGroupOfOperations`, now need to wrap some ops with it
 - okay, nasty thing
   - many operations in the compiler that are atomic
     from the POV of GC (creating a call env) can trigger GC,
     so we'll need to mark this as a 'in progress' operation, and
     keep these objects in a GC buffer to avoid freeing half of them
+- ahh - are we freeing the call env!
+- not freeing anything before bug runs
+- console.log fn env is NULL
 
 
 ```
