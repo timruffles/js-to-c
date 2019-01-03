@@ -2,16 +2,9 @@
 
 #define HEAP_SIZE_DEFAULT 1024000
 
-typedef enum ConfigKey {
-    HeapSizeConfig,
-    _TestConfigKey,
-} ConfigKey;
+typedef struct {
+    uint64_t heapSize;
+} Config;
 
-typedef union ConfigValue {
-    const uint64_t uintValue;
-} ConfigValue;
-
-void configSet(ConfigKey key, ConfigValue value);
-ConfigValue configGet(ConfigKey key);
-void configInitFromEnv(void);
+void configInit(Config*);
 
