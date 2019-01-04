@@ -41,11 +41,11 @@ out/exceptions_test: exceptions.test.c $(source_with_headers)
 # manually ordered for dependencies - i.e objects aren't going to work if we can't allocate
 # or have reliable strings
 .PHONY: test
-test: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/heap_test out/functions_test out/global_test out/gc_test out/config_test out/exceptions_test
+test: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/functions_test out/global_test out/gc_test out/config_test out/exceptions_test
 	out/*_test
 
 .PHONY: test_debug
-test_debug: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/heap_test out/functions_test out/global_test out/gc_test out/config_test out/exceptions_test
+test_debug: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/functions_test out/global_test out/gc_test out/config_test out/exceptions_test
 	set -e; for t in out/*_test; do echo TESTING $$t; lldb -o run ./$$t || break; done
 
 
