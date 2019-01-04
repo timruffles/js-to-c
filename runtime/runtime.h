@@ -5,6 +5,7 @@
 #include "environments.h"
 #include "exceptions.h"
 #include "gc.h"
+#include "config.h"
 
 #define RUNTIME_MAX_STACK_DEPTH 256
 
@@ -31,11 +32,13 @@ typedef struct RuntimeEnvironment {
 
     int gcAtomicGroupId;
 
+    Config* config;
+
 } RuntimeEnvironment;
 
 
 
-RuntimeEnvironment* runtimeInit(void);
+RuntimeEnvironment* runtimeInit(Config*);
 RuntimeEnvironment* runtimeGet(void);
 
 // what's the current function call env

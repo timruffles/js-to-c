@@ -1,5 +1,30 @@
 # Notes
 
+## 12 December 2018
+
+Hit an test failure that ended in extended the GC. A GC test designed to force some GC runs was crashing:
+
+```
+while(i < 1000) {
+  obj = {prop: i}; 
+  i = i + 1;
+  console.log(i)
+}
+```
+
+Afer a session or two of debugging, I realised the call env for the `console.log` call was being freed before the call was complete, and that this was likely not the only example of the root problem. That problem being that there were atomic operations in the runtime which involve multiple allocations that can trigger GC. If the parts of the operation allocated before the GC run were not protected, then bad things ensued.
+
+Pre-marking the allocated items would be a partial solution, which'd fail only if there were multiple GC runs during the allocation. Pretty unlikely, but it seemed safer to solve completely. I added the concept of atomic GC groups, which would be protected until the group was committed:
+
+```
+GcAtomicId gid = gcAtomicGroupStart();
+// multiple allocations
+gcAtomicGroupEnd(gid);
+```
+
+After the group ended
+
+
 ## 23 September 2018
 
 ## Prelude

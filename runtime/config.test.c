@@ -7,8 +7,7 @@
 #include "config.h"
 
 static void itHasDefaults() {
-    Config config = {
-    };
+    Config config = {};
     configInit(&config);
     assert(config.heapSize == HEAP_SIZE_DEFAULT);
 }

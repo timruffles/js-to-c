@@ -20,23 +20,23 @@ typedef struct {
 } TestStruct;
 
 static void itCanTestInitWithoutInit() {
-    _gcTestInit();
+    _gcTestInit(NULL);
 }
 
 static void itCanTestInitAfterInit() {
     // this inits twice, freeing first time
-    _gcTestInit();
-    _gcTestInit();
+    _gcTestInit(NULL);
+    _gcTestInit(NULL);
 }
 
 static void itAllocates() {
-    _gcTestInit();
+    _gcTestInit(NULL);
     void* value = gcAllocate(sizeof(uint64_t), 1); 
     assert(value != NULL);
 }
 
 static void itSetsSizeAndType() {
-    _gcTestInit();
+    _gcTestInit(NULL);
 
     TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
 
@@ -45,7 +45,7 @@ static void itSetsSizeAndType() {
 }
 
 static void itTracksSpace() {
-    _gcTestInit();
+    _gcTestInit(NULL);
 
     TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
     GcObject* freeSpace = (void*)((char*)valueA + sizeof(TestStruct));
@@ -57,10 +57,7 @@ static void itTracksSpace() {
 }
 
 static void itGarbageCollectsCorrectly() {
-    // note - this will crash nastily if we force a GC before
-    // manually running GC - as it'll use runtime env
-    _gcTestInit();
-    runtimeInit();
+    _gcTestInit(NULL);
 
     JsValue* liveOne = objectCreatePlain();
     JsValue* garbageOne = objectCreatePlain();
@@ -84,6 +81,11 @@ static void itGarbageCollectsCorrectly() {
     _gcVisualiseHeap();
     _gcRun(roots, 1);
     _gcVisualiseHeap();
+    
+    // check garbage is zeroed, with a FreeSpace header appended
+    log_info("%s", gcObjectReflectType(jsValueType(garbageOne)).name);
+    assert(jsValueType(garbageOne) == FREE_SPACE_TYPE);
+    assert(jsValueType(garbageTwo) == FREE_SPACE_TYPE);
 
     JsValue* newLiveOne = JS_GET(root, "liveOne");
     JsValue* newLiveTwo = JS_GET(root, "liveTwo");
@@ -94,14 +96,15 @@ static void itGarbageCollectsCorrectly() {
     assert(JS_GET(root, "liveOne")
         == JS_GET(root, "liveOneSecondRef"));
 
-    // garbage is zeroed, with a FreeSpace header appended
-    assert(jsValueType(garbageOne) == FREE_SPACE_TYPE);
-    assert(jsValueType(garbageTwo) == FREE_SPACE_TYPE);
+    assert(JS_GET(root, "liveOne") == liveOne);
+
+    JsValue* newOne = objectCreatePlain();
+    JsValue* newTwo = objectCreatePlain();
+    assert(newOne != newTwo);
 }
 
 static void itCanGcObjectProperties() {
-    _gcTestInit();
-    runtimeInit();
+    _gcTestInit(NULL);
 
     JsValue* garbageOne = objectCreatePlain();
 
@@ -117,8 +120,7 @@ static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
     // We often need to do a set of operations atomically - e.g
     // setup a call environment. If GC occured midway we could end
     // up with an inconsistent state
-    _gcTestInit();
-    runtimeInit();
+    _gcTestInit(NULL);
 
     GcAtomicId id = gcAtomicGroupStart();
     JsValue* itemOne = objectCreatePlain();
@@ -132,10 +134,36 @@ static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
     assert(jsValueNumber(JS_GET(JS_GET(itemTwo, "itemOne"), "someProp")) == 10.3);
 }
 
+static void itCanReuseMemory() {
+    Config config = (Config){
+      .heapSize = 800
+    };
+    _gcTestInit(&config);
+
+    _gcVisualiseHeap();
+
+    for(int i = 0; i < 10; i++) {
+        objectCreatePlain();
+    }
+
+    JsValue* root = objectCreatePlain();
+    JsValue* liveOne = objectCreatePlain();
+    JS_SET(root, "liveOne", liveOne);
+
+    JsValue* roots[] = {root};
+    _gcRun(roots, 1);
+
+    for(int i = 0; i < 10; i++) {
+        objectCreatePlain();
+    }
+
+    DEBUG_JS_VAL(liveOne);
+    DEBUG_JS_VAL(JS_GET(root, "liveOne"));
+    assert(JS_GET(root, "liveOne") == liveOne);
+}
+
 
 int main() {
-    configInitFromEnv();
-
     test(itCanTestInitWithoutInit); 
     test(itCanTestInitAfterInit); 
     test(itAllocates); 
@@ -145,4 +173,5 @@ int main() {
     test(itGarbageCollectsCorrectly);
     test(itCanGcObjectProperties);
     test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
+    test(itCanReuseMemory);
 }

@@ -1,37 +1,3 @@
-#include <stdint.h>
-#include <stdlib.h>
-#include <stddef.h>
-
-#include "lib/debug.h"
-#include "gc.h"
-#include "language.h"
-#include "assert.h"
-#include "objects.h"
-#include "config.h"
-#include "global.h"
-#include "runtime.h"
-#include "strings.h"
-#include "functions.h"
-
-#define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
-
-static int gcAtomicGroupId = 0;
-
-typedef struct FreeSpace {
-  GcHeader;
-} FreeSpace;
-
-typedef struct FreeNode {
-    struct FreeNode* next;
-    struct FreeNode* prev;
-    struct FreeSpace* space;
-} FreeNode;
-
-static FreeNode* freeList;
-static FreeNode* freeListTail;
-static void* memory;
-static void* memoryEnd;
-
 /**
  * Memory is a free list
  *
@@ -45,10 +11,6 @@ static void* memoryEnd;
  *       return split(candidate)
  *     else
  *       candidate = candidate.next
- *
- * To free item I
- *
- *   I->prev = I->next
  *
  * Mark phase
  *
@@ -67,6 +29,41 @@ static void* memoryEnd;
  *        append item, free
  *     i += item.size
  */
+#include <stdint.h>
+#include <stdlib.h>
+#include <stddef.h>
+
+#include "lib/debug.h"
+#include "gc.h"
+#include "language.h"
+#include "assert.h"
+#include "objects.h"
+#include "global.h"
+#include "runtime.h"
+#include "strings.h"
+#include "functions.h"
+
+#define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
+
+static int gcAtomicGroupId = 0;
+
+// lives in JS heap to indicate its unused areas
+typedef struct FreeSpace {
+  GcHeader;
+} FreeSpace;
+
+// space tracking, which lives outside JS heap
+typedef struct FreeNode {
+    struct FreeNode* next;
+    struct FreeNode* prev;
+    struct FreeSpace* space;
+} FreeNode;
+
+// TODO might be worth moving these module variables to runtime
+static FreeNode* freeList;
+static void* memory;
+static void* memoryEnd;
+
 
 static inline bool isAllocatingGroup() {
     return gcAtomicGroupId > 0;
@@ -91,21 +88,25 @@ static FreeSpace freeSpaceCreate(uint64_t size) {
 
 static void freeListInit(FreeNode* node) {
     freeList = node;
-    freeListTail = node;
 }
 
 static void freeListDelete(FreeNode* toRemove) {
-   toRemove->prev = toRemove->next;
+    // not first item
+    if(toRemove == freeList) {
+        if(toRemove->next) {
+            freeList = toRemove->next;
+        }
+    } else {
+       toRemove->prev->next = toRemove->next;
+       free(toRemove);
+    }
 }
 
 static void freeListAppend(FreeNode* toAdd) {
-    freeListTail->next = toAdd;
-    toAdd->prev = freeListTail;
-    freeListTail = toAdd;
-}
-
-static void freeListFree(FreeNode* node) {
-    free(node);
+    FreeNode* currentHead = freeList;
+    toAdd->next = currentHead;
+    currentHead->prev = toAdd;
+    freeList = toAdd;
 }
 
 static void freeListFreeAll() {
@@ -113,12 +114,12 @@ static void freeListFreeAll() {
         node;
         node = node->next
     ) {
-        freeListFree(node);
+        free(node);
     }
 }
 
-void gcInit() {
-    uint64_t heapSize = configGet(HeapSizeConfig).uintValue;
+void gcInit(Config* config) {
+    uint64_t heapSize = config->heapSize;
 
     log_info("initialised gc with heap size %llu", heapSize);
 
@@ -134,20 +135,20 @@ void gcInit() {
 }
 
 
-void _gcTestInit() {
+void _gcTestInit(Config* config) {
     if(memory != NULL) {
         freeListFreeAll();
         free(memory);
     }
-    runtimeInit();
-    gcInit();
+    runtimeInit(config);
+    gcInit(runtimeGet()->config);
 }
 
 
 static FreeNode* findFreeSpace(size_t bytes) {
     FreeNode* found = NULL;
     for(FreeNode* candidate = freeList;
-        candidate;
+        candidate != NULL;
         candidate = candidate->next
     ) {
         if(candidate->space->size >= bytes) {
@@ -156,6 +157,12 @@ static FreeNode* findFreeSpace(size_t bytes) {
         }
     }
     return found;
+}
+
+
+void _gcRunGlobal(void) {
+    RuntimeEnvironment* runtime = runtimeGet();
+    _gcRun(runtime->gcRoots, runtime->gcRootsCount);
 }
 
 /**
@@ -180,40 +187,6 @@ static FreeNode* findFreeSpace(size_t bytes) {
  *     2 *cont*
  *     3 - over allocated, unused, included in size -
  */
-static GcObject* allocateInNode(FreeNode* found, uint64_t bytes) {
-    // this has already been checked to be positive
-    uint64_t remaining = (uint64_t)(found->space->size - bytes);
-
-    GcObject* allocatedAddress = (void*)found->space;
-    bool splitRequired = remaining > sizeof(FreeSpace);
-    // do we have remaining free space?
-    uint64_t allocatedSize = splitRequired
-        ? bytes
-        : found->space->size;
-
-    if(splitRequired) {
-        FreeSpace* newSpace = (void*)(((char*)found->space) + bytes);
-        *newSpace = (FreeSpace) {
-            .type = FREE_SPACE_TYPE,
-            .size = remaining,
-        };
-        found->space = newSpace;
-    } else {
-        freeListDelete(found);
-    }
-
-    *allocatedAddress = (GcObject) {
-        .size = allocatedSize
-    };
-
-    return allocatedAddress;
-}
-
-void _gcRunGlobal(void) {
-    RuntimeEnvironment* runtime = runtimeGet();
-    _gcRun(runtime->gcRoots, runtime->gcRootsCount);
-}
-
 void* gcAllocate(size_t bytes, int type) {
     FreeNode* found = findFreeSpace(bytes);
     if(found == NULL) {
@@ -225,17 +198,35 @@ void* gcAllocate(size_t bytes, int type) {
         assert(found != NULL);
     }
 
-    GcObject* allocated = allocateInNode(found, bytes);
+    GcObject* allocated = (void*)found->space;
+
+    uint64_t remaining = (uint64_t)(allocated->size - bytes);
+    bool splitRequired = remaining > sizeof(FreeSpace);
+    if(splitRequired) {
+        // move the free node's space down past the used portion
+        FreeSpace* newSpace = (void*)(((char*)found->space) + bytes);
+        *newSpace = freeSpaceCreate(remaining);
+        found->space = newSpace;
+
+        *allocated = (GcObject) {
+            .size = bytes
+        };
+    } else {
+        freeListDelete(found);
+    }
+
     allocated->type = type;
+
     if(isAllocatingGroup()) {
         allocated->inGroup = true;
     }
+
     return allocated;
 }
 
 GcStats gcStats() {
     // TODO
-    uint64_t heapSize = configGet(HeapSizeConfig).uintValue;
+    uint64_t heapSize = runtimeGet()->config->heapSize;
     return (GcStats) {
         .used = 0,
         .remaining = 0,
@@ -266,7 +257,6 @@ static void traverse(GcObject* object) {
         default:
             break;
     }
-    log_info("traversed %p", object);
 }
 
 static void mark(GcObject* item) {
@@ -330,6 +320,9 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
         toProcess != memoryEnd && toProcess->type != UNITIALIZED_TYPE;
         toProcess = (void*)((char*)(toProcess) + toProcess->size)
         ) {
+
+        if(toProcess->type == FREE_SPACE_TYPE) continue;
+
         if(toProcess->marked || toProcess->inGroup) {
             toProcess->marked = false;
         } else {
