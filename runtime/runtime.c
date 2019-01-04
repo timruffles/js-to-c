@@ -37,14 +37,22 @@ static RuntimeEnvironment* runtimeCreate() {
     return runtime;
 }
 
-RuntimeEnvironment* runtimeInit() {
-    configInitFromEnv();
+RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
+    Config* config = maybeConfig;
+    if(config == NULL) {
+        // leaks, but no biggy as it's a one time outside tests
+        config = calloc(1, sizeof(Config));
+    }
+    ensureAlloced(config);
+    configInit(config);
+
     log_info("read config");
 
-    gcInit();
+    gcInit(config);
     log_info("setup gc");
 
     runtimeEnv = runtimeCreate();
+    runtimeEnv->config = config;
     log_info("created runtime environment");
     return runtimeEnv;
 }

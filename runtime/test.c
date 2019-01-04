@@ -16,12 +16,12 @@ static void bootstrap() {
         return;
     }
 
-    runtimeInit();
+    runtimeInit(NULL);
     bootstrapped = true;
 }
 
 void testLanguageAndGcInit() {
     log_info("boostrapping");
     bootstrap();
-    _gcTestInit();
+    _gcTestInit(NULL);
 }

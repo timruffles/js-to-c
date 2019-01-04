@@ -7,6 +7,7 @@
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
 #define DEBUG_VALUE_N(M, X, O) char* op##O = calloc(1, 1024); jsValueToCString(X, op##O, 1000); printf(M, op##O);
+#define DEBUG_JS_VAL(X) log_info("value type:%s address:%p", gcObjectReflect(X).name, X)
 
 
 enum TypeTag {
