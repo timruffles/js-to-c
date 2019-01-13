@@ -65,7 +65,7 @@ static void itGarbageCollectsCorrectly() {
     JsValue* garbageTwo = objectCreatePlain();
     JsValue* liveDeepOne = objectCreatePlain();
 
-    JsValue* root = objectCreatePlain();
+    JsValue* root = runtimeGet()->global;
     JS_SET(root, "liveOne", liveOne);
     JS_SET(liveOne, "thingy", jsValueCreateNumber(42));
     JS_SET(liveOne, "id", jsValueCreateNumber(101));
@@ -76,10 +76,8 @@ static void itGarbageCollectsCorrectly() {
     JS_SET(liveTwo, "liveDeepOne", liveDeepOne);
     JS_SET(liveDeepOne, "id", jsValueCreateNumber(2002));
 
-    JsValue* roots[] = {root};
-
     _gcVisualiseHeap();
-    _gcRun(roots, 1);
+    _gcRunGlobal();
     _gcVisualiseHeap();
     
     // check garbage is zeroed, with a FreeSpace header appended
@@ -108,12 +106,10 @@ static void itCanGcObjectProperties() {
 
     JsValue* garbageOne = objectCreatePlain();
 
-    JsValue* root = objectCreatePlain();
+    JsValue* root = runtimeGet()->global;
     JS_SET(garbageOne, "someProp", jsValueCreateNumber(10));
 
-    JsValue* roots[] = {root};
-
-    _gcRun(roots, 1);
+    _gcRunGlobal();
 }
 
 static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
@@ -140,38 +136,40 @@ static void itCanReuseMemory() {
     };
     _gcTestInit(&config);
 
-    _gcVisualiseHeap();
-
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 8; i++) {
         objectCreatePlain();
     }
 
-    JsValue* root = objectCreatePlain();
+    JsValue* root = runtimeGet()->global;
     JsValue* liveOne = objectCreatePlain();
     JS_SET(root, "liveOne", liveOne);
+    _gcVisualiseHeap();
 
-    JsValue* roots[] = {root};
-    _gcRun(roots, 1);
+
+    _gcRunGlobal();
 
     for(int i = 0; i < 10; i++) {
         objectCreatePlain();
     }
+
+    _gcVisualiseHeap();
 
     DEBUG_JS_VAL(liveOne);
     DEBUG_JS_VAL(JS_GET(root, "liveOne"));
+    // we got back undefined!
     assert(JS_GET(root, "liveOne") == liveOne);
 }
 
 
 int main() {
-    test(itCanTestInitWithoutInit); 
-    test(itCanTestInitAfterInit); 
-    test(itAllocates); 
-    test(itSetsSizeAndType);
-    test(itTracksSpace); 
+    //test(itCanTestInitWithoutInit); 
+    //test(itCanTestInitAfterInit); 
+    //test(itAllocates); 
+    //test(itSetsSizeAndType);
+    //test(itTracksSpace); 
 
-    test(itGarbageCollectsCorrectly);
-    test(itCanGcObjectProperties);
-    test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
+    //test(itGarbageCollectsCorrectly);
+    //test(itCanGcObjectProperties);
+    //test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
     test(itCanReuseMemory);
 }

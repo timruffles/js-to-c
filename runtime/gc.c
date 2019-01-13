@@ -1,3 +1,4 @@
+// TODO - clean the inGroup status for allocated objecs
 /**
  * Memory is a free list
  *
@@ -141,7 +142,6 @@ void _gcTestInit(Config* config) {
         free(memory);
     }
     runtimeInit(config);
-    gcInit(runtimeGet()->config);
 }
 
 
@@ -304,7 +304,7 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
     for(uint64_t i = 0;
         i < rootCount;
         i++) {
-        log_info("GC mark loop");
+        log_info("marking root object at %p %i", roots[i], ((GcObject*)roots[i])->marked);
         mark((GcObject*)roots[i]);
     }
 
@@ -317,9 +317,11 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
     // scan entire heap
     GcObject* toProcess;
     for(toProcess = memory;
-        toProcess != memoryEnd && toProcess->type != UNITIALIZED_TYPE;
+        toProcess != memoryEnd;
         toProcess = (void*)((char*)(toProcess) + toProcess->size)
         ) {
+
+        log_info("scanned to %p", toProcess);
 
         if(toProcess->type == FREE_SPACE_TYPE) continue;
 

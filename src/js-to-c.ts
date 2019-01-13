@@ -270,7 +270,7 @@ function bodyForMain() {
     #include "../../runtime/prelude.h"
 
     int main() {
-        RuntimeEnvironment* runtime = runtimeInit();
+        RuntimeEnvironment* runtime = runtimeInit(NULL);
         initialiseInternedStrings();
 
         preludeLibraryInit();

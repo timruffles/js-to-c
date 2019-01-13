@@ -23,6 +23,7 @@ static RuntimeEnvironment* runtimeCreate() {
     uint64_t gcRootsCount = 1;
     JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
     JsValue* global = createGlobalObject();
+    // TODO use globalEnv created in createGlobalObject() - currently it's a noop to convert between but won't always be true
     Env* globalEnv = envFromGlobal(global);
     gcRoots[0] = (JsValue*)globalEnv;
 
@@ -41,6 +42,7 @@ RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
     Config* config = maybeConfig;
     if(config == NULL) {
         // leaks, but no biggy as it's a one time outside tests
+        // TODO just embed config in runtime
         config = calloc(1, sizeof(Config));
     }
     ensureAlloced(config);
