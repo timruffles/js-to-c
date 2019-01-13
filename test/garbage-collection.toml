@@ -1,7 +1,7 @@
 ["global garbage"]
 
   
-env={ JSC_HEAP_SIZE_KB = 10 }
+env={ JSC_HEAP_SIZE_KB = 20 }
 
 example = """
 var i = 0;

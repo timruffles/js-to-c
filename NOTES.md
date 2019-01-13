@@ -1,5 +1,107 @@
 # Notes
 
+## 13 Jan 2019
+
+### Weirder
+
+Root object is outside the heap?!
+
+```
+[INFO] (gc.c:301:_gcRun) GC starting on 1 roots
+[INFO] (gc.c:307:_gcRun) marking root object at 0x100302458 0
+[INFO] (gc.c:243:traverse) traverse object 0x100302458
+```
+
+vs
+
+```
+[INFO] (gc.c:280:_gcVisualiseHeap) 0x100302750 - Heap start
+[INFO] (gc.c:290:_gcVisualiseHeap) 0x100302750 -  objectValue 10 40
+[INFO] (gc.c:290:_gcVisualiseHeap) 0x100302778 -       object  5 24
+[INFO] (gc.c:290:_gcVisualiseHeap) 0x100302790 -  objectValue 10 40
+```
+
+oh... we double init the heap
+
+```
+[INFO] (gc.c:125:gcInit) initialised gc with heap size 800
+[INFO] (runtime.c:54:runtimeInit) setup gc
+[INFO] (objects.c:196:objectSet) Setting console in object at 0x100302458
+[INFO] (objects.c:202:objectSet) looking in 0x0 for props
+[INFO] (global.c:64:createGlobalObject) log fn 0x1003025e8 env 0x100302458
+[INFO] (objects.c:196:objectSet) Setting log in object at 0x100302498
+[INFO] (objects.c:202:objectSet) looking in 0x0 for props
+[INFO] (objects.c:196:objectSet) Setting global in object at 0x100302458
+[INFO] (objects.c:202:objectSet) looking in 0x1003024e8 for props
+[INFO] (runtime.c:58:runtimeInit) created runtime environment
+[INFO] (gc.c:125:gcInit) initialised gc with heap size 800
+```
+
+### Weird
+
+GC bug, where stuff is being GC'd incorrectly. After GC looks healthy, we're
+left with the root obj and live object linked to it:
+```
+[INFO] (gc.c:279:_gcVisualiseHeap) 0x100500610 - Heap start
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500610 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500638 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500650 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500678 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500690 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005006b8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005006d0 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005006f8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500710 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500738 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500750 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500778 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500790 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005007b8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005007d0 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005007f8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500810 -  objectValue 10 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500838 -       object  5 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500850 -  objectValue 10 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500878 -       object  5 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100500890 -  stringValue  9 32
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005008b0 -       string  6 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005008c8 - propertyDescriptor 11 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1005008f0 -   free space 13 64
+```
+
+then we wipe it all out :(
+
+```
+[INFO] (gc.c:279:_gcVisualiseHeap) 0x100302750 - Heap start
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302750 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302778 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302790 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003027b8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003027d0 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003027f8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302810 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302838 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302850 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302878 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302890 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003028b8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003028d0 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003028f8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302910 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302938 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302950 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302978 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302990 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003029b8 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003029d0 -   free space 13 32
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x1003029f0 -   free space 13 24
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302a08 -   free space 13 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302a30 -  objectValue 10 40
+[INFO] (gc.c:289:_gcVisualiseHeap) 0x100302a58 -       object  5 24
+```
+
+wait it's just a bad test, what a silly. We need to pass roots to GC via runtime. Duh.
+
 ## 12 December 2018
 
 Hit an test failure that ended in extended the GC. A GC test designed to force some GC runs was crashing:

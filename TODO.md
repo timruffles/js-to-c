@@ -2,7 +2,7 @@
 
 Next action: why is `npm test -- --grep='global garbage'` (still) failing? Recent to old log:
 
-- TODO - clean the inGroup status for allocated objecs
+- adding stack trace library would be very useful!
 - got reuse working, but now having an issue with objects either
   being GC'd incorrectly or moved? This assertion is failing in two tests
 
