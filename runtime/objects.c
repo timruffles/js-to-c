@@ -1,5 +1,3 @@
-#include "./lib/uthash.h"
-
 #include "language.h"
 #include "objects.h"
 #include "exceptions.h"
