@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "./lib/uthash.h"
-
 #include "environments.h"
 #include "objects.h"
 #include "language.h"
