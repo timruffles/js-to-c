@@ -165,6 +165,15 @@ void _gcRunGlobal(void) {
     _gcRun(runtime->gcRoots, runtime->gcRootsCount);
 }
 
+// Allocate an object off the managed JS heap, so it's never scanned for freeing
+static void* gcAllocateProtected(size_t bytes, int type) {
+    GcObject* obj;
+    ensureCallocBytes(obj, bytes);
+    obj->type = type;
+    return obj;
+}
+
+
 /**
  * Allocating in a free space node will either move the
  * header down, or allocate all of it and replace the node
@@ -188,6 +197,10 @@ void _gcRunGlobal(void) {
  *     3 - over allocated, unused, included in size -
  */
 void* gcAllocate(size_t bytes, int type) {
+    if(runtimeGet()->gcProtectAllocations) {
+        return gcAllocateProtected(bytes, type);
+    }
+
     FreeNode* found = findFreeSpace(bytes);
     if(found == NULL) {
         log_info("Out of memory, GC running");
@@ -267,7 +280,13 @@ static void mark(GcObject* item) {
 }
 
 static void gcObjectFree(GcObject* object) {
-    log_info("Freeing %s at %p", gcObjectReflect(object).name, object);
+    if(object->type == STRING_VALUE_TYPE) {
+        log_info("freeing string data '%s' at %p", _stringDebugValue((void*)object), object);
+    } else if(object->type == STRING_TYPE) {
+        log_info("freeing string '%s' at %p", stringGetCString((void*)object), object);
+    } else {
+        log_info("freeing %s at %p", gcObjectReflect(object).name, object);
+    }
     uint64_t size = object->size;
     memset(object, 0, object->size);
     FreeSpace* newSpace = (void*)object;
@@ -351,4 +370,12 @@ void gcAtomicGroupEnd(GcAtomicId id) {
     GcAtomicId current = gcAtomicGroupId;
     precondition(current == id, "group %i did not exit before nested group %i", id, current);
     gcAtomicGroupId -= 1;
+}
+
+void gcStartProtectAllocations() {
+    runtimeGet()->gcProtectAllocations = true;
+}
+
+void gcStopProtectAllocations() {
+    runtimeGet()->gcProtectAllocations = false;
 }

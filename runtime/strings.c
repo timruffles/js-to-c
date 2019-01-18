@@ -10,6 +10,7 @@
 
 #define TEMPLATE_BUFFER_SIZE 4096
 
+// TODO STRING_VALUE_TYPE to STRING_DATA_TYPE
 typedef struct StringData {
     GcHeader;
     const char* internedString;
@@ -32,12 +33,15 @@ const char* stringGetCString(JsValue* value) {
 }
 
 JsValue* stringCreateFromInternedString(const char* const interned, uint64_t logicalLength) {
+    gcStartProtectAllocations();
     StringData* jsString = gcAllocate(sizeof(StringData), STRING_VALUE_TYPE);
 
     jsString->internedString = interned;
     jsString->length = logicalLength;
 
-    return jsValueCreatePointer(STRING_TYPE, jsString);
+    JsValue* val = jsValueCreatePointer(STRING_TYPE, jsString);
+    gcStopProtectAllocations();
+    return val;
 }
 
 typedef struct StringAllocation {
@@ -108,4 +112,8 @@ uint64_t stringLength(JsValue* value) {
 
 void stringGcTraverse(GcObject* value, GcCallback* cb) {
     cb(jsValuePointer((void*)value));
+}
+
+char* _stringDebugValue(StringData* d) {
+    return getCString(d);
 }

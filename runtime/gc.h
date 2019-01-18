@@ -25,6 +25,9 @@ GcStats gcStats(void);
 GcAtomicId gcAtomicGroupStart(void);
 void gcAtomicGroupEnd(GcAtomicId);
 
+void gcStartProtectAllocations(void);
+void gcStopProtectAllocations(void);
+
 void _gcTestInit(Config*);
 
 void _gcRunGlobal(void);
