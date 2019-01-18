@@ -19,19 +19,9 @@ RuntimeEnvironment* runtimeGet() {
 
 static RuntimeEnvironment* runtimeCreate() {
     RuntimeEnvironment* runtime = calloc(1, sizeof(RuntimeEnvironment));
-
-    uint64_t gcRootsCount = 1;
-    JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
-    JsValue* global = createGlobalObject();
-    // TODO use globalEnv created in createGlobalObject() - currently it's a noop to convert between but won't always be true
-    Env* globalEnv = envFromGlobal(global);
-    gcRoots[0] = (JsValue*)globalEnv;
+    ensureAlloced(runtime);
 
     *runtime = (RuntimeEnvironment) {
-        .gcRoots = gcRoots,
-        .gcRootsCount = gcRootsCount,
-        .globalEnv = globalEnv,
-        .global = global,
         .gcAtomicGroupId = 0,
     };
 
@@ -39,6 +29,8 @@ static RuntimeEnvironment* runtimeCreate() {
 }
 
 RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
+    runtimeEnv = runtimeCreate();
+
     Config* config = maybeConfig;
     if(config == NULL) {
         // leaks, but no biggy as it's a one time outside tests
@@ -53,7 +45,18 @@ RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
     gcInit(config);
     log_info("setup gc");
 
-    runtimeEnv = runtimeCreate();
+    uint64_t gcRootsCount = 1;
+    JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
+    JsValue* global = createGlobalObject();
+    // TODO use globalEnv created in createGlobalObject() - currently it's a noop to convert between but won't always be true
+    Env* globalEnv = envFromGlobal(global);
+    gcRoots[0] = (JsValue*)globalEnv;
+
+    runtimeEnv->gcRoots = gcRoots;
+    runtimeEnv->gcRootsCount = gcRootsCount;
+    runtimeEnv->globalEnv = globalEnv;
+    runtimeEnv->global = global;
+
     runtimeEnv->config = config;
     log_info("created runtime environment");
     return runtimeEnv;

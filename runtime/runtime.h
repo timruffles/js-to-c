@@ -31,6 +31,7 @@ typedef struct RuntimeEnvironment {
     int stackDepth;
 
     int gcAtomicGroupId;
+    bool gcProtectAllocations;
 
     Config* config;
 

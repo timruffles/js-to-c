@@ -1,6 +1,43 @@
 # Notes
 
+Read recent to old, i.e prepend new lines.
+
+## 15 Jan 2019
+
+- attempting to add idea of protected allocation to GC
+  - also create runtime before gcInit, so it truly is the one place we store global state
+- right, it's the interned strings being GC'd, whoops
+  - `console` is GC'd because it's not pointed at. The global `console`
+    is pointed to but not interned stuff
+- ah - we create console, log etc in`global.c`, now they're being GC'd?
+- Seem to have a second set of strings, for stuff that's interned, e.g 'console'
+
+```
+# right after userProgram(...) {, we already have string declared
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:295:_gcVisualiseHeap) 0x100801358 -       string  6 24
+...
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:271:gcObjectFree) freeing string data 'console' at 0x100801338
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:330:_gcRun) scanned to 0x100801358
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:273:gcObjectFree) freeing string '' at 0x100801358
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:330:_gcRun) scanned to 0x100801370
+...
+[ERROR] (/Users/timruffles/p/js-to-c/runtime/language.c:122:jsValuePointer) Expected pointer value, got free space at 0x100801358
+```
+
+
+
 ## 13 Jan 2019
+
+
+### Still issue
+
+Still can't access this post GC, wonder what's up
+
+```
+[INFO] (gc.test.c:158:itCanReuseMemory) value type:objectValue address:0x1005005e8
+[INFO] (objects.c:102:objectGet) Getting liveOne
+[ERROR] (language.c:120:jsValuePointer) Expected pointer value, got objectValue at 0x1005005e8
+```
 
 ### Weirder
 
@@ -124,7 +161,64 @@ GcAtomicId gid = gcAtomicGroupStart();
 gcAtomicGroupEnd(gid);
 ```
 
-After the group ended
+### Scattered notes
+
+- got reuse working, but now having an issue with objects either
+  being GC'd incorrectly or moved? This assertion is failing in two tests
+
+```
+assert(JS_GET(root, "liveOne") == liveOne);
+```
+
+- FIXED: seems like the free list isn't being pushed down, not reusing space
+  - debuggin this is a pain... more tools?
+- free list code is clearly rather borked...
+- rewrote config system for simplicity, and wrote failing test
+[INFO] (gc.c:232:gcAllocate) Allocated string at 0x101f00320
+[ERROR] (language.c:202:jsValueReflect) Non JSValue free space
+- mm, config system is kinda terrible
+  - look online for a better one, would be nice to be
+    able to init a subsystem for testing
+- ah, looks like allocation in free zones is totally borked - all allocations hitting same area:
+
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated stringValue at 0x7fcbdf8037e0
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated string at 0x7fcbdf8037e0
+[INFO] (runtime/objects.c:196:objectSet) Setting   in object at 0x7fcbdf8037a0
+[INFO] (runtime/objects.c:202:objectSet) looking in 0x7fcbdf801678 for props
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated stringValue at 0x7fcbdf8037e0
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated string at 0x7fcbdf8037e0
+[INFO] (runtime/environments.c:51:envGet) Looked up   in 0x7fcbdf8037a0 got type object
+[INFO] (runtime/environments.c:51:envGet) Looked up i in 0x7fcbdf801028 got type number
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated number at 0x7fcbdf8037e0
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated objectValue at 0x7fcbdf801678
+[INFO] (runtime/gc.c:233:gcAllocate) Allocated object at 0x7fcbdf8037e0
+[INFO] (runtime/environments.c:51:envGet) Looked up i in 0x7fcbdf801028 got type number
+[INFO] (runtime/objects.c:196:objectSet) Setting hiThere in object at 0x7fcbdf8037e0
+[INFO] (runtime/objects.c:202:objectSet) looking in 0x7fcbdf8037e0 for props
+[ERROR] (runtime/language.c:120:jsValuePointer) Expected pointer value, got objectValue at 0x7fcbdf801678
+  
+- odd, we have `objectVal->object->properties == objectVal!`
+- mm, now it seems like we're allocating over objs still referenced...
+  - 
+  - `[ERROR] (/Users/timruffles/dev/p/js-to-c/runtime/language.c:120:jsValuePointer) Expected pointer value, got objectValue at 0x7fd243001678`
+- added working atomic operator and passing `itCanPreventGcInTheMiddleOfAGroupOfOperations`, now need to wrap some ops with it
+- okay, nasty thing
+  - many operations in the compiler that are atomic
+    from the POV of GC (creating a call env) can trigger GC,
+    so we'll need to mark this as a 'in progress' operation, and
+    keep these objects in a GC buffer to avoid freeing half of them
+- ahh - are we freeing the call env!
+- not freeing anything before bug runs
+- console.log fn env is NULL
+
+
+```
+int id = gcAtomicAllocationGroupEnter()
+...
+gcAtomicAllocationGroupExit(id)
+```
+
+
 
 
 ## 23 September 2018

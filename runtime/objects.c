@@ -245,7 +245,7 @@ char* objectDebug(JsValue* target) {
         pd = pd->nextProperty
     ) {
         char buffer[1024];
-        sprintf(buffer, "%s,%s", stringGetCString(pd->name), gcObjectReflect((void*)pd->value).name);
+        sprintf(buffer, "%s:%s ", stringGetCString(pd->name), gcObjectReflect((void*)pd->value).name);
         strcat(debugString, buffer);
     }
     return debugString;

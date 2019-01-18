@@ -135,6 +135,7 @@ static void itCanReuseMemory() {
       .heapSize = 800
     };
     _gcTestInit(&config);
+    log_info("After init");
 
     for(int i = 0; i < 8; i++) {
         objectCreatePlain();

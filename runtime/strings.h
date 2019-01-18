@@ -19,3 +19,5 @@ JsValue* stringCreateFromTemplate(const char* fmt, ...);
 JsValue* stringConcat(JsValue*, JsValue*);
 
 void stringGcTraverse(GcObject*, GcCallback*);
+
+char* _stringDebugValue(StringData*);

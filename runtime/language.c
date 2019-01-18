@@ -116,15 +116,15 @@ void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
     }
 }
 
+// dereference the pointed-to value of non-immediate JS Value
+// TODO rename - jsValueAsPointer?
 void* jsValuePointer(JsValue* val) {
     precondition(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE, "Expected pointer value, got %s at %p", gcObjectReflectType(jsValueType(val)).name, val);
-    // note: this will either be object or string
     return val->value.pointer;
 }
 
 void jsValuePointerSet(JsValue* val, void* ptr) {
     precondition(jsValueType(val) == OBJECT_TYPE || jsValueType(val) == STRING_TYPE || jsValueType(val) == FUNCTION_TYPE, "Expected pointer value, got %s", gcObjectReflectType(jsValueType(val)).name);
-    // note: this will either be object or string
     val->value.pointer = ptr;
 }
 
