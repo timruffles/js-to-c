@@ -4,5 +4,5 @@ workflow "Build and verify" {
 }
 
 action "CI" {
-  uses = "./actions/build"
+  uses = "./actions/ci"
 }
