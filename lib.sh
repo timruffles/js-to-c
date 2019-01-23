@@ -38,5 +38,5 @@ CToLib() {
 }
 
 GetRuntimeLibs() {
-    find $__dirname/runtime -depth 1 -name '*.c' -not -name '*.test.c'
+    find "$__dirname/runtime" -maxdepth 1 -name '*.c' -not -name '*.test.c'
 }

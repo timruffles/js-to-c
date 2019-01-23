@@ -1,4 +1,3 @@
-
 js-build/js-to-c.js: src/*.ts
 	tsc
 
@@ -10,3 +9,7 @@ out/prelude.dylib: js-build/js-to-c.js runtime/prelude.js out/runtime.dylib
 
 .PHONY: clean
 clean: js-build/js-to-c.js out/runtime.dylib out/prelude.dylib
+
+.PHONY: install
+install:
+	npm install
