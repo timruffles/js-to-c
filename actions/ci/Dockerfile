@@ -10,11 +10,4 @@ RUN tar -xJf /root/node.tar.xz -C /usr/local/lib/
 RUN ln -s /usr/local/lib/node-${NODE_VERSION}-linux-x64/bin/node /usr/local/bin/node && \
   ln -s /usr/local/lib/node-${NODE_VERSION}-linux-x64/bin/npm /usr/local/bin/npm
 
-
-COPY . /root/code
-
-WORKDIR /root/code
-
-RUN make install
-
 CMD "/root/code/scripts/ci"

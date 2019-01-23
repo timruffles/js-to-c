@@ -2,5 +2,8 @@
 
 set -xeuo pipefail
 
+cd $GITHUB_WORKSPACE
+
+make install
 make
 npm test -- --grep='factorial'
