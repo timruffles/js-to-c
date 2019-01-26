@@ -22,7 +22,8 @@ static RuntimeEnvironment* runtimeCreate() {
     ensureAlloced(runtime);
 
     *runtime = (RuntimeEnvironment) {
-        .gcAtomicGroupId = 0,
+        .gcAtomicGroupId = 1,
+        .gcAtomicGroupDepth = 0,
     };
 
     return runtime;

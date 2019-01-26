@@ -105,11 +105,10 @@ static void itCanGcObjectProperties() {
     _gcTestInit(NULL);
 
     JsValue* garbageOne = objectCreatePlain();
-
-    JsValue* root = runtimeGet()->global;
     JS_SET(garbageOne, "someProp", jsValueCreateNumber(10));
 
     _gcRunGlobal();
+    // TODO would be nice to test it's freed
 }
 
 static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
@@ -118,6 +117,10 @@ static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
     // up with an inconsistent state
     _gcTestInit(NULL);
 
+    JsValue* notInGroup = objectCreatePlain();
+
+    // start a group - although there is no path from root
+    // to these objects they should stay live
     GcAtomicId id = gcAtomicGroupStart();
     JsValue* itemOne = objectCreatePlain();
     JS_SET(itemOne, "someProp", jsValueCreateNumber(10.3));
@@ -128,6 +131,7 @@ static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
     gcAtomicGroupEnd(id);
 
     assert(jsValueNumber(JS_GET(JS_GET(itemTwo, "itemOne"), "someProp")) == 10.3);
+    assert(jsValueType(notInGroup) == FREE_SPACE_TYPE);
 }
 
 static void itCanReuseMemory() {
@@ -171,6 +175,6 @@ int main() {
 
     //test(itGarbageCollectsCorrectly);
     //test(itCanGcObjectProperties);
-    //test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
-    test(itCanReuseMemory);
+    test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
+    //test(itCanReuseMemory);
 }
