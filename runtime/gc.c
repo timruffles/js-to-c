@@ -46,8 +46,6 @@
 
 #define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
 
-const NO_GROUP_ID = ULLONG_MAX;
-
 // lives in JS heap to indicate its unused areas
 typedef struct FreeSpace {
   GcHeader;
@@ -65,7 +63,15 @@ static FreeNode* freeList;
 static void* memory;
 static void* memoryEnd;
 
+static const uint64_t NO_GROUP_ID = ULLONG_MAX;
 
+static GcAtomicId gcCurrentGroupId() {
+    RuntimeEnvironment* rt = runtimeGet();
+    uint16_t depth = rt->gcAtomicGroupDepth;
+    return depth == 0
+        ? NO_GROUP_ID 
+        : rt->gcAtomicGroupId + depth - 1;
+}
 
 static FreeNode* freeNodeCreate(FreeSpace* space) {
     FreeNode* node;
@@ -234,16 +240,6 @@ void* gcAllocate(size_t bytes, int type) {
     return allocated;
 }
 
-GcStats gcStats() {
-    // TODO
-    uint64_t heapSize = runtimeGet()->config->heapSize;
-    return (GcStats) {
-        .used = 0,
-        .remaining = 0,
-        .heapSize = heapSize,
-    };
-}
-
 static void mark(GcObject* item);
 
 static void traverse(GcObject* object) {
@@ -330,7 +326,7 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 
     uint64_t freed = 0;
 
-    const groupId = gcCurrentGroupId();
+    const GcAtomicId groupId = gcCurrentGroupId();
 
     // scan entire heap
     GcObject* toProcess;
@@ -366,14 +362,6 @@ GcAtomicId gcAtomicGroupStart() {
     uint64_t startDepth = rt->gcAtomicGroupDepth;
     rt->gcAtomicGroupDepth += 1;
     return rt->gcAtomicGroupId + startDepth;
-}
-
-GcAtomicId gcCurrentGroupId() {
-    RuntimeEnvironment* rt = runtimeGet();
-    uint16_t depth = rt->gcAtomicGroupDepth;
-    return depth == 0
-        ? NO_GROUP_ID 
-        : rt->gcAtomicGroupId + depth - 1;
 }
 
 void gcAtomicGroupEnd(GcAtomicId id) {

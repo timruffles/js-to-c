@@ -6,21 +6,14 @@
 #include "language.h"
 #include "config.h"
 
-typedef int GcAtomicId;
+typedef uint64_t GcAtomicId;
 
 typedef struct {
     uint64_t size;
 } GcConfig;
 
-typedef struct {
-    uint64_t used;
-    uint64_t remaining;
-    uint64_t heapSize;
-} GcStats;
-
 void gcInit(Config*);
 void* gcAllocate(size_t, int type);
-GcStats gcStats(void);
 
 GcAtomicId gcAtomicGroupStart(void);
 void gcAtomicGroupEnd(GcAtomicId);

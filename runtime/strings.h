@@ -20,4 +20,4 @@ JsValue* stringConcat(JsValue*, JsValue*);
 
 void stringGcTraverse(GcObject*, GcCallback*);
 
-char* _stringDebugValue(StringData*);
+const char* _stringDebugValue(StringData*);
