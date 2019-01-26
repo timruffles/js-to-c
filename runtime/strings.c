@@ -114,6 +114,6 @@ void stringGcTraverse(GcObject* value, GcCallback* cb) {
     cb(jsValuePointer((void*)value));
 }
 
-char* _stringDebugValue(StringData* d) {
+const char* _stringDebugValue(StringData* d) {
     return getCString(d);
 }

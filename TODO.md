@@ -1,6 +1,8 @@
 # Todos
 
-Next action: why is `npm test -- --grep='global garbage'` (still) failing?
+Next action: 
+- why is `npm test -- --grep='global garbage'` (still) failing?
+    - itCanReuseMemory unit test is failing, narrower failure will be easier to debug
 
 ## List
 

@@ -44,18 +44,6 @@ static void itSetsSizeAndType() {
     assert(valueA->type == 1);
 }
 
-static void itTracksSpace() {
-    _gcTestInit(NULL);
-
-    TestStruct* valueA = gcAllocate(sizeof(TestStruct), 1); 
-    GcObject* freeSpace = (void*)((char*)valueA + sizeof(TestStruct));
-
-    assert(valueA->size == sizeof(TestStruct));
-    assert(freeSpace->type == FREE_SPACE_TYPE);
-    GcStats stats = gcStats();
-    assert(freeSpace->size == stats.heapSize - sizeof(TestStruct));
-}
-
 static void itGarbageCollectsCorrectly() {
     _gcTestInit(NULL);
 
@@ -167,14 +155,13 @@ static void itCanReuseMemory() {
 
 
 int main() {
-    //test(itCanTestInitWithoutInit); 
-    //test(itCanTestInitAfterInit); 
-    //test(itAllocates); 
-    //test(itSetsSizeAndType);
-    //test(itTracksSpace); 
+    test(itCanTestInitWithoutInit); 
+    test(itCanTestInitAfterInit); 
+    test(itAllocates); 
+    test(itSetsSizeAndType);
 
-    //test(itGarbageCollectsCorrectly);
-    //test(itCanGcObjectProperties);
+    test(itGarbageCollectsCorrectly);
+    test(itCanGcObjectProperties);
     test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
     //test(itCanReuseMemory);
 }
