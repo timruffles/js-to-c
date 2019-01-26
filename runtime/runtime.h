@@ -30,7 +30,9 @@ typedef struct RuntimeEnvironment {
     RuntimeStackPointer callStack[RUNTIME_MAX_STACK_DEPTH];
     int stackDepth;
 
-    int gcAtomicGroupId;
+    uint64_t gcAtomicGroupId;
+    uint16_t gcAtomicGroupDepth;
+
     bool gcProtectAllocations;
 
     Config* config;

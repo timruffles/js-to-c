@@ -1,4 +1,3 @@
-// TODO - clean the inGroup status for allocated objecs
 /**
  * Memory is a free list
  *
@@ -33,6 +32,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <limits.h>
 
 #include "lib/debug.h"
 #include "gc.h"
@@ -46,7 +46,7 @@
 
 #define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
 
-static int gcAtomicGroupId = 0;
+const NO_GROUP_ID = ULLONG_MAX;
 
 // lives in JS heap to indicate its unused areas
 typedef struct FreeSpace {
@@ -65,10 +65,6 @@ static FreeNode* freeList;
 static void* memory;
 static void* memoryEnd;
 
-
-static inline bool isAllocatingGroup() {
-    return gcAtomicGroupId > 0;
-}
 
 
 static FreeNode* freeNodeCreate(FreeSpace* space) {
@@ -230,8 +226,9 @@ void* gcAllocate(size_t bytes, int type) {
 
     allocated->type = type;
 
-    if(isAllocatingGroup()) {
-        allocated->inGroup = true;
+    GcAtomicId id = gcCurrentGroupId();
+    if(id != NO_GROUP_ID) {
+        allocated->atomicGroupId = id;
     }
 
     return allocated;
@@ -333,6 +330,8 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 
     uint64_t freed = 0;
 
+    const groupId = gcCurrentGroupId();
+
     // scan entire heap
     GcObject* toProcess;
     for(toProcess = memory;
@@ -344,7 +343,8 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 
         if(toProcess->type == FREE_SPACE_TYPE) continue;
 
-        if(toProcess->marked || toProcess->inGroup) {
+        if(toProcess->marked || toProcess->atomicGroupId >= groupId) {
+            // reset for next GC run
             toProcess->marked = false;
         } else {
             gcObjectFree(toProcess);
@@ -361,17 +361,37 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 }
 
 GcAtomicId gcAtomicGroupStart() {
-    gcAtomicGroupId += 1;
-    return gcAtomicGroupId;
+    // first group gets group ID, rest sequentially increase from there
+    RuntimeEnvironment* rt = runtimeGet();
+    uint64_t startDepth = rt->gcAtomicGroupDepth;
+    rt->gcAtomicGroupDepth += 1;
+    return rt->gcAtomicGroupId + startDepth;
+}
+
+GcAtomicId gcCurrentGroupId() {
+    RuntimeEnvironment* rt = runtimeGet();
+    uint16_t depth = rt->gcAtomicGroupDepth;
+    return depth == 0
+        ? NO_GROUP_ID 
+        : rt->gcAtomicGroupId + depth - 1;
 }
 
 void gcAtomicGroupEnd(GcAtomicId id) {
-    precondition(gcAtomicGroupId > 0, "exit before enter");
-    GcAtomicId current = gcAtomicGroupId;
-    precondition(current == id, "group %i did not exit before nested group %i", id, current);
-    gcAtomicGroupId -= 1;
+    RuntimeEnvironment* rt = runtimeGet();
+    uint64_t nextToExit = rt->gcAtomicGroupId + rt->gcAtomicGroupDepth - 1;
+    precondition(id == nextToExit, "atomic group exit out of order");
+    rt->gcAtomicGroupDepth -= 1;
+    if(rt->gcAtomicGroupDepth == 0) {
+        // group complete, mark stale by incrementing counter
+        rt->gcAtomicGroupId += 1;
+    }
 }
 
+/**
+ * Protected allocations live outside the managed JS heap. It's used
+ * by the compiler for stuff like interned strings which it assumes will
+ * never need to be GC'd
+ **/
 void gcStartProtectAllocations() {
     runtimeGet()->gcProtectAllocations = true;
 }

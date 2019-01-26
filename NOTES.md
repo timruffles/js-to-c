@@ -1,16 +1,30 @@
 # Notes
 
-Read recent to old, i.e prepend new lines.
+## 26 Jan 2019
+
+Even with `gcStartProtectAllocations()` still seeing a crash after 90 iterations, when log is being called:
+
+```
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/environments.c:49:envGet) Looked up console in 0x7f8fb4801a28 got type object
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/objects.c:100:objectGet) Getting log
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/environments.c:49:envGet) Looked up i in 0x7f8fb4801a28 got type number
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/functions.c:30:functionRunWithArguments) Getting fn record
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/functions.c:32:functionRunWithArguments) Fn record 0x7f8fb4801aa8
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/environments.c:32:envCreateForCall) Created call env 0x7f8fb4805f08 parent 0x7f8fb4801a28, now looping over 1 args
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/environments.c:34:envCreateForCall) Env name arg0
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/objects.c:194:objectSet) Setting arg0 in object at 0x7f8fb4805f08
+[INFO] (/Users/timruffles/dev/p/js-to-c/runtime/objects.c:200:objectSet) looking in 0x0 for props
+global-garbage(5075,0x7fff9a0e1340) malloc: *** error for object 0x7f8fb4408750: pointer being freed was not allocated
+*** set a breakpoint in malloc_error_break to debug
+```
+
+This is the problem the atomic groups were designed to solve!
+
+Looking at the atomic group design the nesting behaviour we need to ensure is while a parent group is open, closing a child doesn't close the larger open group.
+
+Cleaning up group state is interesting. Doing a linear scan of the heap at the end isn't ideal as it happens every function call. We could store a group id and clear/ignore it if we're not in a group or it's below current highest group id (looping it for max generations). Tracking the nesting would give us an idea of how many groups to close out.
 
 ## 15 Jan 2019
-
-- attempting to add idea of protected allocation to GC
-  - also create runtime before gcInit, so it truly is the one place we store global state
-- right, it's the interned strings being GC'd, whoops
-  - `console` is GC'd because it's not pointed at. The global `console`
-    is pointed to but not interned stuff
-- ah - we create console, log etc in`global.c`, now they're being GC'd?
-- Seem to have a second set of strings, for stuff that's interned, e.g 'console'
 
 ```
 # right after userProgram(...) {, we already have string declared
@@ -23,7 +37,13 @@ Read recent to old, i.e prepend new lines.
 ...
 [ERROR] (/Users/timruffles/p/js-to-c/runtime/language.c:122:jsValuePointer) Expected pointer value, got free space at 0x100801358
 ```
-
+- ah - we create console, log etc in`global.c`, now they're being GC'd?
+- Seem to have a second set of strings, for stuff that's interned, e.g 'console'
+- right, it's the interned strings being GC'd, whoops
+  - `console` is GC'd because it's not pointed at. The global `console`
+    is pointed to but not interned stuff
+- attempting to add idea of protected allocation to GC
+  - also create runtime before gcInit, so it truly is the one place we store global state
 
 
 ## 13 Jan 2019

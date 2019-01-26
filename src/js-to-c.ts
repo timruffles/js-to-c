@@ -295,7 +295,9 @@ function compileInternInitialisation(interned: InternedString[]): string {
     )));
 
     return `static void initialiseInternedStrings() {
+        gcStartProtectAllocations();
         ${initialisers}
+        gcStopProtectAllocations();
     }`;
 }
 
