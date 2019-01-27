@@ -10,9 +10,7 @@
 #include "strings.h"
 #include "config.h"
 #include "runtime.h"
-
-#define JS_SET(O,P,V) objectSet(O,stringFromLiteral(P),V)
-#define JS_GET(O,P) objectGet(O,stringFromLiteral(P))
+#include "_freelist.h"
 
 typedef struct {
     GcHeader;
@@ -64,9 +62,9 @@ static void itGarbageCollectsCorrectly() {
     JS_SET(liveTwo, "liveDeepOne", liveDeepOne);
     JS_SET(liveDeepOne, "id", jsValueCreateNumber(2002));
 
-    _gcVisualiseHeap();
+    _gcVisualiseHeap(NULL);
     _gcRunGlobal();
-    _gcVisualiseHeap();
+    _gcVisualiseHeap(NULL);
     
     // check garbage is zeroed, with a FreeSpace header appended
     log_info("%s", gcObjectReflectType(jsValueType(garbageOne)).name);
@@ -122,12 +120,26 @@ static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
     assert(jsValueType(notInGroup) == FREE_SPACE_TYPE);
 }
 
+static void itPreventsOverAllocation() {
+    Config config = (Config){
+      .heapSize = 4000
+    };
+
+    _gcTestInit(&config);
+
+    _gcVisualiseHeap(NULL);
+    void* allocated = _gcAllocate(10000, STRING_TYPE);
+    log_info("%p", allocated);
+    assert(allocated == NULL);
+}
+
 static void itCanReuseMemory() {
     Config config = (Config){
-      .heapSize = 800
+      .heapSize = 1200
     };
     _gcTestInit(&config);
     log_info("After init");
+    _gcVisualiseHeap(NULL);
 
     for(int i = 0; i < 8; i++) {
         objectCreatePlain();
@@ -135,9 +147,13 @@ static void itCanReuseMemory() {
 
     JsValue* root = runtimeGet()->global;
     JsValue* liveOne = objectCreatePlain();
+    _gcVisualiseHeap(&(GcVisualiseHeapOpts){
+      .highlight = (void*)liveOne,
+    });
     JS_SET(root, "liveOne", liveOne);
-    _gcVisualiseHeap();
-
+    _gcVisualiseHeap(&(GcVisualiseHeapOpts){
+      .highlight = (void*)liveOne,
+    });
 
     _gcRunGlobal();
 
@@ -145,7 +161,7 @@ static void itCanReuseMemory() {
         objectCreatePlain();
     }
 
-    _gcVisualiseHeap();
+    _gcVisualiseHeap(NULL);
 
     DEBUG_JS_VAL(liveOne);
     DEBUG_JS_VAL(JS_GET(root, "liveOne"));
@@ -155,13 +171,14 @@ static void itCanReuseMemory() {
 
 
 int main() {
-    test(itCanTestInitWithoutInit); 
-    test(itCanTestInitAfterInit); 
-    test(itAllocates); 
-    test(itSetsSizeAndType);
+    // test(itCanTestInitWithoutInit); 
+    // test(itCanTestInitAfterInit); 
+    // test(itAllocates); 
+    // test(itSetsSizeAndType);
 
-    test(itGarbageCollectsCorrectly);
-    test(itCanGcObjectProperties);
-    test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
-    //test(itCanReuseMemory);
+    // test(itGarbageCollectsCorrectly);
+    // test(itCanGcObjectProperties);
+    // test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
+    //test(itPreventsOverAllocation);
+    test(itCanReuseMemory);
 }

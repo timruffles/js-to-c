@@ -43,25 +43,19 @@
 #include "runtime.h"
 #include "strings.h"
 #include "functions.h"
-
-#define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
+#include "_freelist.h"
+#include "_memory.h"
 
 // lives in JS heap to indicate its unused areas
 typedef struct FreeSpace {
   GcHeader;
 } FreeSpace;
 
-// space tracking, which lives outside JS heap
-typedef struct FreeNode {
-    struct FreeNode* next;
-    struct FreeNode* prev;
-    struct FreeSpace* space;
-} FreeNode;
 
 // TODO might be worth moving these module variables to runtime
-static FreeNode* freeList;
 static void* memory;
 static void* memoryEnd;
+static void** freeList;
 
 static const uint64_t NO_GROUP_ID = ULLONG_MAX;
 
@@ -73,15 +67,6 @@ static GcAtomicId gcCurrentGroupId() {
         : rt->gcAtomicGroupId + depth - 1;
 }
 
-static FreeNode* freeNodeCreate(FreeSpace* space) {
-    FreeNode* node;
-    ensureCallocBytes(node, sizeof(FreeNode));
-    *node = (FreeNode) {
-        .space = space,
-    };
-    return node;
-}
-
 static FreeSpace freeSpaceCreate(uint64_t size) {
     return (FreeSpace) {
         .type = FREE_SPACE_TYPE,
@@ -89,71 +74,41 @@ static FreeSpace freeSpaceCreate(uint64_t size) {
     };
 }
 
-static void freeListInit(FreeNode* node) {
-    freeList = node;
-}
-
-static void freeListDelete(FreeNode* toRemove) {
-    // not first item
-    if(toRemove == freeList) {
-        if(toRemove->next) {
-            freeList = toRemove->next;
-        }
-    } else {
-       toRemove->prev->next = toRemove->next;
-       free(toRemove);
-    }
-}
-
-static void freeListAppend(FreeNode* toAdd) {
-    FreeNode* currentHead = freeList;
-    toAdd->next = currentHead;
-    currentHead->prev = toAdd;
-    freeList = toAdd;
-}
-
-static void freeListFreeAll() {
-    for(FreeNode* node = freeList;
-        node;
-        node = node->next
-    ) {
-        free(node);
-    }
-}
-
 void gcInit(Config* config) {
+    log_info("gcInit");
     uint64_t heapSize = config->heapSize;
 
     log_info("initialised gc with heap size %llu", heapSize);
 
+    // we allocate a block of zeroed memory as our JS heap
     ensureCallocBytes(memory, heapSize);
-
-    FreeSpace* space = memory;
     memoryEnd = (void*)((char*)memory + heapSize);
 
+    // turn whole of heap into FreeSpace value
+    FreeSpace* space = memory;
     *space = freeSpaceCreate(heapSize);
 
-    FreeNode* node = freeNodeCreate(space);
-    freeListInit(node);
+    // then initialise our free list with a single node pointing at our space
+    freeListAppend(freeList, space);
+
+    log_info("gcInit returning, freeSpace at %p", space);
 }
 
 
 void _gcTestInit(Config* config) {
     if(memory != NULL) {
-        freeListFreeAll();
+        freeListClear(freeList);
         free(memory);
     }
     runtimeInit(config);
 }
 
-
 static FreeNode* findFreeSpace(size_t bytes) {
     FreeNode* found = NULL;
-    for(FreeNode* candidate = freeList;
-        candidate != NULL;
-        candidate = candidate->next
-    ) {
-        if(candidate->space->size >= bytes) {
+    FREE_LIST_ITERATE(freeList, node) {
+        FreeSpace* candidate = node->value;
+        log_info("%llu %llu", candidate->value->size, bytes);
+        if(candidate->value->size >= bytes) {
             found = candidate;
             break;
         }
@@ -176,7 +131,15 @@ static void* gcAllocateProtected(size_t bytes, int type) {
 }
 
 
+void* gcAllocate(size_t bytes, int type) {
+    void* allocated = _gcAllocate(bytes, type);
+    ensure(allocated != NULL, "Out of memory!");
+    return allocated;
+}
+
 /**
+ * Internal method, which doesn't exit on failure.
+ *
  * Allocating in a free space node will either move the
  * header down, or allocate all of it and replace the node
  * (allocating more than required if remainder is < sizeof(FreeSpace)
@@ -198,8 +161,9 @@ static void* gcAllocateProtected(size_t bytes, int type) {
  *     2 *cont*
  *     3 - over allocated, unused, included in size -
  */
-void* gcAllocate(size_t bytes, int type) {
+void* _gcAllocate(size_t bytes, int type) {
     if(runtimeGet()->gcProtectAllocations) {
+        log_info("Allocating protected");
         return gcAllocateProtected(bytes, type);
     }
 
@@ -210,7 +174,7 @@ void* gcAllocate(size_t bytes, int type) {
 
         found = findFreeSpace(bytes);
         // out of memory after gc run
-        assert(found != NULL);
+        if(found == NULL) return NULL;
     }
 
     GcObject* allocated = (void*)found->space;
@@ -227,8 +191,10 @@ void* gcAllocate(size_t bytes, int type) {
             .size = bytes
         };
     } else {
-        freeListDelete(found);
+        freeListDelete(freeList, found);
     }
+
+    log_info("Free space at %p, %s", found->space, splitRequired ? "splitting" : "consumed ");
 
     allocated->type = type;
 
@@ -280,14 +246,30 @@ static void gcObjectFree(GcObject* object) {
     } else {
         log_info("freeing %s at %p", gcObjectReflect(object).name, object);
     }
+    // zero out the memory of the old object
     uint64_t size = object->size;
     memset(object, 0, object->size);
+
+    // replace it with a free space header
     FreeSpace* newSpace = (void*)object;
     *newSpace = freeSpaceCreate(size);
-    freeListAppend(freeNodeCreate(newSpace));
+
+    freeListAppend(freeList, newSpace);
 }
 
-void _gcVisualiseHeap() {
+
+void _gcVisualiseHeap(GcVisualiseHeapOpts* opts) {
+    static GcVisualiseHeapOpts defaultOpts = (GcVisualiseHeapOpts){
+        .highlight = NULL
+    };
+
+    if(opts == NULL) {
+      opts = &defaultOpts;    
+    }
+
+    bool foundHighlight = false;
+    log_info("hl passed %p", opts->highlight);
+
     log_info("%p - Heap start", memory);
     GcObject* toProcess;
     for(toProcess = memory;
@@ -298,11 +280,18 @@ void _gcVisualiseHeap() {
             log_info("%p - ERROR - Heap corruption - uninitialized memory", toProcess);
             break;
         } else {
-            log_info("%p - %12s %2i %llu", toProcess, gcObjectReflect(toProcess).name, toProcess->type, toProcess->size);
+            bool isHighlight = opts->highlight != NULL && opts->highlight == toProcess;
+            log_info("%p - %12s %2i %llu%s", toProcess, gcObjectReflect(toProcess).name, toProcess->type, toProcess->size, isHighlight ? " FOUND" : "");
+            if(isHighlight) {
+                foundHighlight = true;
+            }
         }
     }
     if(toProcess != memoryEnd) {
         log_info("%p - ERROR - Unexpected scan end", toProcess);
+    }
+    if(opts->highlight != NULL && !foundHighlight) {
+        log_info("%p - ERROR - highlight pointer not found in heap", opts->highlight);
     }
     log_info("%p - Heap end", memoryEnd);
 }
@@ -382,8 +371,10 @@ void gcAtomicGroupEnd(GcAtomicId id) {
  **/
 void gcStartProtectAllocations() {
     runtimeGet()->gcProtectAllocations = true;
+    log_info("gcStartProtectAllocations");
 }
 
 void gcStopProtectAllocations() {
     runtimeGet()->gcProtectAllocations = false;
+    log_info("gcStopProtectAllocations");
 }

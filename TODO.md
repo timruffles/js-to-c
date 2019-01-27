@@ -3,6 +3,7 @@
 Next action: 
 - why is `npm test -- --grep='global garbage'` (still) failing?
     - itCanReuseMemory unit test is failing, narrower failure will be easier to debug
+  - suspicious `[INFO] (gc.c:292:gcObjectFree) freeing string data 'arg0' at 0x100400408` - tho could be an call env from prev call?
 
 ## List
 

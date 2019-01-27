@@ -14,6 +14,7 @@ typedef struct {
 
 void gcInit(Config*);
 void* gcAllocate(size_t, int type);
+void* _gcAllocate(size_t, int type);
 
 GcAtomicId gcAtomicGroupStart(void);
 void gcAtomicGroupEnd(GcAtomicId);
@@ -25,6 +26,10 @@ void _gcTestInit(Config*);
 
 void _gcRunGlobal(void);
 void _gcRun(JsValue** roots, uint64_t rootCount);
-void _gcVisualiseHeap(void);
+
+typedef struct {
+  GcObject* highlight;
+} GcVisualiseHeapOpts;
+void _gcVisualiseHeap(GcVisualiseHeapOpts*);
 
 typedef void* (GcCallback)(void*);

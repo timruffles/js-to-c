@@ -32,15 +32,17 @@ const char* stringGetCString(JsValue* value) {
     return getCString(jsValuePointer(value));
 }
 
+/**
+ * Note: must be called while protecting allocations
+ */
 JsValue* stringCreateFromInternedString(const char* const interned, uint64_t logicalLength) {
-    gcStartProtectAllocations();
+    // TODO add debug precondition to enforce this
     StringData* jsString = gcAllocate(sizeof(StringData), STRING_VALUE_TYPE);
 
     jsString->internedString = interned;
     jsString->length = logicalLength;
 
     JsValue* val = jsValueCreatePointer(STRING_TYPE, jsString);
-    gcStopProtectAllocations();
     return val;
 }
 
