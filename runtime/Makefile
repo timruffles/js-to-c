@@ -37,6 +37,10 @@ out/config_test: config.test.c $(source_with_headers)
 out/exceptions_test: exceptions.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(source_files) exceptions.test.c -o $@
 
+out/_freelist_test: _freelist.c _freelist.h _freelist.test.c
+	$(CC) $(CLANG_OPTS) _freelist.c _freelist.test.c -o $@
+
+
 
 # manually ordered for dependencies - i.e objects aren't going to work if we can't allocate
 # or have reliable strings

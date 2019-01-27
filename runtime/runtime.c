@@ -30,6 +30,7 @@ static RuntimeEnvironment* runtimeCreate() {
 }
 
 RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
+    log_info("runtimeInit");
     runtimeEnv = runtimeCreate();
 
     Config* config = maybeConfig;
@@ -44,7 +45,7 @@ RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
     log_info("read config");
 
     gcInit(config);
-    log_info("setup gc");
+    _gcVisualiseHeap(NULL);
 
     uint64_t gcRootsCount = 1;
     JsValue** gcRoots = calloc(gcRootsCount, sizeof(JsValue*));
@@ -60,6 +61,8 @@ RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
 
     runtimeEnv->config = config;
     log_info("created runtime environment");
+
+    log_info("runtimeInit returning");
     return runtimeEnv;
 }
 

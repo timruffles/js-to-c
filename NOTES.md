@@ -1,5 +1,20 @@
 # Notes
 
+## 27 Jan 2019
+
+- Wrote a focussed test to ensure allocation doesn't screw up
+- Seems we're reusing a free list node :|
+
+```
+[INFO] (gc.c:250:_gcAllocate) Free space at 0x100800370, consumed
+[INFO] (gc.c:163:findFreeSpace) 32 32
+[INFO] (gc.c:250:_gcAllocate) Free space at 0x1008003f0, consumed
+[INFO] (gc.c:163:findFreeSpace) 48 48
+[INFO] (gc.c:250:_gcAllocate) Free space at 0x100800370, consumed
+[INFO] (gc.c:163:findFreeSpace) 48 32
+[INFO] (gc.c:250:_gcAllocate) Free space at 0x100800320, consumed
+```
+
 ## 26 Jan 2019
 
 Even with `gcStartProtectAllocations()` still seeing a crash after 90 iterations, when log is being called:
@@ -23,6 +38,35 @@ This is the problem the atomic groups were designed to solve!
 Looking at the atomic group design the nesting behaviour we need to ensure is while a parent group is open, closing a child doesn't close the larger open group.
 
 Cleaning up group state is interesting. Doing a linear scan of the heap at the end isn't ideal as it happens every function call. We could store a group id and clear/ignore it if we're not in a group or it's below current highest group id (looping it for max generations). Tracking the nesting would give us an idea of how many groups to close out.
+
+### Failing focussed test
+
+Huh, `itCanReuseMemory` is failing and it's rather bad:
+
+```
+[INFO] (gc.c:303:_gcVisualiseHeap) 0x100202100 - Heap start
+...
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x100202350 -  objectValue 10 48
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x100202380 -       object  5 32
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x1002023a0 -  objectValue 10 48
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x1002023d0 -       object  5 32
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x1002023f0 -       object  5 48 FOUND
+[INFO] (gc.c:326:_gcVisualiseHeap) 0x100202420 - Heap end
+[INFO] (objects.c:194:objectSet) Setting liveOne in object at 0x100202130
+[INFO] (objects.c:200:objectSet) looking in 0x1002022d0 for props
+[INFO] (gc.c:301:_gcVisualiseHeap) hl passed 0x1002023f0
+[INFO] (gc.c:303:_gcVisualiseHeap) 0x100202100 - Heap start
+...
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x100202350 -  objectValue 10 48
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x100202380 -       object  5 32
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x1002023a0 -  objectValue 10 48
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x1002023d0 -       object  5 32
+[INFO] (gc.c:314:_gcVisualiseHeap) 0x1002023f0 - propertyDescriptor 11 48 FOUND
+```
+
+Memory being overwritten during the property set! Ouch! Is that because we have no free space?
+
+Yes - boosting the free space up to 4k means it's fine. So the GC code isn't keeping its invariants.
 
 ## 15 Jan 2019
 

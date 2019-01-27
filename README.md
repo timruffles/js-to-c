@@ -90,3 +90,7 @@ See `lib` - currently just
 ## Dynamic libraries
 
 The runtime is built into a dynamic library to avoid recompiling. There's also a prelude, which allows langauge features to be implemented in JS that's pre-compiled to C. 
+
+## Runtime
+
+Files prefixed `_` are private to the runtime and should not be relied on.
