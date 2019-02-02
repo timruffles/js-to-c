@@ -11,14 +11,16 @@
 #include "runtime.h"
 
 static void itCanCreateAList() {
-    FreeNode* list;
+    FreeNode* list = NULL;
+    log_info("%p %p", list, &list);
     int value = 5;
     FreeNode* node = freeListAppend(&list, &value);
+    assert(list != NULL);
     assert(*(int*)(node->value) == 5);
 }
 
 static void itAppends() {
-    FreeNode* list;
+    FreeNode* list = NULL;
     int valueA = 5;
     int valueB = 10;
     freeListAppend(&list, &valueA);
@@ -27,14 +29,14 @@ static void itAppends() {
 }
 
 static void itCanDelete() {
-    FreeNode* list;
+    FreeNode* list = NULL;
     int valueA = 5;
     FreeNode* nodeA = freeListAppend(&list, &valueA);
     freeListDelete(&list, nodeA);
 }
 
 static void itAppendsAfterDelete() {
-    FreeNode* list;
+    FreeNode* list = NULL;
     int valueA = 5;
     int valueB = 10;
     FreeNode* nodeA = freeListAppend(&list, &valueA);
@@ -45,14 +47,14 @@ static void itAppendsAfterDelete() {
 
 
 static void itClears() {
-    FreeNode* list;
+    FreeNode* list = NULL;
     int valueA = 5;
     freeListAppend(&list, &valueA);
     freeListClear(&list);
 }
 
 static void itWorksAfterClear() {
-    FreeNode* list;
+    FreeNode* list = NULL;
     int valueA = 5;
     int valueB = 10;
     freeListAppend(&list, &valueA);
@@ -63,24 +65,20 @@ static void itWorksAfterClear() {
 }
 
 static void itIterates() {
-    char* expected = "5 10 ";
-    char output[100];
-    FreeNode* list;
+    char* expected = "10 5 ";
+    char output[100] = {0};
+    FreeNode* list = NULL;
     int valueA = 5;
     int valueB = 10;
     freeListAppend(&list, &valueA);
     freeListAppend(&list, &valueB);
 
-    log_info("pre it");
     FREE_LIST_ITERATE(&list, node) {
-        log_info("it to %p %p", node, node->value);
-        char buf[16];
+        char buf[16] = {0};
         sprintf(buf, "%i ", *((int*)node->value));
-        log_info("sprinted");
         strcat(output, buf);
     }
 
-    log_info("%s %s", expected, output);
     assert(strcmp(expected, output) == 0);
 }
 
