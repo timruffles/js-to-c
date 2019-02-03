@@ -98,6 +98,7 @@ void gcInit(Config* config) {
 void _gcTestInit(Config* config) {
     if(memory != NULL) {
         freeListClear(&freeList);
+        freeList = NULL;
         free(memory);
     }
     runtimeInit(config);
@@ -106,14 +107,10 @@ void _gcTestInit(Config* config) {
 static void gcPrintFreeList() {
     FREE_LIST_ITERATE(&freeList, node) {
       GcObject* value = node->value;
-      log_info("node:%p space:%p next:%p prev:%p%s", node, node->value, node->next, node->prev, value->type == FREE_SPACE_TYPE ? "" : " error: not free!");
     }
 }
 
 static FreeNode* findFreeSpace(size_t bytes) {
-    log_info("Finding free space, current list with head at %p", freeList);
-    gcPrintFreeList();
-
     FreeNode* found = NULL;
     FREE_LIST_ITERATE(&freeList, node) {
         FreeSpace* candidate = node->value;
@@ -199,11 +196,8 @@ void* _gcAllocate(size_t bytes, int type) {
             .size = bytes
         };
     } else {
-        log_info("Attempting to delete %p, current head %p", found, freeList);
         freeListDelete(&freeList, found);
     }
-
-    log_info("Free node %p (n: %p, p: %p), space at %p %s", found, found->next, found->prev, found->value, splitRequired ? "splitting" : "consumed ");
 
     allocated->type = type;
 
@@ -277,7 +271,6 @@ void _gcVisualiseHeap(GcVisualiseHeapOpts* opts) {
     }
 
     bool foundHighlight = false;
-    log_info("hl passed %p", opts->highlight);
 
     log_info("%p - Heap start", memory);
     GcObject* toProcess;
@@ -296,12 +289,6 @@ void _gcVisualiseHeap(GcVisualiseHeapOpts* opts) {
             }
         }
     }
-
-    log_info("");
-    log_info("");
-    log_info("Free list:");
-
-    gcPrintFreeList();
 
     if(toProcess != memoryEnd) {
         log_info("%p - ERROR - Unexpected scan end", toProcess);
