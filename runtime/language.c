@@ -221,7 +221,7 @@ GcObjectReflection gcObjectReflectType(int type) {
         REFLECT(PROPERTY_DESCRIPTOR_TYPE, "propertyDescriptor");
         REFLECT(FUNCTION_RECORD_TYPE, "functionRecord");
 
-        REFLECT(FREE_SPACE_TYPE, "free space");
+        REFLECT(FREE_SPACE_TYPE, "freeSpace");
 
         default:
             log_err("Unknown type %i", type);

@@ -37,13 +37,11 @@ FreeNode* freeListAppend(FreeNode** list, void* value) {
 void freeListDelete(FreeNode** list, FreeNode* toRemove) {
     // first item
     if(toRemove == *list) {
-       log_info("deleted head %p", toRemove);
         FreeNode* next = *list = toRemove->next;
         if(next != NULL) {
             next->prev = NULL;
         }
     } else if (toRemove->prev->next == toRemove) {
-       log_info("deleted %p", toRemove);
        toRemove->prev->next = toRemove->next;
        FreeNode* next = toRemove->next;
        if(next != NULL) {
