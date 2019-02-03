@@ -81,8 +81,8 @@ void exceptionsThrow(JsValue* error) {
 
 static JsValue* errorCreate(JsValue* name, JsValue* message) {
     JsValue* obj = objectCreatePlain();
-    JS_SET_LITERAL(obj, "name", name);
-    JS_SET_LITERAL(obj, "message", message);
+    JS_SET(obj, "name", name);
+    JS_SET(obj, "message", message);
     return obj;
 }
 

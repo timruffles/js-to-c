@@ -8,6 +8,7 @@ typedef struct FreeNode {
     void* value;
 } FreeNode;
 
+void freeListCreate(FreeNode** list, void* value);
 void freeListDelete(FreeNode** list, FreeNode* toRemove);
 FreeNode* freeListAppend(FreeNode** list, void* toAdd);
 void freeListClear(FreeNode** list);

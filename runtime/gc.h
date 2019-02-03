@@ -6,6 +6,7 @@
 #include "language.h"
 #include "config.h"
 
+
 typedef uint64_t GcAtomicId;
 
 typedef struct {

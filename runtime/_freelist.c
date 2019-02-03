@@ -17,16 +17,6 @@ static FreeNode* freeNodeCreate(void* value) {
     return node;
 }
 
-void freeListDelete(FreeNode** list, FreeNode* toRemove) {
-    // not first item
-    if(toRemove == *list) {
-        *list = toRemove->next;
-    } else {
-       toRemove->prev->next = toRemove->next;
-       free(toRemove);
-    }
-}
-
 FreeNode* freeListAppend(FreeNode** list, void* value) {
     FreeNode* toAdd = freeNodeCreate(value);
     // free list invariants:
@@ -42,6 +32,28 @@ FreeNode* freeListAppend(FreeNode** list, void* value) {
         *list = toAdd;
     }
     return toAdd;
+}
+
+void freeListDelete(FreeNode** list, FreeNode* toRemove) {
+    // first item
+    if(toRemove == *list) {
+       log_info("deleted head %p", toRemove);
+        FreeNode* next = *list = toRemove->next;
+        if(next != NULL) {
+            next->prev = NULL;
+        }
+    } else if (toRemove->prev->next == toRemove) {
+       log_info("deleted %p", toRemove);
+       toRemove->prev->next = toRemove->next;
+       FreeNode* next = toRemove->next;
+       if(next != NULL) {
+           next->prev = toRemove->prev;
+       }
+       free(toRemove);
+    } else {
+        // not in list
+        fail("WARN: node to delete not in list %p (n: %p, p: %p)", toRemove, toRemove->next, toRemove->prev);
+    }
 }
 
 void freeListClear(FreeNode** list) {

@@ -55,7 +55,7 @@ typedef struct FreeSpace {
 // TODO might be worth moving these module variables to runtime
 static void* memory;
 static void* memoryEnd;
-static void** freeList;
+static void** freeList = NULL;
 
 static const uint64_t NO_GROUP_ID = ULLONG_MAX;
 
@@ -89,7 +89,7 @@ void gcInit(Config* config) {
     *space = freeSpaceCreate(heapSize);
 
     // then initialise our free list with a single node pointing at our space
-    freeListAppend(freeList, space);
+    FreeNode* p = freeListAppend(&freeList, space);
 
     log_info("gcInit returning, freeSpace at %p", space);
 }
@@ -97,19 +97,28 @@ void gcInit(Config* config) {
 
 void _gcTestInit(Config* config) {
     if(memory != NULL) {
-        freeListClear(freeList);
+        freeListClear(&freeList);
         free(memory);
     }
     runtimeInit(config);
 }
 
+static void gcPrintFreeList() {
+    FREE_LIST_ITERATE(&freeList, node) {
+      GcObject* value = node->value;
+      log_info("node:%p space:%p next:%p prev:%p%s", node, node->value, node->next, node->prev, value->type == FREE_SPACE_TYPE ? "" : " error: not free!");
+    }
+}
+
 static FreeNode* findFreeSpace(size_t bytes) {
+    log_info("Finding free space, current list with head at %p", freeList);
+    gcPrintFreeList();
+
     FreeNode* found = NULL;
-    FREE_LIST_ITERATE(freeList, node) {
+    FREE_LIST_ITERATE(&freeList, node) {
         FreeSpace* candidate = node->value;
-        log_info("%llu %llu", candidate->value->size, bytes);
-        if(candidate->value->size >= bytes) {
-            found = candidate;
+        if(candidate->size >= bytes) {
+            found = node;
             break;
         }
     }
@@ -129,7 +138,6 @@ static void* gcAllocateProtected(size_t bytes, int type) {
     obj->type = type;
     return obj;
 }
-
 
 void* gcAllocate(size_t bytes, int type) {
     void* allocated = _gcAllocate(bytes, type);
@@ -177,24 +185,25 @@ void* _gcAllocate(size_t bytes, int type) {
         if(found == NULL) return NULL;
     }
 
-    GcObject* allocated = (void*)found->space;
+    GcObject* allocated = (void*)found->value;
 
     uint64_t remaining = (uint64_t)(allocated->size - bytes);
     bool splitRequired = remaining > sizeof(FreeSpace);
     if(splitRequired) {
         // move the free node's space down past the used portion
-        FreeSpace* newSpace = (void*)(((char*)found->space) + bytes);
+        FreeSpace* newSpace = (void*)(((char*)found->value) + bytes);
         *newSpace = freeSpaceCreate(remaining);
-        found->space = newSpace;
+        found->value = newSpace;
 
         *allocated = (GcObject) {
             .size = bytes
         };
     } else {
-        freeListDelete(freeList, found);
+        log_info("Attempting to delete %p, current head %p", found, freeList);
+        freeListDelete(&freeList, found);
     }
 
-    log_info("Free space at %p, %s", found->space, splitRequired ? "splitting" : "consumed ");
+    log_info("Free node %p (n: %p, p: %p), space at %p %s", found, found->next, found->prev, found->value, splitRequired ? "splitting" : "consumed ");
 
     allocated->type = type;
 
@@ -254,7 +263,7 @@ static void gcObjectFree(GcObject* object) {
     FreeSpace* newSpace = (void*)object;
     *newSpace = freeSpaceCreate(size);
 
-    freeListAppend(freeList, newSpace);
+    freeListAppend(&freeList, newSpace);
 }
 
 
@@ -287,6 +296,13 @@ void _gcVisualiseHeap(GcVisualiseHeapOpts* opts) {
             }
         }
     }
+
+    log_info("");
+    log_info("");
+    log_info("Free list:");
+
+    gcPrintFreeList();
+
     if(toProcess != memoryEnd) {
         log_info("%p - ERROR - Unexpected scan end", toProcess);
     }
