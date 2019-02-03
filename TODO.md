@@ -2,8 +2,13 @@
 
 Next action: 
 - why is `npm test -- --grep='global garbage'` (still) failing?
-    - itCanReuseMemory unit test is failing, narrower failure will be easier to debug
   - suspicious `[INFO] (gc.c:292:gcObjectFree) freeing string data 'arg0' at 0x100400408` - tho could be an call env from prev call?
+  - still same bug, atomic might fix?:
+
+
+[INFO] (/Users/timruffles/p/js-to-c/runtime/environments.c:32:envCreateForCall) Created call env 0x100806908 parent 0x100801a30, now looping over 1 args
+[ERROR] (/Users/timruffles/p/js-to-c/runtime/language.c:125:jsValuePointer) Expected pointer value, got free space at 0x100801b40
+  
 
 ## List
 
