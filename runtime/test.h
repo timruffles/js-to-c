@@ -8,4 +8,10 @@
 
 #define assertFloatEqual(A,B) { double a_f_e_result = fabs(A - B); assert(a_f_e_result < 0.000001); }
 
+#define assertStringEqual(A,B) { int r = strcmp(A,B) == 0; if(!r) { log_err("Expected \"%s\" == \"%s\"", A, B); exit(1); } }
+
+#define assertPointersEqual(A,B) { if(A != B) { log_err("Expected %p == %p", A, B); exit(1); } }
+
 void testLanguageAndGcInit(void);
+
+

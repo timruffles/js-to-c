@@ -89,7 +89,10 @@ JsValue *jsValueCreateNumber(double number) {
     return val;
 }
 
-JsValue *jsValueCreatePointer(JsValueType type, void* pointer) {
+/**
+ * Use via jsValueCreatePointer macro that ensure value and reference are atomically allocated.
+ */
+JsValue *_jsValueCreatePointer(JsValueType type, void* pointer) {
     JsValue* val = gcAllocate(sizeof(JsValue), type);
     val->value.pointer = pointer;
     return val;

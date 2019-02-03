@@ -35,8 +35,9 @@ typedef struct JsObject {
  */
 JsValue* objectCreatePlain() {
     // TODO set pt
-    JsObject *obj = gcAllocate(sizeof(JsObject), OBJECT_VALUE_TYPE);
-    JsValue *val = jsValueCreatePointer(OBJECT_TYPE, obj);
+    JsObject *obj;
+    JsValue *val;
+    jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     return val;
 }
 
@@ -48,10 +49,10 @@ JsValue* objectCreate(JsValue* prototype) {
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
     // TODO set function prototype
-    JsObject *obj = gcAllocate(sizeof(JsObject), OBJECT_VALUE_TYPE);
+    JsObject *obj;
+    JsValue *val;
+    jsValueCreatePointer(val, FUNCTION_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->callInternal = fr;
-
-    JsValue *val = jsValueCreatePointer(FUNCTION_TYPE, obj);
     return val;
 }
 

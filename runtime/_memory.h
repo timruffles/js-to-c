@@ -3,5 +3,5 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define ensureCallocBytes(V, M) V = calloc(1, M); assert(V != NULL);
+#define ensureCallocBytes(V, S) V = calloc(1, S); assert(V != NULL);
 

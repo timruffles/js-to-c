@@ -138,30 +138,44 @@ static void itCanReuseMemory() {
       .heapSize = 1200
     };
     _gcTestInit(&config);
-    log_info("After init");
-    _gcVisualiseHeap(NULL);
+    log_info("Step: after init:");
+    JsValue* root = runtimeGet()->global;
+    _gcVisualiseHeap(&(GcVisualiseHeapOpts){
+      .highlight = root,
+    });
 
     for(int i = 0; i < 8; i++) {
         objectCreatePlain();
     }
 
-    JsValue* root = runtimeGet()->global;
+    log_info("Step: allocated 10 objects of garbage");
+    _gcVisualiseHeap(NULL);
+
+    log_info("Step: allocating live object");
     JsValue* liveOne = objectCreatePlain();
+
+    GcAtomicId gid = gcAtomicGroupStart();
+    JsValue* strAlloced = stringFromLiteral("liveOne");
+    objectSet(root, strAlloced, liveOne);
+    gcAtomicGroupEnd(gid);
+    log_info("Alloced string at %p", strAlloced);
+    //JS_SET(root, "liveOne", liveOne);
+    
     _gcVisualiseHeap(&(GcVisualiseHeapOpts){
-      .highlight = (void*)liveOne,
-    });
-    JS_SET(root, "liveOne", liveOne);
-    _gcVisualiseHeap(&(GcVisualiseHeapOpts){
-      .highlight = (void*)liveOne,
+      .highlight = (void*)strAlloced,
     });
 
+    log_info("Step: force GC");
     _gcRunGlobal();
 
     for(int i = 0; i < 10; i++) {
         objectCreatePlain();
     }
 
-    _gcVisualiseHeap(NULL);
+    log_info("Step: after GC, allocated 10 objects of garbage");
+    _gcVisualiseHeap(&(GcVisualiseHeapOpts){
+      .highlight = (void*)liveOne,
+    });
 
     DEBUG_JS_VAL(liveOne);
     DEBUG_JS_VAL(JS_GET(root, "liveOne"));

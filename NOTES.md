@@ -1,5 +1,125 @@
 # Notes
 
+## 3 Feb 2019
+
+Wrapping `JS_SET` - which is a macro for something the compiler would usually do as an operation node - stopped liveOne being freed too early in this code:
+
+```c
+    log_info("allocated in %p", liveOne);
+    JS_SET(root, "liveOne", liveOne);
+```
+
+One of the allocations in this line triggered GC. The log looked like this - we never traversed to it, so it was immediately freed.
+
+```
+[INFO] (gc.c:195:_gcAllocate) Free space at 0x101001d20, consumed
+[INFO] (gc.c:195:_gcAllocate) Free space at 0x101001d50, consumed
+[INFO] (objects.c:195:objectSet) Setting liveOne in object at 0x101001a30
+[INFO] (objects.c:201:objectSet) looking in 0x101001cf0 for props
+[INFO] (gc.c:170:_gcAllocate) Out of memory, GC running
+[INFO] (gc.c:300:_gcRun) GC starting on 1 roots
+[INFO] (gc.c:306:_gcRun) marking root object at 0x101001a30 0
+[INFO] (gc.c:213:traverse) traverse object 0x101001a30
+[INFO] (gc.c:213:traverse) traverse objectValue 0x101001a00
+[INFO] (gc.c:213:traverse) traverse propertyDescriptor 0x101001cf0
+[INFO] (gc.c:211:traverse) traverse string 0x101001cd0 value 'global'
+[INFO] (gc.c:213:traverse) traverse stringValue 0x101001ca8
+[INFO] (gc.c:213:traverse) traverse propertyDescriptor 0x101001ae8
+[INFO] (gc.c:211:traverse) traverse string 0x101001ac8 value 'console'
+[INFO] (gc.c:213:traverse) traverse stringValue 0x101001aa0
+[INFO] (gc.c:213:traverse) traverse object 0x101001a80
+[INFO] (gc.c:213:traverse) traverse objectValue 0x101001a50
+[INFO] (gc.c:213:traverse) traverse propertyDescriptor 0x101001c78
+[INFO] (gc.c:211:traverse) traverse string 0x101001c58 value 'log'
+[INFO] (gc.c:213:traverse) traverse stringValue 0x101001c30
+[INFO] (gc.c:213:traverse) traverse function 0x101001c10
+[INFO] (gc.c:213:traverse) traverse objectValue 0x101001be0
+[INFO] (gc.c:213:traverse) traverse functionRecord 0x101001b60
+[INFO] (runtime.c:87:runtimeGcTraverse) GC call env stack 0
+[INFO] (gc.c:312:_gcRun) GC fully traversed 1 roots
+[INFO] (gc.c:325:_gcRun) scanned to 0x101001a00
+...
+[INFO] (gc.c:325:_gcRun) scanned to 0x101001d20
+[INFO] (gc.c:241:gcObjectFree) freeing string data 'liveOne' at 0x101001d20
+[INFO] (gc.c:325:_gcRun) scanned to 0x101001d50
+``` 
+
+Buuuuut... although it makes us get lots further through the program, writing linked lists is hard. https://www.quora.com/Why-are-linked-lists-so-hard-to-implement-in-C-C++
+
+Ah... I should be changing four pointers in my doubly linked list. I'm changing three. My linked-list unit tests weren't enforcing the invariants, they were checking behaviour in some too-small set of operations. I'd started writing a fuzzer to find this, bah. Good lesson that even 'easily' analysed things are worth fuzzing, and/or doing analysis. Obviously reusing a library is good but it has been a learning operation.
+
+### Squished it
+
+Updated the freelist to pass this test:
+
+```c
+    FreeNode* nodeA = freeListAppend(&list, &valueA);
+    FreeNode* nodeB = freeListAppend(&list, &valueB);
+    FreeNode* nodeC = freeListAppend(&list, &valueC);
+
+    // delete middle node of C <-> B <-> A
+    freeListDelete(&list, nodeB);
+
+    // C <-> A
+    assertPointersEqual(nodeC->next, nodeA);
+    assertPointersEqual(nodeA->prev, nodeC);
+```
+
+And got this!
+
+```
+[INFO] (gc.test.c:181:itCanReuseMemory) value type:free space address:0x101001da0
+[INFO] (gc.c:114:findFreeSpace) Finding free space, current list with head at 0x100500020
+[INFO] (gc.c:109:gcPrintFreeList) node:0x100500020 space:0x101001da0 next:0x100400210 prev:0x0
+[INFO] (gc.c:109:gcPrintFreeList) node:0x100400210 space:0x101001b40 next:0x1004001f0 prev:0x100500020
+[INFO] (gc.c:109:gcPrintFreeList) node:0x1004001f0 space:0x101001b18 next:0x0 prev:0x100400210
+[INFO] (gc.c:202:_gcAllocate) Attempting to delete 0x1004001f0, current head 0x100500020
+[INFO] (_freelist.c:46:freeListDelete) deleted 0x1004001f0
+[INFO] (gc.c:206:_gcAllocate) Free node 0x1004001f0 (n: 0x0, p: 0x100400210), space at 0x101001b18 consumed
+[INFO] (gc.c:114:findFreeSpace) Finding free space, current list with head at 0x100500020
+[INFO] (gc.c:109:gcPrintFreeList) node:0x100500020 space:0x101001da0 next:0x100400210 prev:0x0
+[INFO] (gc.c:109:gcPrintFreeList) node:0x100400210 space:0x101001b40 next:0x0 prev:0x100500020
+[INFO] (gc.c:202:_gcAllocate) Attempting to delete 0x100500020, current head 0x100500020
+[INFO] (_freelist.c:40:freeListDelete) deleted head 0x100500020
+[INFO] (gc.c:206:_gcAllocate) Free node 0x100500020 (n: 0x100400210, p: 0x0), space at 0x101001da0 consumed
+[INFO] (objects.c:101:objectGet) Getting liveOne
+itCanReuseMemory passed
+```
+
+My original test case had only iterated forwards, asserting `C -> A` but not `C <- A`:
+
+```c
+    assertStringEqual("300 1 ", printIntList(list));
+```
+
+### Strategic conclusion
+
+Reuse more libraries! `lib/uthash.h` was a pain to fiddle around with when prototyping, but I should have just grabbed a proven LL library as the bigger goal is to learn compilers not (admittedly still fun) data structures in C.
+
+## 2 Feb 2019
+
+Need to use `gcAtomicAllocationGroupEnter` a lot more - all reference types!
+
+Ouch, this is a lot more pervaisive than I thought. There are a lot of operations that need to be atomic.
+
+e.g
+
+```
+var i = 0;
+root["string" + i++] = {};
+console.log(root)
+```
+
+we don't want a GC to happily free anything during the compound operation, e.g
+
+```
+root["string" + i++] = {};         |
+... = allocate({})                 | allocates into A
+...[allocate("string" + i++)] ...  | GC required, no path to A so freed, allocates into B
+root[B] = < freed >
+console.log(root)                  | explodes, tries to print freed value
+```
+
 ## 27 Jan 2019
 
 - Wrote a focussed test to ensure allocation doesn't screw up

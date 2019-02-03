@@ -10,7 +10,7 @@
 
 #define TEMPLATE_BUFFER_SIZE 4096
 
-// TODO STRING_VALUE_TYPE to STRING_DATA_TYPE
+// TODO STRING_VALUE_TYPE to ...G_DATA_TY..
 typedef struct StringData {
     GcHeader;
     const char* internedString;
@@ -33,16 +33,18 @@ const char* stringGetCString(JsValue* value) {
 }
 
 /**
- * Note: must be called while protecting allocations
+ * Note: for compiler interned strings, must be called while protecting allocations
  */
 JsValue* stringCreateFromInternedString(const char* const interned, uint64_t logicalLength) {
-    // TODO add debug precondition to enforce this
-    StringData* jsString = gcAllocate(sizeof(StringData), STRING_VALUE_TYPE);
+
+    StringData* jsString;
+    JsValue* val; 
+
+    jsValueCreatePointer(val, STRING_TYPE, jsString, STRING_VALUE_TYPE, sizeof(StringData));
 
     jsString->internedString = interned;
     jsString->length = logicalLength;
 
-    JsValue* val = jsValueCreatePointer(STRING_TYPE, jsString);
     return val;
 }
 
@@ -52,10 +54,14 @@ typedef struct StringAllocation {
 } StringAllocation;
 
 static StringAllocation createHeapString(uint64_t stringLength) {
-    StringData* data = gcAllocate(sizeof(StringData) + stringLength, STRING_VALUE_TYPE);
+    StringData* data;
+    JsValue* value;
+
+    jsValueCreatePointer(value, STRING_TYPE, data, STRING_VALUE_TYPE, sizeof(StringData) + stringLength);
+
     data->length = stringLength;
     data->internedString = NULL;
-    JsValue* value = jsValueCreatePointer(STRING_TYPE, data);
+
     return (StringAllocation) {
         .string = value,
         .data = data,
