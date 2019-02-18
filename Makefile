@@ -7,8 +7,13 @@ out/runtime.dylib: runtime/*.c
 out/prelude.dylib: js-build/js-to-c.js runtime/prelude.js out/runtime.dylib
 	./compile-js-lib prelude runtime/prelude.js out/prelude.dylib
 
+build: js-build/js-to-c.js out/runtime.dylib out/prelude.dylib
+
 .PHONY: clean
-clean: js-build/js-to-c.js out/runtime.dylib out/prelude.dylib
+clean:
+	rm -rf out/* js-build/*
+
+
 
 .PHONY: install
 install:
