@@ -2,7 +2,7 @@
 
 A compiled implementation of ES5, targetting C.
 
-Read my [notes](https://github.com/timruffles/js-to-c/blob/dev/NOTES.md) for a rough development blog.
+Read my [notes](NOTES.md) for a rough dev notes, or read more polished write ups on [my blog](https://timr.co).
 
 Next thing to do - see [TODO.md](TODO.md).
 
