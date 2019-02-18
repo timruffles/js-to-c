@@ -55,7 +55,7 @@ typedef struct FreeSpace {
 // TODO might be worth moving these module variables to runtime
 static void* memory;
 static void* memoryEnd;
-static void** freeList = NULL;
+static FreeNode* freeList = NULL;
 
 static const uint64_t NO_GROUP_ID = ULLONG_MAX;
 
@@ -89,7 +89,7 @@ void gcInit(Config* config) {
     *space = freeSpaceCreate(heapSize);
 
     // then initialise our free list with a single node pointing at our space
-    FreeNode* p = freeListAppend(&freeList, space);
+    freeListAppend(&freeList, space);
 
     log_info("gcInit returning, freeSpace at %p", space);
 }
@@ -102,12 +102,6 @@ void _gcTestInit(Config* config) {
         free(memory);
     }
     runtimeInit(config);
-}
-
-static void gcPrintFreeList() {
-    FREE_LIST_ITERATE(&freeList, node) {
-      GcObject* value = node->value;
-    }
 }
 
 static FreeNode* findFreeSpace(size_t bytes) {

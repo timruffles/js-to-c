@@ -7,4 +7,4 @@
 test=$1
 output=${test/.c/} 
 
-./link-c $test $output && lldb -o run ${output}
+./link-c $test $output && lldb -S ./test/lldb.conf -o run ${output}

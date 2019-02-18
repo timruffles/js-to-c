@@ -11,7 +11,7 @@ Env *envCreateRoot(void);
 
 Env *envFromGlobal(JsValue*);
 Env *envCreate(Env *const parent);
-Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount);
+Env *envCreateForCall(Env* parent, JsValue* argumentNames[], uint64_t argCount, JsValue* argumentValues[], uint64_t suppliedArgCount);
 
 void envDestroy(Env *);
 

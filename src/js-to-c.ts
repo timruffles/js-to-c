@@ -53,13 +53,17 @@ export class InternedString {
 
 export type JsIdentifier = string;
 
-export class IntermediateVariableTarget {
+interface CompilerIdentifier {
+    id: string
+}
+
+export class IntermediateVariableTarget implements CompilerIdentifier {
     static readonly type = 'IntermediateVariableTarget';
     readonly type: typeof IntermediateVariableTarget.type = IntermediateVariableTarget.type;
     constructor(readonly id: JsIdentifier) {}
 }
 
-export class PredefinedVariableTarget {
+export class PredefinedVariableTarget implements CompilerIdentifier {
     static readonly type = 'PredefinedVariableTarget';
     readonly type: typeof PredefinedVariableTarget.type = PredefinedVariableTarget.type;
     constructor(readonly id: JsIdentifier) {}
@@ -333,17 +337,19 @@ function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeS
     }
 }
 
+
 // used by any node that evaluates to a value to assign that value to the target
-function assignToTarget(cExpression: string, target: CompileTarget) {
+function assignToTarget(cExpression: string, target: CompileTarget, {gcAtomicId}: { gcAtomicId?: CompilerIdentifier } = {}) {
+    const atomicGroupSrc = gcAtomicId ? `gcAtomicGroupEnd(${gcAtomicId.id});` : ''
     switch(target.type) {
         case 'SideEffectTarget':
-            return `${cExpression};`;
+            return `${cExpression};${atomicGroupSrc}`;
         case IntermediateVariableTarget.type:
-            return `JsValue* ${target.id} = (${cExpression});`;
+            return `JsValue* ${target.id} = (${cExpression});${atomicGroupSrc}`;
         case PredefinedVariableTarget.type:
-            return `${target.id} = (${cExpression});`;
+            return `${target.id} = (${cExpression});${atomicGroupSrc}`;
         case 'ReturnTarget':
-            return `return (${cExpression});`;
+            return `{ JsValue* returnValue = (${cExpression});${atomicGroupSrc}; return returnValue; }`;
     }
 }
 
@@ -394,11 +400,13 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
         : `JsValue** ${argsArrayVar} = NULL;`;
 
 
+    const gcAtomicId = new IntermediateVariableTarget(state.getNextSymbol('gid'));
     const isNew = node.type === 'NewExpression';
     const runtimeOperation = isNew ? 'objectNewOperation' : 'functionRunWithArguments';
     const thisArgumentSrc = isNew ? '' : ',NULL';
 
-    return `${calleeSrc}
+    return `GcAtomicId ${gcAtomicId.id} = gcAtomicGroupStart();
+            ${calleeSrc}
             ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
             ${argsArrayInit}
             ${assignToTarget(`${runtimeOperation}(
@@ -406,7 +414,9 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
                 ${argsArrayVar},
                 ${argsWithTargets.length}
                 ${thisArgumentSrc}
-            )`, state.target)}
+            )`, state.target, {
+                gcAtomicId,
+            })}
             `;
 }
 

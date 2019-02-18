@@ -1,6 +1,7 @@
 # Todos
 
 Next action: 
+- look at how to break on exit - failing precondition at language.c:125
 - why is `npm test -- --grep='global garbage'` (still) failing?
   - suspicious `[INFO] (gc.c:292:gcObjectFree) freeing string data 'arg0' at 0x100400408` - tho could be an call env from prev call?
   - still same bug, atomic might fix?:

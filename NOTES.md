@@ -1,12 +1,21 @@
 # Notes
 
+## 17 Feb 2019
+
+Well, added gcAtomicGroupStart/End and still go the same issue... so seems like many points we likely need to make compile use GC in an atomic way.
+
+Huh... I fixed a bug in functionRecord and the this went away. Questions:
+- is there a good unit test for types and freeing? e.g `tCreate(); tFree(); assertNoUnfreed();`
+- did the gcAtomicStuff fix a real bug; can I recreate it?
+  - quite fine grained situation.
+
 ## 3 Feb 2019
 
 Wrapping `JS_SET` - which is a macro for something the compiler would usually do as an operation node - stopped liveOne being freed too early in this code:
 
 ```c
-    log_info("allocated in %p", liveOne);
-    JS_SET(root, "liveOne", liveOne);
+log_info("allocated in %p", liveOne);
+JS_SET(root, "liveOne", liveOne);
 ```
 
 One of the allocations in this line triggered GC. The log looked like this - we never traversed to it, so it was immediately freed.

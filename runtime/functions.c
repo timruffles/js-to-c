@@ -30,11 +30,10 @@ JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint6
     log_info("Getting fn record");
     FunctionRecord* record = objectGetCallInternal(val);
     log_info("Fn record %p", record);
-    assert(record->argumentCount == argumentCount);
 
     GcAtomicId gid = gcAtomicGroupStart();
 
-    Env* callEnv = envCreateForCall(record->env, record->argumentNames, argumentValues, record->argumentCount);
+    Env* callEnv = envCreateForCall(record->env, record->argumentNames, record->argumentCount, argumentValues, argumentCount);
 
     runtimeEnterEnv(callEnv);
 
@@ -44,7 +43,6 @@ JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint6
 
     JsValue* returnVal = _functionRun(val, callEnv);
     runtimeExitEnv();
-
     gcAtomicGroupEnd(gid);
 
     return returnVal;
@@ -71,5 +69,8 @@ void functionGcTraverse(GcObject* value, GcCallback* cb) {
     objectGcTraverse((void*)object, cb);
     FunctionRecord* record = objectGetCallInternal(object);
     cb(record);
+    for(uint64_t i = 0; i < record->argumentCount; i++) {
+        cb(record->argumentNames[i]);
+    }
     cb(record->env);
 }

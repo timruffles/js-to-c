@@ -26,27 +26,31 @@ Env *envCreate(Env* parent) {
     return objectCreate(parent);
 }
 
-Env *envCreateForCall(Env* parent, JsValue* argumentNames[], JsValue* argumentValues[], uint64_t argCount) {
-    // TODO argh shiiiiiiite how do we protect against GC here?!
+/**
+ * Create a env used for a given function call
+ **/
+Env *envCreateForCall(Env* parent, JsValue* argumentNames[], uint64_t argCount, JsValue* argumentValues[], uint64_t suppliedArgumentCount) {
     Env* callEnv = envCreate(parent);
     log_info("Created call env %p parent %p, now looping over %llu args", callEnv, parent, argCount);
     for(uint64_t i = 0; i < argCount; i++) {
-        log_info("Env name %s", stringGetCString(argumentNames[0]));
+        log_info("Env name %s", stringGetCString(argumentNames[i]));
         envDeclare(callEnv, argumentNames[i]);
-        envSet(callEnv, argumentNames[i], argumentValues[i]);
+        JsValue* val = i < suppliedArgumentCount ? argumentValues[i] : getUndefined();
+        envSet(callEnv, argumentNames[i], val);
     }
     log_info("Setup new call env");
     return callEnv;
 }
 
 JsValue *envGet(Env *env, JsValue *name) {
+    precondition(jsValueType(name) == STRING_TYPE, "Attempted to lookup non-string in env");
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {
-        log_info("Looked up undeclared %s", stringGetCString(name));
+        log_info("Looked up undeclared variable '%s'", stringGetCString(name));
         exceptionsThrowReferenceError(
             stringCreateFromTemplate("%s is not defined", stringGetCString(name)));
     }
-    log_info("Looked up %s in %p got type %s", stringGetCString(name), env, jsValueReflect(found).name);
+    log_info("Looked up '%s' in %p got type %s", stringGetCString(name), env, jsValueReflect(found).name);
     return found;
 }
 
