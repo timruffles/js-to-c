@@ -353,12 +353,25 @@ GcAtomicId gcAtomicGroupStart() {
 void gcAtomicGroupEnd(GcAtomicId id) {
     RuntimeEnvironment* rt = runtimeGet();
     uint64_t nextToExit = rt->gcAtomicGroupId + rt->gcAtomicGroupDepth - 1;
-    precondition(id == nextToExit, "atomic group exit out of order");
+    precondition(id == nextToExit, "atomic group exit out of order %llu should be %llu",
+        id, nextToExit);
     rt->gcAtomicGroupDepth -= 1;
     if(rt->gcAtomicGroupDepth == 0) {
         // group complete, mark stale by incrementing counter
         rt->gcAtomicGroupId += 1;
     }
+}
+
+/**
+ * When an exception is triggered midway through an atomic operation,
+ * clear all atomic groups so they can be GC'd.
+ *
+ * HMM - it seems likely this is legit, as we'll be jumping out of the
+ * context and the value being created inside the group won't be refered to.
+ */
+void gcOnExceptionsThrow() {
+    RuntimeEnvironment* rt = runtimeGet();
+    rt->gcAtomicGroupId = NO_GROUP_ID;
 }
 
 /**

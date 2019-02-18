@@ -9,6 +9,12 @@ Huh... I fixed a bug in functionRecord and the this went away. Questions:
 - did the gcAtomicStuff fix a real bug; can I recreate it?
   - quite fine grained situation.
 
+### Oh dear
+
+`gcAtomicGroupStart` and exceptions being thrown. Tricky, but immediate thoughts: auto end all groups? I think this'll actually be ok - it seems likely this is legit, as we'll be jumping out of the context and the value being created inside the group won't be refered to.
+
+However, I think there's a bug in the gc group logic.
+
 ## 3 Feb 2019
 
 Wrapping `JS_SET` - which is a macro for something the compiler would usually do as an operation node - stopped liveOne being freed too early in this code:

@@ -4,8 +4,7 @@ example="""
 throw new Error("Test");
 """
 
-errorOutMatch="Error: Test"
-
+expectJsException="Error: Test"
 
 ["call stacks"]
 
@@ -24,6 +23,7 @@ A();
 """
 
 errorOutMatch="Error: B threw[\s\\n]+at B[\s\\n]+at A"
+expectJsException='Error: B threw'
 
 
 ["catching"]
@@ -73,10 +73,7 @@ var A = '';
 A();
 """
 
-errorOutMatch="Uncaught TypeError: A is not a function"
-
-expectedStatus="1"
-
+expectJsException="Uncaught TypeError: A is not a function"
 
 ["reference error"]
 
@@ -84,9 +81,7 @@ example="""
 A();
 """
 
-errorOutMatch="Uncaught ReferenceError: A is not defined"
-
-expectedStatus="1"
+expectJsException="Uncaught ReferenceError: A is not defined"
 
 
 ["dereference undefined"]
@@ -97,9 +92,7 @@ var A;
 A.thingy;
 """
 
-errorOutMatch="Uncaught TypeError: Cannot read property 'thingy' of undefined"
-
-expectedStatus="1"
+expectJsException="Uncaught TypeError: Cannot read property 'thingy' of undefined"
 
 ["Error works identically without 'new'"]
 

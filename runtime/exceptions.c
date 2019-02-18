@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "language.h"
+#include "gc.h"
 #include "objects.h"
 #include "strings.h"
 #include "exceptions.h"
@@ -70,6 +71,8 @@ void exceptionsThrow(JsValue* error) {
         unhandledException(error);
     } else {
         runtime->thrownError = error;
+
+        gcOnExceptionsThrow();
 
         jmp_buf target;
         memcpy(target, exceptionsJumpBuf, sizeof(jmp_buf));

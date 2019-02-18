@@ -94,3 +94,8 @@ The runtime is built into a dynamic library to avoid recompiling. There's also a
 ## Runtime
 
 Files prefixed `_` are private to the runtime and should not be relied on.
+
+## Potential issues
+
+`grep` for `HMM` to see potential problems I'm leaving alone for now as they seem tricky to solve properly/I'm unsure they'll be a problem in practice. Good place to look if weird bugs occur.
+

@@ -58,7 +58,8 @@ function updateFixture({ name, tests, testFile }) {
             const spawnResult = execFn(executable, { env: ${JSON.stringify(env)} });
             assertOutput(
               spawnResult,
-              ${JSON.stringify(testSetup, null, '\t')}
+              ${JSON.stringify(testSetup, null, '\t')},
+              { cFile }
             );
           });`
     }).join('\n\n');

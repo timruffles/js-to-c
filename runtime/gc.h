@@ -19,6 +19,7 @@ void* _gcAllocate(size_t, int type);
 
 GcAtomicId gcAtomicGroupStart(void);
 void gcAtomicGroupEnd(GcAtomicId);
+void gcOnExceptionsThrow(void);
 
 void gcStartProtectAllocations(void);
 void gcStopProtectAllocations(void);

@@ -802,7 +802,7 @@ function compileTryStatement(node: TryStatement, state: CompileTimeState) {
         JsValue* errorVars[1] = { runtimeGet()->thrownError };
         JsValue* errorNames[1] = { ${errorName.id} };
         Env* parentEnv = env;
-        Env* env = envCreateForCall(parentEnv, errorNames, errorVars, 1);
+        Env* env = envCreateForCall(parentEnv, errorNames, 1, errorVars, 1);
         ${compile(catchClause.body, state)}
     }`;
 

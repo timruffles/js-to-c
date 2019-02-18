@@ -39,6 +39,8 @@ exports.debugExecutable = function(path, opts) {
     return exports.runExecutable("/usr/bin/lldb", ["-S", "./test/lldb.conf", "-o", "run", path], opts);
 }
 
+const MISSING_ARG = {}
+
 exports.assertOutput = function({
     stderr,
     stdout,
@@ -51,11 +53,24 @@ exports.assertOutput = function({
     outputMatch,
     errorOut,
     errorOutMatch,
-    expectedStatus = 0,
+    expectedStatus = MISSING_ARG,
+    expectJsException,
+}, {
+    cFile,
 }) {
+
+    if(expectJsException && expectedStatus === MISSING_ARG) {
+        expectedStatus = 1
+    }
+
+    if(expectedStatus === MISSING_ARG) {
+        expectedStatus = 0
+    }
+
     const errors = compositeErrors(
         () => assert.isUndefined(error, 'unexpected execution error'),
-        () => assert.isNull(signal, 'unexpected signal'),
+        /* we expect SIGABT with exceptions */
+        () => !expectJsException && assert.isNull(signal, 'unexpected signal'),
         () => {
             if(expectedStatus != null) {
                 assert.equal(status, expectedStatus, 'unexpected status');
@@ -88,7 +103,8 @@ exports.assertOutput = function({
         process.stdout.write(stderr);
     }
 
-    assert.deepEqual(errors.map(formatError), []);
+    const debugCmd = `./scripts/debug-system-test ${cFile}`
+    assert.deepEqual(errors.map(formatError), [], `failed, to debug: \n${debugCmd}`);
 }
 
 function formatError({stack, message, name}) {
