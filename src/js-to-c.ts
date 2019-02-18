@@ -428,7 +428,10 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
 }
 
 function compileIdentifier(node: Identifier, state: CompileTimeState) {
-    const interned = state.internString(node.name);
+   if(node.name === 'undefined') {
+       return assignToTarget(`getUndefined()`, state.target);
+   }
+   const interned = state.internString(node.name);
    return assignToTarget(
        `envGet(env, ${interned.reference})`,
        state.target,
