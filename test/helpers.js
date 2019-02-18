@@ -32,9 +32,11 @@ exports.runExecutable = function(path, opts) {
         return spawnSync(path, opts);
     } catch(e) {
         console.log(e);
-        
         return e;
     }
+}
+exports.debugExecutable = function(path, opts) {
+    return exports.runExecutable("/usr/bin/lldb", ["-S", "./test/lldb.conf", "-o", "run", path], opts);
 }
 
 exports.assertOutput = function({
@@ -52,11 +54,11 @@ exports.assertOutput = function({
     expectedStatus = 0,
 }) {
     const errors = compositeErrors(
-        () => assert.isUndefined(error),
-        () => assert.isUndefined(signal),
+        () => assert.isUndefined(error, 'unexpected execution error'),
+        () => assert.isNull(signal, 'unexpected signal'),
         () => {
             if(expectedStatus != null) {
-                assert.equal(status, expectedStatus);
+                assert.equal(status, expectedStatus, 'unexpected status');
             }
         },
         () => {
@@ -81,10 +83,20 @@ exports.assertOutput = function({
         },
     )
 
-    assert.deepEqual(errors, [], 
-        process.env.TEST_DEBUG
-          ? `failed - stdout:\n${stdout}\n\nstderr:\n${stderr}`
-          : undefined);
+    if(process.env.TEST_DEBUG) {
+        process.stdout.write(stdout);
+        process.stdout.write(stderr);
+    }
+
+    assert.deepEqual(errors.map(formatError), []);
+}
+
+function formatError({stack, message, name}) {
+    return {
+        name,
+        message,
+        stack,
+    }
 }
 
 function compositeErrors(...tests) {

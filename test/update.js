@@ -54,8 +54,8 @@ function updateFixture({ name, tests, testFile }) {
         return `it${skip}("${name}", () => {
             const cFile = compile('${fixtureFile}');
             const executable = link(cFile);
-            const spawnResult = runExecutable(executable, { env: ${JSON.stringify(env)} });
-            
+            const execFn = process.env.TEST_DEBUG ? debugExecutable : runExecutable;
+            const spawnResult = execFn(executable, { env: ${JSON.stringify(env)} });
             assertOutput(
               spawnResult,
               ${JSON.stringify(testSetup, null, '\t')}
@@ -64,7 +64,7 @@ function updateFixture({ name, tests, testFile }) {
     }).join('\n\n');
 
     const testFileSrc = `'use strict';
-    const { compile, runExecutable, link, assertOutput } = require("../helpers.js");
+    const { compile, runExecutable, debugExecutable, link, assertOutput } = require("../helpers.js");
 
     describe("${name}", () => {
       ${testsSrc}
