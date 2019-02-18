@@ -28,7 +28,7 @@ static void unhandledException(JsValue* error) {
       stringGetCString(objectGet(error, stringFromLiteral("message"))));
 
     fprintf(stderr, "%s", buffer);
-    exit(1);
+    assert(0);
 }
 
 void exceptionsTryStart(Env* env) {

@@ -22,13 +22,13 @@
 
 #define log_info(M, ...) fprintf(stderr, "[INFO] (%s:%d:%s) " M "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)
 
-#define ensure(T, M) if(!(T)) { log_err(#T); exit(1); }
+#define ensure(T, M) if(!(T)) { log_err(#T); assert(0); }
 
-#define precondition(T, M, ...) if(!(T)) { log_err(M, ##__VA_ARGS__); exit(1); }
+#define precondition(T, M, ...) if(!(T)) { log_err(M, ##__VA_ARGS__); assert(0); }
 
-#define ensureAlloced(V) if((V) == NULL) { log_err("Could not allocate memory for '%s'", #V); exit(1); }
+#define ensureAlloced(V) if((V) == NULL) { log_err("Could not allocate memory for '%s'", #V); assert(0); }
 
-#define fail(M, ...)  { log_err(M, ##__VA_ARGS__); exit(1); }
+#define fail(M, ...)  { log_err(M, ##__VA_ARGS__); assert(0); }
 
 #pragma clang diagnostic pop
 
