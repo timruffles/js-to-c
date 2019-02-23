@@ -372,6 +372,7 @@ void gcAtomicGroupEnd(GcAtomicId id) {
 void gcOnExceptionsThrow() {
     RuntimeEnvironment* rt = runtimeGet();
     rt->gcAtomicGroupId = NO_GROUP_ID;
+    rt->gcAtomicGroupDepth = 0;
 }
 
 /**

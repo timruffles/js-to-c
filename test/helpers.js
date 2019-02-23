@@ -54,23 +54,27 @@ exports.assertOutput = function({
     errorOut,
     errorOutMatch,
     expectedStatus = MISSING_ARG,
+    expectedSignal = MISSING_ARG,
     expectJsException,
 }, {
     cFile,
 }) {
 
-    if(expectJsException && expectedStatus === MISSING_ARG) {
-        expectedStatus = 1
-    }
-
-    if(expectedStatus === MISSING_ARG) {
+    if(expectJsException) {
+        // exits with 128 + numeric val of signal (SIGABT), which gives exit code 134 (ignored by node and treated as null)
+        expectedSignal = 'SIGABRT'
+        errorOutMatch = expectJsException;
+        assert(expectedStatus == MISSING_ARG)
+        expectedStatus = null
+    } else if(expectedStatus === MISSING_ARG) {
         expectedStatus = 0
     }
 
     const errors = compositeErrors(
         () => assert.isUndefined(error, 'unexpected execution error'),
-        /* we expect SIGABT with exceptions */
-        () => !expectJsException && assert.isNull(signal, 'unexpected signal'),
+        () => expectedSignal === MISSING_ARG 
+          ? assert.isNull(signal, 'unexpected signal')
+          : assert.equal(signal, expectedSignal, 'wrong signal'),
         () => {
             if(expectedStatus != null) {
                 assert.equal(status, expectedStatus, 'unexpected status');
@@ -93,6 +97,7 @@ exports.assertOutput = function({
         },
         () => {
             if(errorOutMatch != null) {
+                
                 assert.match(stderr.toString(), new RegExp(errorOutMatch, 'm'));
             }
         },

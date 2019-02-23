@@ -1,10 +1,10 @@
 ["global exceptions"]
 
 example="""
-throw new Error("Test");
+throw new Error("BOOM");
 """
 
-expectJsException="Error: Test"
+expectJsException="Error: BOOM"
 
 ["call stacks"]
 
@@ -117,3 +117,40 @@ console.log(A());
 output="B threw"
 
 
+["exceptions and GC - torture test"]
+
+
+example="""
+try {
+  var x
+  var y
+
+  function doThing() {
+      y = "result: " + makeGarbage() + t()
+  }
+
+  try {
+      x = makeGarbage()
+      // not really necessary to do this in a fn, just want to make
+      // this as akward as possible
+      doThing()
+  } catch(e) {
+      y = y === undefined ? "it worked" : "FAIL:" + y
+      throw Error("x")
+  }
+} catch(e) {
+  console.log(x,y)
+}
+
+function t() { throw Error("boom") }
+function makeGarbage() {
+  // silly loop to make loads of garbage objects
+  var r = 0
+  for(var i = 0; i < 100; i++) {
+    r = ({ a: 10 }).a + r
+  }
+  return r
+}
+"""
+
+output="1000 it worked"

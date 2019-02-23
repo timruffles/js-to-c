@@ -43,3 +43,20 @@ console.log(a.testKey);
 """
 
 output = "testValue"
+
+["assignment"]
+
+example = """
+function getQux() {
+  return "qux"
+}
+var a = {};
+a.foo = "foo"
+a.bar = getQux();
+a.bar = "bar"
+
+console.log(a.foo);
+console.log(a.bar);
+"""
+
+output = "foo\nbar"

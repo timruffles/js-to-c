@@ -1,5 +1,72 @@
 # Notes
 
+## 23 Feb 2019
+
+Did a heap of thinking about the GC atomic stuff, and realised I was on the wrong track. Taking a graph based view of it, I realised two big things:
+
+1. we need to ensure each operation protects the *result* of each sub-operation, not the whole lot.
+2. it's try/catch blocks that make up the important units of clearing sub-operations on exception throws
+
+So I'll switch to something more like:
+
+```
+// JS
+a.bar = (x + y) + d()
+
+digraph ops {
+  assignment -> memberExp
+  memberExp -> a
+  memberExp -> bar
+  
+  assignment -> addA
+  addA -> addB
+  addA -> callD
+  addB -> x
+  addB -> y
+}
+```
+
+It took a lot of drawing but I believe that inductively if each operation ensures its sub-results are protected from GC, we'll not have any issues. Since each operation results in a single JsValue, we're all set.
+
+On a throw, we'll jump to a catch node. We can tell from the catch stack which nodes have been skipped, so we should invalidate all the protected sub-results before continuing to the catch block. Function calls don't need to be explicitly referenced in this process. 
+
+Here's an annotated torture test
+
+```javascript
+try {
+  var x
+  var y
+
+  function doThing() {
+      y = makeGarbage() + t()
+  }
+
+  try {
+      x = makeGarbage()
+      // not really necessary to do this in a fn, just want to make
+      // this as akward as possible
+      doThing()
+  } catch(e) {
+      y = y === undefined ? "it worked" : "FAIL:" + y
+      throw Error("x")
+  }
+} catch(e) {
+  // expect: 1000, "it worked"
+  console.log(x)
+}
+
+function t() { throw Error("boom") }
+function makeGarbage() {
+  // silly loop to make loads of garbage objects
+  var r = 0
+  for(var i = 0; i < 100; i++) {
+    r = ({ a: 10 }).a + r
+  }
+  return r
+}
+```
+
+
 ## 17 Feb 2019
 
 Well, added gcAtomicGroupStart/End and still go the same issue... so seems like many points we likely need to make compile use GC in an atomic way.
