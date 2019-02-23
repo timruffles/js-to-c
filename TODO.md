@@ -5,8 +5,6 @@ Next action:
 
 ## List
 
-- interned strings shouldn't be subject to GC
-- Adding stack trace library would be very useful!
 - Why is Error undefined when thrown?
 - Object System
   - debugging - list keys
