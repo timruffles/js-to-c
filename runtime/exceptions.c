@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "language.h"
+#include "_memory.h"
 #include "gc.h"
 #include "objects.h"
 #include "strings.h"
@@ -17,8 +18,10 @@ jmp_buf exceptionsJumpBuf;
 
 typedef struct JsCatch {
     struct JsCatch* parent;
+    bool isRoot;
     Env* env;
     jmp_buf jumpBuf;
+    GcProtectedValue* gcProtectedValues;
 } JsCatch;
 
 static void unhandledException(JsValue* error) {
@@ -49,17 +52,19 @@ void exceptionsCatchStart(Env* env) {
 
 static void catchStackPop() {
     RuntimeEnvironment* runtime = runtimeGet();
+    precondition(runtime->catchStack != NULL, "catch stack root popped");
+
     JsCatch* newHead = runtime->catchStack->parent;
     free(runtime->catchStack);
     runtime->catchStack = newHead;
-    if(newHead) {
+    if(!newHead->isRoot) {
         memcpy(exceptionsJumpBuf, newHead->jumpBuf, sizeof(jmp_buf));
     }
 }
 
 void exceptionsCatchEnd() {
     RuntimeEnvironment* runtime = runtimeGet();
-    if(runtime->catchStack == NULL) {
+    if(runtime->catchStack->isRoot) {
         fail("Ending catch when none started");
     }
     catchStackPop();
@@ -67,12 +72,12 @@ void exceptionsCatchEnd() {
 
 void exceptionsThrow(JsValue* error) {
     RuntimeEnvironment* runtime = runtimeGet();
-    if(runtime->catchStack == NULL) {
+    if(runtime->catchStack->isRoot) {
         unhandledException(error);
     } else {
         runtime->thrownError = error;
 
-        gcOnExceptionsThrow();
+        //gcOnExceptionsThrow();
 
         jmp_buf target;
         memcpy(target, exceptionsJumpBuf, sizeof(jmp_buf));
@@ -98,3 +103,44 @@ void exceptionsThrowTypeError(JsValue* message) {
 }
 
 
+void _exceptionsGcProtect(JsValue* value) {
+    RuntimeEnvironment* rt = runtimeGet();
+    GcObject* obj = (void*)value;
+    obj->protect = true;
+    GcProtectedValue* head = rt->catchStack->gcProtectedValues;
+    GcProtectedValue* newHead;
+    ensureCallocBytes(newHead, sizeof(GcProtectedValue));
+    *newHead = (GcProtectedValue){
+        .next = head,
+        .value = obj,
+    };
+    rt->catchStack->gcProtectedValues = newHead;
+}
+
+void _exceptionsGcUnprotectAfterThrow() {
+    RuntimeEnvironment* rt = runtimeGet();
+    JsCatch* stack = rt->catchStack;
+    while(stack->gcProtectedValues != NULL) {
+        _exceptionsGcUnprotect();
+    }
+}
+
+GcObject* _exceptionsGcUnprotect() {
+    RuntimeEnvironment* rt = runtimeGet();
+    JsCatch* stack = rt->catchStack;
+    precondition(stack->gcProtectedValues != NULL, "popped too many values");
+    GcObject* value = stack->gcProtectedValues->value;
+    value->protect = false;
+    stack->gcProtectedValues = stack->gcProtectedValues->next;
+    return value;
+}
+
+JsCatch* exceptionsRootCatchCreate() {
+    JsCatch* catch;
+    ensureCallocBytes(catch, sizeof(JsCatch));
+    *catch = (JsCatch) {
+        .parent = NULL,
+        .isRoot = true,
+    };
+    return catch;
+}

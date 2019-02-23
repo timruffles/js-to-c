@@ -1,4 +1,5 @@
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wunused-function"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -106,25 +107,31 @@ static void itCanPreventGcInTheMiddleOfAGroupOfOperations() {
 
     // start a group - although there is no path from root
     // to these objects they should stay live
-    GcAtomicId id = gcAtomicGroupStart();
     JsValue* itemOne = objectCreatePlain();
     JS_SET(itemOne, "someProp", jsValueCreateNumber(10.3));
     JsValue* itemTwo = objectCreatePlain();
 
     _gcVisualiseHeap(&(GcVisualiseHeapOpts){
-        .highlight = notInGroup
+        .highlight = (void*)notInGroup
     });
+
+    gcProtectValue(itemOne);
+    gcProtectValue(itemTwo);
 
     _gcRunGlobal();
     JS_SET(itemTwo, "itemOne", itemOne);
-    gcAtomicGroupEnd(id);
 
     assert(jsValueNumber(JS_GET(JS_GET(itemTwo, "itemOne"), "someProp")) == 10.3);
-
     // either no longer a number, or a different one
     if(jsValueType(notInGroup) == NUMBER_TYPE) {
         refuteFloatEqual(uniqueIshValue, jsValueNumber(notInGroup));
     }
+
+    gcUnprotectValues(2);
+
+    _gcRunGlobal();
+    assert(jsValueType(itemOne) == FREE_SPACE_TYPE);
+    assert(jsValueType(itemTwo) == FREE_SPACE_TYPE);
 }
 
 static void itPreventsOverAllocation() {
@@ -168,14 +175,14 @@ static void itCanReuseMemory() {
 
 
 int main() {
-    test(itCanTestInitWithoutInit); 
-    test(itCanTestInitAfterInit); 
-    test(itAllocates); 
-    test(itSetsSizeAndType);
+    //test(itCanTestInitWithoutInit); 
+    //test(itCanTestInitAfterInit); 
+    //test(itAllocates); 
+    //test(itSetsSizeAndType);
 
-    test(itGarbageCollectsCorrectly);
-    test(itCanGcObjectProperties);
+    //test(itGarbageCollectsCorrectly);
+    //test(itCanGcObjectProperties);
     test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
-    test(itPreventsOverAllocation);
-    test(itCanReuseMemory);
+    //test(itPreventsOverAllocation);
+    //test(itCanReuseMemory);
 }

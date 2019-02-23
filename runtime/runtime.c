@@ -24,6 +24,7 @@ static RuntimeEnvironment* runtimeCreate() {
     *runtime = (RuntimeEnvironment) {
         .gcAtomicGroupId = 1,
         .gcAtomicGroupDepth = 0,
+        .catchStack = exceptionsRootCatchCreate(),
     };
 
     return runtime;

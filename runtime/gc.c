@@ -36,6 +36,7 @@
 
 #include "lib/debug.h"
 #include "gc.h"
+#include "exceptions.h"
 #include "language.h"
 #include "assert.h"
 #include "objects.h"
@@ -56,16 +57,6 @@ typedef struct FreeSpace {
 static void* memory;
 static void* memoryEnd;
 static FreeNode* freeList = NULL;
-
-static const uint64_t NO_GROUP_ID = ULLONG_MAX;
-
-static GcAtomicId gcCurrentGroupId() {
-    RuntimeEnvironment* rt = runtimeGet();
-    uint16_t depth = rt->gcAtomicGroupDepth;
-    return depth == 0
-        ? NO_GROUP_ID 
-        : rt->gcAtomicGroupId + depth - 1;
-}
 
 static FreeSpace freeSpaceCreate(uint64_t size) {
     return (FreeSpace) {
@@ -195,17 +186,12 @@ void* _gcAllocate(size_t bytes, int type) {
 
     allocated->type = type;
 
-    GcAtomicId id = gcCurrentGroupId();
-    if(id != NO_GROUP_ID) {
-        allocated->atomicGroupId = id;
-    }
-
     return allocated;
 }
 
 static void mark(GcObject* item);
 
-static void traverse(GcObject* object) {
+static void traverse(GcObject* object, GcCallback* callback) {
     if(object->type == STRING_TYPE) {
         log_info("traverse string %p value '%s'", object, stringGetCString((void*)object));
     } else {
@@ -214,13 +200,13 @@ static void traverse(GcObject* object) {
 
     switch(object->type) {
         case OBJECT_TYPE:
-            objectGcTraverse((void*)object, (GcCallback*)mark);
+            objectGcTraverse((void*)object, callback);
             break;
         case STRING_TYPE:
-            stringGcTraverse(object, (GcCallback*)mark);
+            stringGcTraverse(object, callback);
             break;
         case FUNCTION_TYPE:
-            functionGcTraverse(object, (GcCallback*)mark);
+            functionGcTraverse(object, callback);
             break;
         // TODO - strings copy over string
         default:
@@ -231,7 +217,7 @@ static void traverse(GcObject* object) {
 static void mark(GcObject* item) {
     if(!item->marked) {
         item->marked = true;
-        traverse(item);
+        traverse(item, (GcCallback*)&mark);
     }
 }
 
@@ -312,8 +298,6 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 
     uint64_t freed = 0;
 
-    const GcAtomicId groupId = gcCurrentGroupId();
-
     // scan entire heap
     GcObject* toProcess;
     for(toProcess = memory;
@@ -325,7 +309,7 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 
         if(toProcess->type == FREE_SPACE_TYPE) continue;
 
-        if(toProcess->marked || toProcess->atomicGroupId >= groupId) {
+        if(toProcess->marked || toProcess->protect) {
             // reset for next GC run
             toProcess->marked = false;
         } else {
@@ -342,25 +326,25 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
     log_info("GC complete, %lli bytes collected", freed);
 }
 
-GcAtomicId gcAtomicGroupStart() {
-    // first group gets group ID, rest sequentially increase from there
-    RuntimeEnvironment* rt = runtimeGet();
-    uint64_t startDepth = rt->gcAtomicGroupDepth;
-    rt->gcAtomicGroupDepth += 1;
-    return rt->gcAtomicGroupId + startDepth;
+void gcProtectValue(JsValue* value) {
+    log_info("protecting %s", gcObjectReflect(value).name);
+    _exceptionsGcProtect(value);
+    traverse((void*)value, (GcCallback*)gcProtectValue);
 }
 
-void gcAtomicGroupEnd(GcAtomicId id) {
-    RuntimeEnvironment* rt = runtimeGet();
-    uint64_t nextToExit = rt->gcAtomicGroupId + rt->gcAtomicGroupDepth - 1;
-    precondition(id == nextToExit, "atomic group exit out of order %llu should be %llu",
-        id, nextToExit);
-    rt->gcAtomicGroupDepth -= 1;
-    if(rt->gcAtomicGroupDepth == 0) {
-        // group complete, mark stale by incrementing counter
-        rt->gcAtomicGroupId += 1;
+static void unprotectRecursive(GcObject*);
+static void unprotectRecursive(GcObject* object) {
+    object->protect = false;
+    traverse(object, (GcCallback*)&unprotectRecursive);
+}
+
+void gcUnprotectValues(uint64_t count) {
+    for(uint64_t i = 0; i < count; i++) {
+        GcObject* obj = _exceptionsGcUnprotect();
+        unprotectRecursive(obj);
     }
 }
+
 
 /**
  * When an exception is triggered midway through an atomic operation,
@@ -370,9 +354,8 @@ void gcAtomicGroupEnd(GcAtomicId id) {
  * context and the value being created inside the group won't be refered to.
  */
 void gcOnExceptionsThrow() {
-    RuntimeEnvironment* rt = runtimeGet();
-    rt->gcAtomicGroupId = NO_GROUP_ID;
-    rt->gcAtomicGroupDepth = 0;
+    //RuntimeEnvironment* rt = runtimeGet();
+    // TODO
 }
 
 /**

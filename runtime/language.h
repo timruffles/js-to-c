@@ -5,7 +5,7 @@
 
 #include "gcObject.h"
 
-#define jsValueCreatePointer(V,VT,R,RT,RS) GcAtomicId _aid = gcAtomicGroupStart(); R = gcAllocate(RS, RT); V = _jsValueCreatePointer(VT, R); gcAtomicGroupEnd(_aid)
+#define jsValueCreatePointer(V,VT,R,RT,RS) R = gcAllocate(RS, RT); V = _jsValueCreatePointer(VT, R);
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
 #define DEBUG_VALUE_N(M, X, O) char* op##O = calloc(1, 1024); jsValueToCString(X, op##O, 1000); printf(M, op##O);

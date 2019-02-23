@@ -6,7 +6,7 @@
 
 #define JS_SET_LITERAL(O,S,V) objectSet(O, stringFromLiteral(S), V)
 #define JS_GET_LITERAL(O,S) objectGet(O, stringFromLiteral(S))
-#define JS_SET(O,P,V) { GcAtomicId gid = gcAtomicGroupStart(); objectSet(O,stringFromLiteral(P),V); gcAtomicGroupEnd(gid); }
+#define JS_SET(O,P,V) objectSet(O,stringFromLiteral(P),V);
 #define JS_GET(O,P) objectGet(O,stringFromLiteral(P))
 
 
