@@ -1,4 +1,4 @@
-import {CompileTarget, InternedString, SideEffectTarget} from "./js-to-c";
+import {CompilerIdentifier, CompileTarget, InternedString, SideEffectTarget} from "./js-to-c";
 
 /**
  * The body of a JS function, ready to be linked with correct env etc
@@ -69,6 +69,10 @@ export class CompileTimeState {
         return child;
     }
 
+    childStateWithTarget(target: CompileTarget) {
+        return this.childState({target})
+    }
+
     internString(str: string) {
         if(!(str in this.interned)) {
             this.interned[str] = new InternedString(this.getNextSymbol('interned'), str);
@@ -87,5 +91,27 @@ export class CompileTimeState {
     nextId() {
         this.counter.id += 1;
         return this.counter.id;
+    }
+
+    protectStack() {
+        return new ProtectionStack()
+    }
+}
+
+export class ProtectionStack {
+    private stack: CompilerIdentifier[] = []
+    private ended = false
+
+    idSrc(target: CompilerIdentifier) {
+        this.stack.push(target)
+        return `gcProtectValue(${target.id});`
+    }
+
+    endSrc() {
+        if(this.ended) {
+            throw Error('Already ended')
+        }
+        this.ended = true
+        return `gcUnprotectValues(${this.stack.length});`
     }
 }
