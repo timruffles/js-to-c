@@ -339,17 +339,16 @@ function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeS
 
 
 // used by any node that evaluates to a value to assign that value to the target
-function assignToTarget(cExpression: string, target: CompileTarget, {gcAtomicId}: { gcAtomicId?: CompilerIdentifier } = {}) {
-    const atomicGroupSrc = gcAtomicId ? `gcAtomicGroupEnd(${gcAtomicId.id});` : ''
+function assignToTarget(cExpression: string, target: CompileTarget) {
     switch(target.type) {
         case 'SideEffectTarget':
-            return `${cExpression};${atomicGroupSrc}`;
+            return `${cExpression};`;
         case IntermediateVariableTarget.type:
-            return `JsValue* ${target.id} = (${cExpression});${atomicGroupSrc}`;
+            return `JsValue* ${target.id} = (${cExpression});`;
         case PredefinedVariableTarget.type:
-            return `${target.id} = (${cExpression});${atomicGroupSrc}`;
+            return `${target.id} = (${cExpression});`;
         case 'ReturnTarget':
-            return `{ JsValue* returnValue = (${cExpression});${atomicGroupSrc}; return returnValue; }`;
+            return `return (${cExpression});`;
     }
 }
 
@@ -400,13 +399,11 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
         : `JsValue** ${argsArrayVar} = NULL;`;
 
 
-    const gcAtomicId = new IntermediateVariableTarget(state.getNextSymbol('gid'));
     const isNew = node.type === 'NewExpression';
     const runtimeOperation = isNew ? 'objectNewOperation' : 'functionRunWithArguments';
     const thisArgumentSrc = isNew ? '' : ',NULL';
 
-    return `GcAtomicId ${gcAtomicId.id} = gcAtomicGroupStart();
-            ${calleeSrc}
+    return `${calleeSrc}
             ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
             ${argsArrayInit}
             ${assignToTarget(`${runtimeOperation}(
@@ -414,9 +411,7 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
                 ${argsArrayVar},
                 ${argsWithTargets.length}
                 ${thisArgumentSrc}
-            )`, state.target, {
-                gcAtomicId,
-            })}
+            )`, state.target)}
             `;
 }
 

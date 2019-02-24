@@ -73,7 +73,7 @@ var A = '';
 A();
 """
 
-expectJsException="Uncaught TypeError: A is not a function"
+expectJsException="Uncaught TypeError: 'string' is not a function"
 
 ["reference error"]
 

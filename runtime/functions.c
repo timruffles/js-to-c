@@ -26,7 +26,10 @@ typedef struct FunctionRecord {
 } FunctionRecord;
 
 JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint64_t argumentCount, JsValue* thisValue) {
-    languageAssertType(val, FUNCTION_TYPE);
+    if(jsValueType(val) != FUNCTION_TYPE) {
+        // TODO compiler support for nicer errors
+        exceptionsThrowTypeError(stringCreateFromTemplate("'%s' is not a function", jsValueReflect(val).name));
+    }
     log_info("Getting fn record");
     FunctionRecord* record = objectGetCallInternal(val);
     log_info("Fn record %p", record);
