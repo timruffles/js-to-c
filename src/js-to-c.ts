@@ -53,7 +53,7 @@ export class InternedString {
 
 export type JsIdentifier = string;
 
-interface CompilerIdentifier {
+export interface CompilerIdentifier {
     id: string
 }
 

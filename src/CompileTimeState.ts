@@ -1,4 +1,4 @@
-import {CompileTarget, InternedString, PredefinedVariableTarget, SideEffectTarget} from "./js-to-c";
+import {CompilerIdentifier, CompileTarget, InternedString, PredefinedVariableTarget, SideEffectTarget} from "./js-to-c";
 
 /**
  * The body of a JS function, ready to be linked with correct env etc
@@ -12,22 +12,24 @@ export interface CompileOptions {
 }
 
 class ExecutableTarget {
-   readonly type: 'Executable' = 'Executable';
+    readonly type: 'Executable' = 'Executable';
 }
 
 export class LibraryTarget {
     readonly type: 'Library' = 'Library';
+
     constructor(
         readonly header: string,
         readonly name: string,
-    ) {}
+    ) {
+    }
 }
 
-function getTarget({ outputLibraryHeader: header, outputLibraryName: name}: CompileOptions)  {
-    if(!header && !name) {
+function getTarget({outputLibraryHeader: header, outputLibraryName: name}: CompileOptions) {
+    if (!header && !name) {
         return new ExecutableTarget;
     } else {
-        if(!header || !name) {
+        if (!header || !name) {
             throw Error("Must supply both library header and name");
         }
         return new LibraryTarget(header, name);
@@ -40,8 +42,8 @@ export class CompileTimeState {
     // shared between all state objects for a given compilation
     functions: JsFunctionBody[] = [];
     // our intern string pool
-    interned: {[k: string]: InternedString } = {};
-    private counter = { id: 0 };
+    interned: { [k: string]: InternedString } = {};
+    private counter = {id: 0};
 
     target: CompileTarget = SideEffectTarget;
 
@@ -69,8 +71,12 @@ export class CompileTimeState {
         return child;
     }
 
+    childStateWithTarget(target: CompileTarget) {
+        return this.childState({target})
+    }
+
     internString(str: string) {
-        if(!(str in this.interned)) {
+        if (!(str in this.interned)) {
             this.interned[str] = new InternedString(this.getNextSymbol('interned'), str);
         }
         return this.interned[str];
@@ -96,8 +102,8 @@ export class CompileTimeState {
      * This returns a new child state that either points at the original, or a predefined
      */
     withManualReturn(symbol: string): { state: CompileTimeState } | { returnSrc: string, state: CompileTimeState } {
-        if(this.target.type !== "ReturnTarget") {
-            return { state: this }
+        if (this.target.type !== "ReturnTarget") {
+            return {state: this}
         }
 
         const target = new PredefinedVariableTarget(symbol)
@@ -108,6 +114,28 @@ export class CompileTimeState {
                 target,
             }),
         }
+    }
+
+    protectStack() {
+        return new ProtectionStack()
+    }
+}
+
+export class ProtectionStack {
+    private stack: CompilerIdentifier[] = []
+    private ended = false
+
+    idSrc(target: CompilerIdentifier) {
+        this.stack.push(target)
+        return `gcProtectValue(${target.id});`
+    }
+
+    endSrc() {
+        if (this.ended) {
+            throw Error('Already ended')
+        }
+        this.ended = true
+        return `gcUnprotectValues(${this.stack.length});`
     }
 }
 
