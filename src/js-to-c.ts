@@ -454,8 +454,7 @@ function ensureSupportedTarget(node: Pattern): SupportedAssignmentTarget {
 
 function unimplemented(node: string) {
     return function () {
-        console.warn(`Unimplemented ${node}`)
-        return `/* unimplemented ${node} */`;
+        throw Error(`unimplemented ${node}`);
     }
 }
 

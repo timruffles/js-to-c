@@ -192,11 +192,13 @@ JsValueType jsValueType(JsValue* value) {
 }
 
 #define REFLECT(T, S) case T: return (GcObjectReflection) { .name = S };
+// NOTE: typeof should be implemented explcitly in operators
 GcObjectReflection jsValueReflect(JsValue* object) {
     switch(object->type) {
         REFLECT(UNDEFINED_TYPE, "undefined");
         REFLECT(NULL_TYPE, "null");
         REFLECT(NUMBER_TYPE, "number");
+        REFLECT(NAN_TYPE, "number");
         REFLECT(BOOLEAN_TYPE, "boolean");
         REFLECT(OBJECT_TYPE, "object");
         REFLECT(STRING_TYPE, "string");
@@ -215,6 +217,7 @@ GcObjectReflection gcObjectReflectType(int type) {
         REFLECT(OBJECT_TYPE, "object");
         REFLECT(STRING_TYPE, "string");
         REFLECT(FUNCTION_TYPE, "function");
+        REFLECT(NAN_TYPE, "number");
 
         REFLECT(STRING_VALUE_TYPE, "stringValue");
         REFLECT(OBJECT_VALUE_TYPE, "objectValue");
