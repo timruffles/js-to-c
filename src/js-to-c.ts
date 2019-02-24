@@ -30,7 +30,7 @@ import {
     UnaryOperator,
     IfStatement,
     ForStatement,
-    ForInStatement, SimpleLiteral,
+    ForInStatement, SimpleLiteral, UpdateExpression,
 } from 'estree';
 import {CompileTimeState, CompileOptions, LibraryTarget} from "./CompileTimeState";
 
@@ -180,7 +180,7 @@ function getCompilers(): NodeCompilerLookup {
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
         UnaryExpression: compileUnaryExpression,
-        UpdateExpression: unimplemented('UpdateExpression'),
+        UpdateExpression: compileUpdateExpression,
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
         WhileStatement: compileWhileStatement,
@@ -500,6 +500,48 @@ function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState
     return `${leftSrc}
             ${rightSrc}
             ${linkSrc}`;
+}
+
+const updateOperatorsToValue = {
+    '++': 1,
+    '--': -1,
+}
+
+function compileUpdateExpression(node: UpdateExpression, state: CompileTimeState) {
+    // TODO ah crap, the updating is going to be tricky - `a++ vs a[b]++ a[b()]++, a[b()].foo++`
+    // can just reuse/call compileAssignmentExpression?
+    const value = updateOperatorsToValue[node.operator]
+    if(value == null) {
+        throw Error(`Unknown update operator '${node.operator}`)
+    }
+
+    const leftTarget = new IntermediateVariableTarget(state.getNextSymbol('left'))
+
+    // the final result
+    const leftFinalValueTarget = new IntermediateVariableTarget(state.getNextSymbol('result'))
+    // what the expression evaluates too
+    const evaluationTarget = new IntermediateVariableTarget(state.getNextSymbol('evaluation'))
+
+    const protection = state.protectStack();
+
+    const addSrc = `addOperator(${leftTarget.id}, jsValueCreateNumber(${value}));`
+
+    const updateSrc = node.prefix
+        ? `${evaluationTarget.id} = ${leftFinalValueTarget} = ${addSrc}`
+        : `${evaluationTarget.id} = ${leftTarget.id};
+           ${protection.idSrc(evaluationTarget)}
+           ${leftFinalValueTarget} = ${addSrc}
+           ${leftTarget.id} = ${evaluationTarget.id}`
+
+    return `
+        JsValue* ${leftFinalValueTarget.id};
+        JsValue* ${evaluationTarget.id};
+        ${compile(node.argument, state.childStateWithTarget(leftTarget))}
+        gcProtectValue(${leftTarget.id});
+        ${updateSrc}
+        ${protection.endSrc()}
+        ${assignToTarget(evaluationTarget.id, state.target)}
+    `
 }
 
 function compileConditionalExpression(node: ConditionalExpression, state: CompileTimeState) {

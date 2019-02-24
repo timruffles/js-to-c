@@ -96,7 +96,21 @@ JsValue* subtractOperator(JsValue* left, JsValue* right) {
     return jsValueCreateNumber(jsValueNumber(left) - jsValueNumber(right));
 }
 
+/**
+ * Spec: 11.6.1 The Addition operator
+ */
 JsValue* addOperator(JsValue* left, JsValue* right) {
+    /*
+     * - Let lref be the result of evaluating AdditiveExpression.
+     * - Let lval be GetValue(lref).
+     * - Let rref be the result of evaluating MultiplicativeExpression.
+     * - Let rval be GetValue(rref).
+     * - Let lprim be ToPrimitive(lval).
+     * - Let rprim be ToPrimitive(rval).
+     * - If Type(lprim) is String or Type(rprim) is String, then
+     *     - Return the String that is the result of concatenating ToString(lprim) followed by ToString(rprim)
+     * - Return the result of applying the addition operation to ToNumber(lprim) and ToNumber(rprim). See the Note below 11.6.3.
+     */
     if(!BOTH_NUMBERS(left, right)) {
         return getNaN();
     }
