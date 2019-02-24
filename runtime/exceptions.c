@@ -31,7 +31,7 @@ static void unhandledException(JsValue* error) {
       stringGetCString(objectGet(error, stringFromLiteral("name"))),
       stringGetCString(objectGet(error, stringFromLiteral("message"))));
 
-    fprintf(stderr, "%s", buffer);
+    fprintf(stderr, "%s\n", buffer);
     assert(0);
 }
 
