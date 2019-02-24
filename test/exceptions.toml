@@ -165,8 +165,9 @@ try {
       throw new Error("x")
   }
 } catch(e) {
-  console.log(x,y)
+  console.log(x)
+  console.log(y)
 }
 """
 
-output="1000 it worked"
+output="1000.000000\nit worked"
