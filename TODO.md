@@ -1,7 +1,7 @@
 # Todos
 
 Next action: 
-- why is `npm test -- --grep='throwing'` failing?
+- keep working on atomic problem - `./scripts/test-by-name 'garbage in loop'`
 - 
 
 ## List

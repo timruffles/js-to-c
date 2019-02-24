@@ -713,15 +713,25 @@ function compileObjectExpression(node: ObjectExpression, state: CompileTimeState
     const objectCreateSrc = `JsValue* ${objectVar} = objectCreatePlain();`
     const objectSrc = assignToTarget(objectVar, state.target);
 
-    // TODO protect each 
+    const hasProperties = node.properties.length > 0
+
     const propertiesSrc = node.properties.map(property => {
         const valueTarget = new IntermediateVariableTarget(state.getNextSymbol('value'));
         const key = state.internString(objectKeyToString(property.key));
+        const protect = hasProperties ? `gcProtectValue(${valueTarget.id});` : ''
         return `${compile(property.value, state.childState({ target: valueTarget }))}
+            ${protect}
             objectSet(${objectVar}, ${key.id}, ${valueTarget.id});`;
     }).join('\n')
 
-    return `${objectCreateSrc}\n${propertiesSrc}\n${objectSrc}`
+    const objectProtect = hasProperties ? `gcProtectValue(${objectVar});` : ''
+    const propertiesProtect = hasProperties ? `gcUnprotectValues(${node.properties.length + 1});` : ''
+
+    return `${objectCreateSrc}
+            ${objectProtect}
+            ${propertiesSrc}
+            ${propertiesProtect} 
+            ${objectSrc}`
 }
 
 function compileProperty(property: Expression, state: CompileTimeState) {

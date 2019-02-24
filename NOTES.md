@@ -129,6 +129,47 @@ Target 0: (allocate-garbage-in-loop) stopped.
 
 Nice! Lesson: fuzzing is ace. Write tests that push weird edge conditions and do strange stuff.
 
+### It gets harder
+
+Protected values probably do need to go in a special area, doing a single traverse means updates to mutable values get missed. For instance, here the new object properties allocated in objectSet aren't being protected, even though they're reachable from the main objectLiteral:
+
+```js
+  garbage = {
+    a: "1",
+    b: "2",
+    c: "3",
+    d: "4",
+    e: "5",
+  };
+```
+
+```c
+gcProtectValue(objectLiteral_10);
+JsValue* value_11 = (interned_13 /* 1 */);
+gcProtectValue(value_11);
+// this creates a property object that's not protected
+objectSet(objectLiteral_10, interned_12, value_11);
+JsValue* value_14 = (interned_16 /* 2 */);
+// ...
+```
+
+One approach would be a pre-traverse of all the stack frames. We could likely then often avoid having to painstakingly protect, as long as an operand is assigned to a protected value without additonal GC happening in between.
+
+The below is the compiler without protection for object literals. We'd probably still need to protect each prop val as `objectSet` allocates.
+
+```tsc
+    const propertiesSrc = node.properties.map(property => {
+        const valueTarget = new IntermediateVariableTarget(state.getNextSymbol('value'));
+        const key = state.internString(objectKeyToString(property.key));
+        return `${compile(property.value, state.childState({ target: valueTarget }))}
+            objectSet(${objectVar}, ${key.id}, ${valueTarget.id});`;
+    }).join('\n')
+
+    return `${objectCreateSrc}
+            ${propertiesSrc}
+            ${objectSrc}`
+```
+
 ## 17 Feb 2019
 
 Well, added gcAtomicGroupStart/End and still go the same issue... so seems like many points we likely need to make compile use GC in an atomic way.

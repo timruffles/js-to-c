@@ -327,7 +327,6 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 }
 
 void gcProtectValue(JsValue* value) {
-    log_info("protecting '%s'", jsValueReflect(value).name);
     _exceptionsGcProtect(value);
     traverse((void*)value, (GcCallback*)gcProtectValue);
 }

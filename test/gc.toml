@@ -1,9 +1,10 @@
 ["allocate garbage in loop"]
 
+env={ JSC_HEAP_SIZE_KB = 20 }
 
 example="""
 var garbage;
-for(var i = 0; i < 1000; i++) {
+for(var i = 0; i < 1000; i += 1) {
   garbage = {
     a: "1",
     b: "2",
