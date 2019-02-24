@@ -86,7 +86,7 @@ static void itSetsUpArgumentValuesInCallEnv() {
     Env* env = envCreateRoot();
     JsValue* names[] = {stringFromLiteral("one"), stringFromLiteral("two")};
     JsValue* values[] = {getTrue(), stringFromLiteral("twoValue")};
-    Env* callEnv = envCreateForCall(env, names, values, 2);
+    Env* callEnv = envCreateForCall(env, names, 2, values, 2);
 
     assert(callEnv != NULL);
 

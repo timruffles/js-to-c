@@ -19,14 +19,20 @@ static void itCanAccessNumberValue() {
 }
 
 static void itCanAccessPointerValue() {
-    char a = 'Y';
+    // Check if the pointer ends up pointing to the right place.
+    //
+    // This is a weird test as all of the pointer type constructors conceal their
+    // struct's shapes, so manually point to a string rather than correct type for testing.
+    // Also the is a lower level bit of the system so don't want to rely on a concrete type.
+    char* justForTest = "Y";
+    JsValue* val;
+    JsObject* obj;
+    jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, 1);
 
-    // just checking if the pointers end up pointing to the right place
-    JsValue* val = jsValueCreatePointer(OBJECT_TYPE, &a);
-    char* ptr = jsValuePointer(val);
+    void* assingWrongTypeForEaseOfTesting = (void*)obj;
+    assingWrongTypeForEaseOfTesting = justForTest;
 
-    assert(*ptr == 'Y');
-    assert(ptr == &a);
+    assertStringEqual(jsValuePointer(val), "Y");
 }
 
 static void itHasDefinedTruthiness() {

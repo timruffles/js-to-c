@@ -46,7 +46,7 @@ out/_freelist_test: _freelist.c _freelist.h _freelist.test.c
 # or have reliable strings
 .PHONY: test
 test: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/functions_test out/global_test out/gc_test out/config_test out/exceptions_test
-	out/*_test
+	for t in out/*_test; do $$t; done
 
 .PHONY: test_debug
 test_debug: out/environments_test out/objects_test out/strings_test out/language_test out/operators_test out/functions_test out/global_test out/gc_test out/config_test out/exceptions_test

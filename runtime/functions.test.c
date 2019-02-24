@@ -29,7 +29,7 @@ static void itCanCallAFunction() {
     JsValue* fn = functionCreate(exampleUserFunction, argumentNames, 2, exampleEnv);
     assert(fn != NULL);
 
-    Env* callEnv = envCreateForCall(exampleEnv, argumentNames, argumentValues, 2);
+    Env* callEnv = envCreateForCall(exampleEnv, argumentNames, 2, argumentValues, 2);
 
     JsValue* returned = _functionRun(fn, callEnv);
     assert(returned == getTrue());

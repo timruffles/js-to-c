@@ -192,11 +192,11 @@ void* _gcAllocate(size_t bytes, int type) {
 static void mark(GcObject* item);
 
 static void traverse(GcObject* object, GcCallback* callback) {
-    if(object->type == STRING_TYPE) {
-        log_info("traverse string %p value '%s'", object, stringGetCString((void*)object));
-    } else {
-        log_info("traverse %s %p", gcObjectReflect(object).name, object);
-    }
+    //if(object->type == STRING_TYPE) {
+    //    log_info("traverse string %p value '%s'", object, stringGetCString((void*)object));
+    //} else {
+    //    log_info("traverse %s %p", gcObjectReflect(object).name, object);
+    //}
 
     switch(object->type) {
         case OBJECT_TYPE:
@@ -222,13 +222,13 @@ static void mark(GcObject* item) {
 }
 
 static void gcObjectFree(GcObject* object) {
-    if(object->type == STRING_VALUE_TYPE) {
-        log_info("freeing string data '%s' at %p", _stringDebugValue((void*)object), object);
-    } else if(object->type == STRING_TYPE) {
-        log_info("freeing string '%s' at %p", stringGetCString((void*)object), object);
-    } else {
-        log_info("freeing %s at %p", gcObjectReflect(object).name, object);
-    }
+    //if(object->type == STRING_VALUE_TYPE) {
+    //    log_info("freeing string data '%s' at %p", _stringDebugValue((void*)object), object);
+    //} else if(object->type == STRING_TYPE) {
+    //    log_info("freeing string '%s' at %p", stringGetCString((void*)object), object);
+    //} else {
+    //    log_info("freeing %s at %p", gcObjectReflect(object).name, object);
+    //}
     // zero out the memory of the old object
     uint64_t size = object->size;
     memset(object, 0, object->size);
@@ -337,19 +337,6 @@ void gcUnprotectValues(uint64_t count) {
     for(uint64_t i = 0; i < count; i++) {
         _exceptionsGcUnprotect();
     }
-}
-
-
-/**
- * When an exception is triggered midway through an atomic operation,
- * clear all atomic groups so they can be GC'd.
- *
- * HMM - it seems likely this is legit, as we'll be jumping out of the
- * context and the value being created inside the group won't be refered to.
- */
-void gcOnExceptionsThrow() {
-    //RuntimeEnvironment* rt = runtimeGet();
-    // TODO
 }
 
 /**

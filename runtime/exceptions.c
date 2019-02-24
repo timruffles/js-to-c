@@ -77,8 +77,6 @@ void exceptionsThrow(JsValue* error) {
     } else {
         runtime->thrownError = error;
 
-        //gcOnExceptionsThrow();
-
         jmp_buf target;
         memcpy(target, exceptionsJumpBuf, sizeof(jmp_buf));
 
