@@ -713,6 +713,7 @@ function compileObjectExpression(node: ObjectExpression, state: CompileTimeState
     const objectCreateSrc = `JsValue* ${objectVar} = objectCreatePlain();`
     const objectSrc = assignToTarget(objectVar, state.target);
 
+    // TODO protect each 
     const propertiesSrc = node.properties.map(property => {
         const valueTarget = new IntermediateVariableTarget(state.getNextSymbol('value'));
         const key = state.internString(objectKeyToString(property.key));

@@ -1,6 +1,7 @@
 
 ["allocate garbage in loop"]
 
+
 example="""
 var garbage;
 for(var i = 0; i < 1000; i++) {
@@ -8,8 +9,8 @@ for(var i = 0; i < 1000; i++) {
     a: "1",
     b: "2",
     c: "3",
-    d: "4",
-    e: "5",
+    d: {},
+    e: 4.7,
   };
 };
 console.log(garbage.a);

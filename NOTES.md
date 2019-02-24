@@ -102,6 +102,31 @@ Assertion failed: (0), function jsValueReflect, file /Users/timruffles/p/js-to-c
     frame #7: 0x0000000100000a01 allocate-garbage-in-loop`main at allocate-garbage-in-loop.c:111
 ```
 
+fiddling with this, switching a value over causes a slightly different crash:
+
+```javascript
+    // ...
+    d: {},
+    e: 4.7,
+  };
+```
+
+```
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:326:_gcRun) GC complete, 1022464 bytes collected
+Process 28755 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x20)
+    frame #0: 0x00000001000e94c8 runtime.dylib`appendProperty(object=0x00000001005f9fb0, pd=0x00000001005f9fb0) at objects.c:191
+   188 	    if(object->properties == NULL) {
+   189 	        object->properties = pd;
+   190 	    } else {
+-> 191 	        object->tailProperty->nextProperty = pd;
+   192 	    }
+   193 	    object->tailProperty = pd;
+   194 	}
+Target 0: (allocate-garbage-in-loop) stopped.
+
+```
+
 Nice! Lesson: fuzzing is ace. Write tests that push weird edge conditions and do strange stuff.
 
 ## 17 Feb 2019
