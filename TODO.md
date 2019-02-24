@@ -2,12 +2,6 @@
 
 Next action: 
 - keep working on atomic problem - `./scripts/test-by-name 'garbage in loop'`
-- weird getting:
-
-[INFO] (objects.c:198:objectSet) Setting itemOne in object at 0x1006003b0
-[INFO] (objects.c:204:objectSet) looking in 0x0 for props
-[INFO] (objects.c:103:objectGet) Getting (
-[INFO] (objects.c:103:objectGet) Getting ( 
 - instanceof important - need to fill in more of the language
   as it makes writing tests hard, TODOs in other tests aren't clear
   enough (note to self: read the skipped tests)
@@ -17,8 +11,6 @@ Next action:
 - Object System
   - debugging - list keys
   - Object.prototype -> prelude
-  - prelude - it'd be really useful to define lots of the functionality in JS, and compile it (bootstrap the minimum required in C)
-      - * immediate use case - implement `new Error` (see exceptions.toml)
   - method calls - setting this in `obj.method()`
   - real implementation of properties - descriptors etc
 - Arrays

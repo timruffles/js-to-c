@@ -169,20 +169,19 @@ static void itCanReuseMemory() {
 
     DEBUG_JS_VAL(liveOne);
     DEBUG_JS_VAL(JS_GET(root, "liveOne"));
-    // we got back undefined!
     assert(JS_GET(root, "liveOne") == liveOne);
 }
 
 
 int main() {
-    test(itCanTestInitWithoutInit); 
-    test(itCanTestInitAfterInit); 
-    test(itAllocates); 
-    test(itSetsSizeAndType);
+    //test(itCanTestInitWithoutInit); 
+    //test(itCanTestInitAfterInit); 
+    //test(itAllocates); 
+    //test(itSetsSizeAndType);
 
-    test(itGarbageCollectsCorrectly);
-    test(itCanGcObjectProperties);
-    test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
-    test(itPreventsOverAllocation);
+    //test(itGarbageCollectsCorrectly);
+    //test(itCanGcObjectProperties);
+    //test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
+    //test(itPreventsOverAllocation);
     test(itCanReuseMemory);
 }
