@@ -42,7 +42,7 @@ Env *envCreateForCall(Env* parent, JsValue* argumentNames[], uint64_t argCount, 
     return callEnv;
 }
 
-JsValue *envGet(Env *env, JsValue *name) {
+JsValue* envGet(Env *env, JsValue *name) {
     precondition(jsValueType(name) == STRING_TYPE, "Attempted to lookup non-string in env");
     JsValue* found = objectLookup(env, name);
     if(found == NULL) {

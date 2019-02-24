@@ -99,8 +99,8 @@ static JsValue* coerceForObjectReadWrite(JsValue* raw, const char* const verb, J
 
 // used from compiled code
 JsValue* objectGet(JsValue *rawVal, JsValue *name) {
-    log_info("Getting %s", stringGetCString(name));
     JsValue* val = coerceForObjectReadWrite(rawVal, "read", name);
+    log_info("Getting %s", stringGetCString(val));
     JsValue* found = objectLookup(val, name);
     return found == NULL
       ? getUndefined()
