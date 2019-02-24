@@ -292,6 +292,9 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
         mark((GcObject*)roots[i]);
     }
 
+    // All atomic values - traverse
+    _exceptionsGcForeachValue((GcCallback*)mark);
+
     runtimeGcTraverse((GcCallback*)mark);
 
     log_info("GC fully traversed %llu roots", rootCount);
@@ -305,11 +308,11 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
         toProcess = (void*)((char*)(toProcess) + toProcess->size)
         ) {
 
-        log_info("scanned to %p", toProcess);
+        // log_info("scanned to %p", toProcess);
 
         if(toProcess->type == FREE_SPACE_TYPE) continue;
 
-        if(toProcess->marked || toProcess->protect) {
+        if(toProcess->marked) {
             // reset for next GC run
             toProcess->marked = false;
         } else {
@@ -328,19 +331,11 @@ void _gcRun(JsValue** roots, uint64_t rootCount) {
 
 void gcProtectValue(JsValue* value) {
     _exceptionsGcProtect(value);
-    traverse((void*)value, (GcCallback*)gcProtectValue);
-}
-
-static void unprotectRecursive(GcObject*);
-static void unprotectRecursive(GcObject* object) {
-    object->protect = false;
-    traverse(object, (GcCallback*)&unprotectRecursive);
 }
 
 void gcUnprotectValues(uint64_t count) {
     for(uint64_t i = 0; i < count; i++) {
-        GcObject* obj = _exceptionsGcUnprotect();
-        unprotectRecursive(obj);
+        _exceptionsGcUnprotect();
     }
 }
 

@@ -106,7 +106,6 @@ void exceptionsThrowTypeError(JsValue* message) {
 void _exceptionsGcProtect(JsValue* value) {
     RuntimeEnvironment* rt = runtimeGet();
     GcObject* obj = (void*)value;
-    obj->protect = true;
     GcProtectedValue* head = rt->catchStack->gcProtectedValues;
     GcProtectedValue* newHead;
     ensureCallocBytes(newHead, sizeof(GcProtectedValue));
@@ -125,14 +124,13 @@ void _exceptionsGcUnprotectAfterThrow() {
     }
 }
 
-GcObject* _exceptionsGcUnprotect() {
+void _exceptionsGcUnprotect() {
     RuntimeEnvironment* rt = runtimeGet();
     JsCatch* stack = rt->catchStack;
     precondition(stack->gcProtectedValues != NULL, "popped too many values");
     GcObject* value = stack->gcProtectedValues->value;
-    value->protect = false;
+    value->marked = false;
     stack->gcProtectedValues = stack->gcProtectedValues->next;
-    return value;
 }
 
 JsCatch* exceptionsRootCatchCreate() {
@@ -144,3 +142,18 @@ JsCatch* exceptionsRootCatchCreate() {
     };
     return catch;
 }
+void _exceptionsGcForeachValue(GcCallback* callback) {
+    RuntimeEnvironment* rt = runtimeGet();
+    JsCatch* stack = rt->catchStack;
+    while(stack) {
+        log_info("Traversing catch frame");
+        GcProtectedValue* node = stack->gcProtectedValues;
+        while(node != NULL) { 
+            log_info("Traversed value on catch frame");
+            callback(node->value);
+            node = node->next;
+        }
+        stack = stack->parent;
+    }
+}
+

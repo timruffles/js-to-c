@@ -2,7 +2,12 @@
 
 Next action: 
 - keep working on atomic problem - `./scripts/test-by-name 'garbage in loop'`
-- 
+- weird getting:
+
+[INFO] (objects.c:198:objectSet) Setting itemOne in object at 0x1006003b0
+[INFO] (objects.c:204:objectSet) looking in 0x0 for props
+[INFO] (objects.c:103:objectGet) Getting (
+[INFO] (objects.c:103:objectGet) Getting ( 
 
 ## List
 

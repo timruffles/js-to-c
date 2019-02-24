@@ -3,6 +3,7 @@
 #include <setjmp.h>
 
 #include "language.h"
+#include "gc.h"
 #include "environments.h"
 
 #define exceptionsTry(E) (exceptionsTryStart(E), setjmp(exceptionsJumpBuf) == 0)
@@ -25,4 +26,5 @@ void exceptionsTryStart(Env* env);
 // owned by gc module
 void _exceptionsGcProtect(JsValue*);
 void _exceptionsGcUnprotectAfterThrow(void);
-GcObject* _exceptionsGcUnprotect(void);
+void _exceptionsGcUnprotect(void);
+void _exceptionsGcForeachValue(GcCallback*);

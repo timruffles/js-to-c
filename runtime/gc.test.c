@@ -175,14 +175,14 @@ static void itCanReuseMemory() {
 
 
 int main() {
-    //test(itCanTestInitWithoutInit); 
-    //test(itCanTestInitAfterInit); 
-    //test(itAllocates); 
-    //test(itSetsSizeAndType);
+    test(itCanTestInitWithoutInit); 
+    test(itCanTestInitAfterInit); 
+    test(itAllocates); 
+    test(itSetsSizeAndType);
 
-    //test(itGarbageCollectsCorrectly);
-    //test(itCanGcObjectProperties);
+    test(itGarbageCollectsCorrectly);
+    test(itCanGcObjectProperties);
     test(itCanPreventGcInTheMiddleOfAGroupOfOperations);
-    //test(itPreventsOverAllocation);
-    //test(itCanReuseMemory);
+    test(itPreventsOverAllocation);
+    test(itCanReuseMemory);
 }

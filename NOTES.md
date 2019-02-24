@@ -1,5 +1,9 @@
 # Notes
 
+## 24 Feb 2019
+
+Switching over to traversing the catch stack at GC time fixed the bug! I don't think an approach that didn't involve this would be better - it'd require a huge refactor to ensure all mutations would also be protected. I think it's possibly the only way in this system.
+
 ## 23 Feb 2019
 
 Did a heap of thinking about the GC atomic stuff, and realised I was on the wrong track. Taking a graph based view of it, I realised two big things:
