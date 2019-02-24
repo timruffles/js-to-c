@@ -37,6 +37,7 @@ JsValue* consoleLog(Env* env) {
     FILE* stream = getOutStream();
     assert(stream != NULL);
 
+    // TODO use proper ToString operation
     jsValueToCString(envGet(env, stringFromLiteral("arg0")), outputBuffer, sizeof(outputBuffer));
     ensureWrite(outputBuffer, stream);
     ensureWrite("\n", stream);
