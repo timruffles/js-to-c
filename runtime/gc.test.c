@@ -169,7 +169,6 @@ static void itCanReuseMemory() {
 
     DEBUG_JS_VAL(liveOne);
     DEBUG_JS_VAL(JS_GET(root, "liveOne"));
-    // we got back undefined!
     assert(JS_GET(root, "liveOne") == liveOne);
 }
 
