@@ -38,8 +38,8 @@ static void unhandledException(JsValue* error) {
 // called by exceptionsTry macro to implement try/catch
 void exceptionsCatchStart(Env* env) {
     RuntimeEnvironment* runtime = runtimeGet();
-    JsCatch* catch = calloc(1, sizeof(JsCatch));
-    ensureAlloced(catch);
+    JsCatch* catch;
+    ensureCallocBytes(catch, sizeof(JsCatch));
     *catch = (JsCatch) {
         .parent = runtime->catchStack,
         .env = env,
