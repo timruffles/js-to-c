@@ -14,7 +14,6 @@ Next action:
 
 ## List
 
-- Why is Error undefined when thrown?
 - Object System
   - debugging - list keys
   - Object.prototype -> prelude

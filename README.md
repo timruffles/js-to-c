@@ -1,6 +1,6 @@
 # JS to C 
 
-A compiled implementation of ES5, targetting C.
+A compiled implementation of [ES5](https://www.ecma-international.org/ecma-262/5.1/#sec-11.6.1), targetting C.
 
 Read my [notes](NOTES.md) for a rough dev notes, or read more polished write ups on [my blog](https://timr.co).
 
