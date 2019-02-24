@@ -40,6 +40,12 @@ void exceptionsCatchStart(Env* env) {
     RuntimeEnvironment* runtime = runtimeGet();
     JsCatch* catch;
     ensureCallocBytes(catch, sizeof(JsCatch));
+
+    // save current jump buf before the macro overwrites it
+    if(!runtime->catchStack->isRoot) {
+        memcpy(runtime->catchStack->jumpBuf, exceptionsJumpBuf, sizeof(jmp_buf));
+    }
+
     *catch = (JsCatch) {
         .parent = runtime->catchStack,
         .env = env,

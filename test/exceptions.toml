@@ -66,6 +66,22 @@ console.log(A());
 
 output="B threw"
 
+["rethrowing errors"]
+
+example="""
+try {
+    try {
+      throw new Error("A");
+    } catch(e) {
+      throw new Error("B"); 
+    }
+} catch(e) {
+    console.log(e.message);
+}
+"""
+
+output="B"
+
 ["calling non function"]
 
 example="""
@@ -121,6 +137,16 @@ output="B threw"
 
 
 example="""
+function t() { throw Error("boom") }
+function makeGarbage() {
+  // silly loop to make loads of garbage objects
+  var r = 0
+  for(var i = 0; i < 100; i += 1) {
+    r = ({ a: 10 }).a + r
+  }
+  return r
+}
+
 try {
   var x
   var y
@@ -136,20 +162,10 @@ try {
       doThing()
   } catch(e) {
       y = y === undefined ? "it worked" : "FAIL:" + y
-      throw Error("x")
+      throw new Error("x")
   }
 } catch(e) {
   console.log(x,y)
-}
-
-function t() { throw Error("boom") }
-function makeGarbage() {
-  // silly loop to make loads of garbage objects
-  var r = 0
-  for(var i = 0; i < 100; i++) {
-    r = ({ a: 10 }).a + r
-  }
-  return r
 }
 """
 

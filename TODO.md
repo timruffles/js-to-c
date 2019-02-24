@@ -8,6 +8,9 @@ Next action:
 [INFO] (objects.c:204:objectSet) looking in 0x0 for props
 [INFO] (objects.c:103:objectGet) Getting (
 [INFO] (objects.c:103:objectGet) Getting ( 
+- instanceof important - need to fill in more of the language
+  as it makes writing tests hard, TODOs in other tests aren't clear
+  enough (note to self: read the skipped tests)
 
 ## List
 
