@@ -6,7 +6,7 @@
 #include "gc.h"
 #include "environments.h"
 
-#define exceptionsTry(E) (exceptionsTryStart(E), setjmp(exceptionsJumpBuf) == 0)
+#define exceptionsTry(E) (exceptionsCatchStart(E), setjmp(exceptionsJumpBuf) == 0)
 
 typedef struct JsCatch JsCatch;
 
@@ -20,8 +20,6 @@ void exceptionsCatchEnd(void);
 
 void exceptionsThrowReferenceError(JsValue* msg);
 void exceptionsThrowTypeError(JsValue* msg);
-
-void exceptionsTryStart(Env* env);
 
 // owned by gc module
 void _exceptionsGcProtect(JsValue*);

@@ -35,10 +35,7 @@ static void unhandledException(JsValue* error) {
     assert(0);
 }
 
-void exceptionsTryStart(Env* env) {
-    exceptionsCatchStart(env);
-}
-
+// called by exceptionsTry macro to implement try/catch
 void exceptionsCatchStart(Env* env) {
     RuntimeEnvironment* runtime = runtimeGet();
     JsCatch* catch = calloc(1, sizeof(JsCatch));
@@ -52,7 +49,8 @@ void exceptionsCatchStart(Env* env) {
 
 static void catchStackPop() {
     RuntimeEnvironment* runtime = runtimeGet();
-    precondition(runtime->catchStack != NULL, "catch stack root popped");
+    precondition(runtime->catchStack != NULL, "catch stack invalid, should never be NULL");
+    precondition(!runtime->catchStack->isRoot, "catch stack should never attempt to pop root");
 
     JsCatch* newHead = runtime->catchStack->parent;
     free(runtime->catchStack);
