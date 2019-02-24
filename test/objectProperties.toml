@@ -18,18 +18,10 @@ var a = {
 console.log(a[2]);
 """
 
-output = ""
 
-["numeric object properties"]
+output = "2Val"
 
-example = """
-var a = {
-    one: 2,
-};
-console.log(a[2]);
-"""
-
-output = ""
+todo="Implement Object.toString, Number.toString() etc"
 
 ["setting properties"]
 

@@ -23,6 +23,7 @@ typedef struct JsObject {
     GcHeader;
 
     PropertyDescriptor* properties;
+    PropertyDescriptor* tailProperty;
 
     JsValue* prototype;
 
@@ -184,10 +185,12 @@ static PropertyDescriptor* propertyCreate() {
 }
 
 static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
-    if(object->properties != NULL) {
-        pd->nextProperty = object->properties;
+    if(object->properties == NULL) {
+        object->properties = pd;
+    } else {
+        object->tailProperty->nextProperty = pd;
     }
-    object->properties = pd;
+    object->tailProperty = pd;
 }
 
 // used from compiled code
