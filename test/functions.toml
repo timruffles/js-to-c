@@ -32,3 +32,20 @@ console.log(one() === undefined);
 """
 
 output = "true"
+
+["hoisting function declarations"]
+
+example = """
+main();
+
+function main() {
+    console.log(meaningOfLifeSquared());
+
+    function meaningOfLifeSquared() {
+        return 42 * 42;
+    }
+}
+"""
+
+output = "1764.000000"
+todo="implement function declaration hoisting"
