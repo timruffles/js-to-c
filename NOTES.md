@@ -66,6 +66,43 @@ function makeGarbage() {
 }
 ```
 
+### Got a crash in an earlier test!
+
+The following crashes, which I believe is a legit case where the non-atomicness is biting me:
+
+```javascript
+var garbage;
+for(var i = 0; i < 1000; i++) {
+  garbage = {
+    a: "1",
+    b: "2",
+    c: "3",
+    d: "4",
+    e: "5",
+  };
+};
+console.log(garbage.a);
+```
+
+with this crash:
+
+```sh
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:321:_gcRun) End of GC, memory end 0x1005fa000 and got to 0x1005fa000
+[INFO] (/Users/timruffles/p/js-to-c/runtime/gc.c:326:_gcRun) GC complete, 1022560 bytes collected
+[ERROR] (/Users/timruffles/p/js-to-c/runtime/language.c:205:jsValueReflect) Non JSValue freeSpace
+Assertion failed: (0), function jsValueReflect, file /Users/timruffles/p/js-to-c/runtime/language.c, line 205.
+* thread #1, queue = 'com.apple.main-thread', stop reason = signal SIGABRT
+  * frame #0: 0x00007fff64f49b86 libsystem_kernel.dylib`__pthread_kill + 10
+    frame #1: 0x00007fff64fffc50 libsystem_pthread.dylib`pthread_kill + 285
+    frame #2: 0x00007fff64eb31c9 libsystem_c.dylib`abort + 127
+    frame #3: 0x00007fff64e7b868 libsystem_c.dylib`__assert_rtn + 320
+    frame #4: 0x00000001000e814f runtime.dylib`jsValueReflect(object=0x00000001005f9fb0) at language.c:205
+    frame #5: 0x00000001000e9350 runtime.dylib`objectSet(rawVal=0x00000001005f9fb0, name=0x0000000100302570, value=0x0000000100302d50) at objects.c:198
+    frame #6: 0x0000000100000b2d allocate-garbage-in-loop`userProgram(env=0x0000000100500030) at allocate-garbage-in-loop.c:55
+    frame #7: 0x0000000100000a01 allocate-garbage-in-loop`main at allocate-garbage-in-loop.c:111
+```
+
+Nice! Lesson: fuzzing is ace. Write tests that push weird edge conditions and do strange stuff.
 
 ## 17 Feb 2019
 
