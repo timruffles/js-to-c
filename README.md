@@ -6,7 +6,8 @@ Read my [notes](NOTES.md) for a rough dev notes, or read more polished write ups
 
 Next thing to do - see [TODO.md](TODO.md).
 
-## Example
+Example
+-------
 
 The following JS
 
@@ -44,7 +45,8 @@ JsValue *fact_1(Env *env) {
 // ...
 ```
 
-## Guide
+Guide
+-------
 
     ./runtime
         the C implementation of the language runtime
