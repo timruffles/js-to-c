@@ -1,6 +1,7 @@
 #include "language.h"
 #include "strings.h"
 #include "operators.h"
+#include "lib/debug.h"
 
 #define BOTH_NUMBERS(L,R) !(isNaN(L) || isNaN(R) || jsValueType(L) != NUMBER_TYPE || jsValueType(R) != NUMBER_TYPE)
 
@@ -101,4 +102,19 @@ JsValue* addOperator(JsValue* left, JsValue* right) {
         return getNaN();
     }
     return jsValueCreateNumber(jsValueNumber(left) + jsValueNumber(right));
+}
+
+JsValue* typeofOperator(JsValue* val) {
+    switch(jsValueType(val)) {
+        case  UNDEFINED_TYPE: return stringFromLiteral("undefined");
+        case  NUMBER_TYPE: return stringFromLiteral("number");
+        case  NAN_TYPE: return stringFromLiteral("number");
+        case  BOOLEAN_TYPE: return stringFromLiteral("boolean");
+        case  OBJECT_TYPE: return stringFromLiteral("object");
+        case  NULL_TYPE: return stringFromLiteral("object");
+        case  STRING_TYPE: return stringFromLiteral("string");
+        case  FUNCTION_TYPE: return stringFromLiteral("function");
+        default:
+            fail("Non JSValue %s", jsValueReflect(val).name);
+    }
 }

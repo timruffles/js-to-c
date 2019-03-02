@@ -90,6 +90,7 @@ export type CompileTarget =
 
 const unaryOpToFunction: {[k: string]: string | undefined} = {
     "!": "notOperator",
+    "typeof": "typeofOperator",
 }
 
 const binaryOpToFunction: {[k: string]: string | undefined} = {

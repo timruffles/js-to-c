@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "operators.h"
+#include "objects.h"
 #include "gc.h"
 #include "test.h"
 #include "language.h"
@@ -68,6 +69,25 @@ static void itImplementsStrictEquality() {
     assert(strictEqualOperator(getUndefined(), getNull()) == getFalse());
 }
 
+static void itImplementsTypeof() {
+    assertJsStringValue(typeofOperator(getTrue()), "boolean");
+    assertJsStringValue(typeofOperator(getFalse()), "boolean");
+
+    assertJsStringValue(typeofOperator(jsValueCreateNumber(7)), "number");
+    assertJsStringValue(typeofOperator(jsValueCreateNumber(0)), "number");
+    assertJsStringValue(typeofOperator(getNaN()), "number");
+
+    assertJsStringValue(typeofOperator(getUndefined()), "undefined");
+
+    assertJsStringValue(typeofOperator(getNull()), "object");
+    assertJsStringValue(typeofOperator(objectCreatePlain()), "object");
+
+    assertJsStringValue(typeofOperator(objectCreateFunction(NULL)), "function");
+
+    assertJsStringValue(typeofOperator(stringFromLiteral("hello")), "string");
+    assertJsStringValue(typeofOperator(stringFromLiteral("")), "string");
+}
+
 int main() {
     testLanguageAndGcInit();
 
@@ -79,7 +99,7 @@ int main() {
     test(itIdentifiesGreaterThanOperands);
     test(itIdentifiesGreaterThanOrEqualOperands);
     test(itImplementsStrictEquality);
-
     test(itHasMultiplyOperator);
+    test(itImplementsTypeof);
 }
 
