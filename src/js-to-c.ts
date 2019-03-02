@@ -30,7 +30,7 @@ import {
     UnaryOperator,
     IfStatement,
     ForStatement,
-    ForInStatement, SimpleLiteral,
+    ForInStatement, SimpleLiteral, LogicalExpression,
 } from 'estree';
 import {CompileTimeState, CompileOptions, LibraryTarget} from "./CompileTimeState";
 
@@ -60,6 +60,9 @@ interface CompilerIdentifier {
 export class IntermediateVariableTarget implements CompilerIdentifier {
     static readonly type = 'IntermediateVariableTarget';
     readonly type: typeof IntermediateVariableTarget.type = IntermediateVariableTarget.type;
+    get definition() {
+        return `JsValue* ${this.id};`
+    }
     constructor(readonly id: JsIdentifier) {}
 }
 
@@ -144,6 +147,31 @@ function always(output: string): () => string {
     return () => output;
 }
 
+function compileLogicalExpression(node: LogicalExpression, state: CompileTimeState): string {
+    const returnSetup = state.withManualReturn(state.getNextSymbol('evaluation'));
+
+    const leftTarget = new IntermediateVariableTarget(state.getNextSymbol('lhs'));
+    const leftSrc = compile(node.left, returnSetup.state.childState({
+        target: leftTarget,
+    }));
+
+    const rightSrc = compile(node.right, returnSetup.state);
+
+    const shortCircuit = node.operator === '&&' ? 'false' : 'true'
+
+    const returnSrc = 'returnSrc' in returnSetup ? returnSetup.returnSrc : ''
+
+    return `/* ${node.operator} */
+            ${leftSrc}
+            if(isTruthy(${leftTarget.id}) == ${shortCircuit}) {
+                ${assignToTarget(leftTarget.id, returnSetup.state.target)}
+            } else {
+                ${rightSrc};
+            }
+            ${returnSrc}`
+
+}
+
 function getCompilers(): NodeCompilerLookup {
     return {
         ArrayExpression: unimplemented('ArrayExpression'),
@@ -167,7 +195,7 @@ function getCompilers(): NodeCompilerLookup {
         IfStatement: compileIfStatement,
         LabeledStatement: unimplemented('LabeledStatement'),
         Literal: compileLiteral,
-        LogicalExpression: unimplemented('LogicalExpression'),
+        LogicalExpression: compileLogicalExpression,
         MemberExpression: compileMemberExpression,
         MethodDefinition: unimplemented('MethodDefinition'),
         NewExpression: compileNewExpression,
@@ -379,9 +407,9 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
         target: calleeTarget
     }));
 
-    const argsWithTargets = node.arguments.map((argNode, i) => {
+    const argsWithTargets = node.arguments.map((argNode, i): {target: PredefinedVariableTarget, expression: string} => {
         const callVar = state.getSymbolForId(`call${id}Arg`, i);
-        const target = new IntermediateVariableTarget(callVar);
+        const target = new PredefinedVariableTarget(callVar);
         const expression = compile(argNode, state.childState({
             target,
         }));
@@ -400,12 +428,15 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
         ? `JsValue* ${argsArrayVar}[] = {${argsValuesSrc}};`
         : `JsValue** ${argsArrayVar} = NULL;`;
 
+    const argsDefinitionsSrc = argsWithTargets.map(({target}) => `JsValue* ${target.id};`).join("\n")
+
 
     const isNew = node.type === 'NewExpression';
     const runtimeOperation = isNew ? 'objectNewOperation' : 'functionRunWithArguments';
     const thisArgumentSrc = isNew ? '' : ',NULL';
 
-    return `${calleeSrc}
+    return `${argsDefinitionsSrc}
+            ${calleeSrc}
             ${joinNodeOutput(argsWithTargets.map(({expression}) => expression))}
             ${argsArrayInit}
             ${assignToTarget(`${runtimeOperation}(

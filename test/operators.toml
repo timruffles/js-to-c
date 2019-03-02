@@ -42,3 +42,52 @@ console.log(!(10===10.001));
 """
 
 output="true\ntrue\ntrue"
+
+["logical and - values"]
+
+example = """
+function getEmpty() {
+    return ""
+}
+function getOk() {
+    return "ok"
+}
+
+console.log(false && 'rhs');
+console.log(true && 'rhs');
+console.log(getEmpty() && 'rhs');
+console.log(false && 'rhs');
+console.log('lhs' && 'rhs');
+console.log(0 && 'rhs');
+"""
+
+output="false\nrhs\n\nfalse\nrhs\n0.000000"
+
+["logical and - short circuiting"]
+
+example = """
+function boom() {
+  throw new Error("Should not have been evaluated");
+}
+
+false && boom()
+0 && boom()
+console.log("ok");
+"""
+
+output="ok"
+
+["logical and - in return position"]
+
+example = """
+function one() {
+    function getFalsy() { return 0 }
+    function boom() {
+      throw new Error("Should not have been evaluated");
+    }
+    return getFalsy() && boom();
+}
+console.log(one());
+"""
+
+output="0.000000"

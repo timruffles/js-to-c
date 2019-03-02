@@ -1,4 +1,4 @@
-import {CompileTarget, InternedString, SideEffectTarget} from "./js-to-c";
+import {CompileTarget, InternedString, PredefinedVariableTarget, SideEffectTarget} from "./js-to-c";
 
 /**
  * The body of a JS function, ready to be linked with correct env etc
@@ -88,4 +88,26 @@ export class CompileTimeState {
         this.counter.id += 1;
         return this.counter.id;
     }
+
+    /**
+     * In cases where we need to compile multiple branches for target's value (e.g &&, ?)
+     * we need to control where to place the return.
+     *
+     * This returns a new child state that either points at the original, or a predefined
+     */
+    withManualReturn(symbol: string): { state: CompileTimeState } | { returnSrc: string, state: CompileTimeState } {
+        if(this.target.type !== "ReturnTarget") {
+            return { state: this }
+        }
+
+        const target = new PredefinedVariableTarget(symbol)
+
+        return {
+            returnSrc: `return ${target.id};`,
+            state: this.childState({
+                target,
+            }),
+        }
+    }
 }
+
