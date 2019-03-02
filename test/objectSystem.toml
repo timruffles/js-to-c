@@ -39,6 +39,55 @@ console.log(typeof A.prototype);
 
 output = "object"
 
+["typeof operator"]
+
+example = """
+console.log(typeof {});
+console.log(typeof null);
+console.log(typeof (typeof 7));
+console.log(typeof NaN === 'number');
+"""
+
+output = "object\nobject\nstring\ntrue"
+
+["instanceof operator"]
+
+example = """
+function A() {}
+
+var a = new A;
+var b = {}
+
+console.log(a instanceof A);
+console.log(A instanceof A);
+console.log(b instanceof A);
+"""
+
+output = "true\nfalse\nfalse"
+
+["instanceof operator - non func"]
+
+example = """
+var a = {};
+console.log(a instanceof {});
+"""
+
+expectJsException = "TypeError: Right hand side of 'instanceof' is not callable"
+
+["instanceof with primitives"]
+
+todo="time to do pedantic stuff"
+
+example = """
+console.log("" instanceof String);
+console.log(1 instanceof Number);
+console.log(null instanceof Object);
+
+console.log(new Number(1) instanceof Number);
+"""
+
+output = "false\nfalse\nfalse\ntrue"
+
 ["new operator returns non primitive"]
 
 example = """

@@ -64,6 +64,8 @@ JsValue* createGlobalObject() {
     log_info("log fn %p env %p", consoleLogJsv, globalEnv);
     objectSet(console, stringFromLiteral("log"),
             consoleLogJsv);
+
+    JS_SET_LITERAL(global, "NaN", getNaN());
     
     // setup reference to self (important when used as an env)
     objectSet(global, stringFromLiteral("global"),

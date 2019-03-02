@@ -102,6 +102,7 @@ const binaryOpToFunction: {[k: string]: string | undefined} = {
     "-": "subtractOperator",
     "*": "multiplyOperator",
     "===": "strictEqualOperator",
+    "instanceof": "objectInstanceof",
 };
 
 const assignmentOpToFunction: {[k: string]: string | undefined} = {

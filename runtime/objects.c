@@ -257,6 +257,35 @@ char* objectDebug(JsValue* target) {
     return debugString;
 }
 
+JsValue* objectInstanceof(JsValue* instance, JsValue* candidate) {
+    if(jsValueType(candidate) != FUNCTION_TYPE) {
+        exceptionsThrowTypeError(stringFromLiteral("Right hand side of 'instanceof' is not callable"));
+    }
+    JsValue* const candidatePt = JS_GET_LITERAL(candidate, "prototype");
+    if(jsValueType(candidatePt) != OBJECT_TYPE) {
+        exceptionsThrowTypeError(stringFromLiteral("Right hand side of 'instanceof' has non-object prototype property"));
+    }
+
+    do {
+        instance = coerceToObject(instance);
+        if(instance == NULL) {
+            break;
+        }
+        JsValue* pt = OBJECT_VALUE(instance)->prototype;
+        if(pt == candidatePt) {
+            return getTrue();
+        }
+
+        if(pt == NULL || jsValueType(pt) == UNDEFINED_TYPE || jsValueType(pt) == NULL_TYPE) {
+            break;
+        }
+
+        instance = pt;
+    } while(instance != NULL);
+
+    return getFalse();
+}
+
 JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64_t argumentCount) {
     JsValue* pt = JS_GET_LITERAL(function, "prototype");
     // TODO use Object.prototype if pt is undefined
