@@ -91,3 +91,24 @@ console.log(one());
 """
 
 output="0.000000"
+
+["ternary"]
+
+example = """
+function boom() {
+  throw new Error("Should not have been evaluated");
+}
+function one() {
+    function getFalsy() { return 0 }
+    return getFalsy() ? boom() : "ok"
+}
+function two() {
+    function getTruthy() { return true }
+    return getTruthy() ? "ok" : boom()
+}
+console.log(one());
+console.log(two());
+console.log(10 > 15 ? "fail" : "ok");
+"""
+
+output="ok\nok\nok"
