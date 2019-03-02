@@ -25,6 +25,7 @@ typedef struct JsObject {
     PropertyDescriptor* properties;
     PropertyDescriptor* tailProperty;
 
+    // Internal slots - implementation visible only
     JsValue* prototype;
 
     // determines if this is callable - i.e [[Call]] internal slot
@@ -54,6 +55,7 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
     JsValue *val;
     jsValueCreatePointer(val, FUNCTION_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->callInternal = fr;
+    JS_SET_LITERAL(val, "prototype", objectCreatePlain());
     return val;
 }
 

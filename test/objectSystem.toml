@@ -30,6 +30,15 @@ console.log(a.data);
 
 output = "12.000000"
 
+["function prototype property"]
+
+example = """
+function A() {}
+console.log(typeof A.prototype);
+"""
+
+output = "object"
+
 ["new operator returns non primitive"]
 
 example = """
