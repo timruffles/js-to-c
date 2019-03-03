@@ -57,11 +57,13 @@ Guide
 
 ### Functional
 
-Run `npm test` to update the tests, then use mocha as usual.
+Run `npm test` to run/update tests. `./scripts/test-by-name $name` to run a single test.
+
+Failed tests provide a command to compile and run the C program with the debugger.
 
 ### Unit
 
-The runtime has unit tests - use the Makefile in `./runtime` to run them.
+The runtime has unit tests - use the `make test` in `./runtime` to run them, and `./runtime/scripts/compile-test-loop test-file-basename`.
 
 ## Runtime
 
