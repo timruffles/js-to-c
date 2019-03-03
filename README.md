@@ -73,6 +73,9 @@ Dependencies:
 
 - clang
 - Make
+- libuv (`brew`)
+
+I'm trying to limit my focus to learning about compilation, so I've made no attempt to make this cross platform.
 
 ### Developing
 

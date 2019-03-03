@@ -1,0 +1,16 @@
+["hello world async IO"]
+
+example="""
+var a = 0;
+
+function logIt() {
+  console.log(a);
+}
+
+setTimeout(logIt)
+
+a = 1
+console.log("Hello")
+"""
+
+output="Hello\n2"

@@ -42,9 +42,17 @@ typedef struct GcObjectReflection {
     char name[24];
 } GcObjectReflection;
 
+
 typedef int JsValueType;
 
 typedef struct JsValue JsValue;
+
+// not the user-facing 'arguments' object
+typedef struct FunctionArguments {
+    JsValue** args;
+    uint16_t count;
+} FunctionArguments;
+
 
 bool isUndefined(JsValue*);
 bool isNaN(JsValue*);

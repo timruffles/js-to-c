@@ -27,16 +27,20 @@ CToExec() {
     local cTarget=$1
     local exe=$2
 
-    clang $(ClangOptions) $cTarget out/runtime.dylib out/prelude.dylib -o $exe
+    clang $(ClangOptions) $cTarget out/runtime.dylib out/prelude.dylib $(LibuvDylib) -o $exe
 }
 
 CToLib() {
     local cTarget=$1
     local out=$2
 
-    clang -dynamiclib $(ClangOptions) out/runtime.dylib $cTarget -o $out
+    clang -dynamiclib $(ClangOptions) out/runtime.dylib $(LibuvDylib) $cTarget -o $out
 }
 
 GetRuntimeLibs() {
     find "$__dirname/runtime" -maxdepth 1 -name '*.c' -not -name '*.test.c'
+}
+
+LibuvDylib() {
+  echo /usr/local/Cellar/libuv/1.22.0/lib/libuv.dylib
 }
