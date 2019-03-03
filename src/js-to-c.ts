@@ -270,6 +270,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/runtime.h"
         #include "../../runtime/exceptions.h"
         #include "../../runtime/lib/debug.h"
+        #include "../../runtime/event.h"
 
         
         ${interned}
@@ -278,6 +279,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         
         static void userProgram(Env* env) {
             ${body};
+            eventLoop();
         }
         
         ${compileInternInitialisation(internedStrings)}

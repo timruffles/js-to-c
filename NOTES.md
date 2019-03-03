@@ -1,5 +1,31 @@
 # Notes
 
+## 2 Mar 2019
+
+There's still lots to do, but the big remaining thing I've not even started is event based IO. Once that's in we have something that does all the interesting bits of JS:
+
+- basic language
+- object system - prototypes etc
+- functions + closures
+- GC
+- exceptions
+- *event based IO*
+
+Here's a minimal test case:
+
+```
+var a = 0;
+
+function logIt() {
+  console.log(a);
+}
+
+setTimeout(logIt)
+
+a = 1
+console.log("Hello")
+```
+
 ## 24 Feb 2019
 
 Switching over to traversing the catch stack at GC time fixed the bug! I don't think an approach that didn't involve this would be better - it'd require a huge refactor to ensure all mutations would also be protected. I think it's possibly the only way in this system.

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "uv.h"
 
 #include "language.h"
 #include "environments.h"
@@ -37,6 +38,8 @@ typedef struct RuntimeEnvironment {
 
     Config* config;
 
+    uv_loop_t eventLoop;
+
 } RuntimeEnvironment;
 
 
@@ -48,3 +51,4 @@ RuntimeEnvironment* runtimeGet(void);
 void runtimeEnterEnv(Env*);
 void runtimeExitEnv(void);
 void runtimeGcTraverse(GcCallback* cb);
+void runtimeRunCallback(JsValue* fn, FunctionArguments args);

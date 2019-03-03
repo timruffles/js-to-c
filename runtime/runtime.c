@@ -3,9 +3,11 @@
 
 #include "lib/debug.h"
 #include "global.h"
+#include "event.h"
 #include "runtime.h"
 #include "config.h"
 #include "environments.h"
+#include "functions.h"
 #include "language.h"
 #include "gc.h"
 #include "gcObject.h"
@@ -63,10 +65,15 @@ RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
     runtimeEnv->config = config;
     log_info("created runtime environment");
 
+    eventInit(runtimeEnv);
+
     log_info("runtimeInit returning");
     return runtimeEnv;
 }
 
+void runtimeRunCallback(JsValue* fn, FunctionArguments args) {
+    functionRunCallback(fn, args, runtimeGet()->global);
+}
 
 void runtimeEnterEnv(Env* env) {
     RuntimeEnvironment* rt = runtimeGet();

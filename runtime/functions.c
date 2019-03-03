@@ -25,6 +25,10 @@ typedef struct FunctionRecord {
     JsValue* argumentNames[MAX_ARG_NAMES];
 } FunctionRecord;
 
+JsValue* functionRunCallback(JsValue* val, FunctionArguments args, JsValue* thisValue) {
+    return functionRunWithArguments(val, args.args, args.count, thisValue);
+}
+
 JsValue* functionRunWithArguments(JsValue* val, JsValue* argumentValues[], uint64_t argumentCount, JsValue* thisValue) {
     if(jsValueType(val) != FUNCTION_TYPE) {
         // TODO compiler support for nicer errors
