@@ -1,0 +1,22 @@
+["hello world async IO"]
+
+example="""
+var a = 0;
+
+function logItA() {
+  console.log(a);
+  a = 2
+}
+
+function logItB() {
+  console.log(a);
+}
+
+setTimeout(logItB, 5)
+setTimeout(logItA)
+
+a = 1
+console.log("Hello")
+"""
+
+output="Hello\n1.000000\n2.000000"

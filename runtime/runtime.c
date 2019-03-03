@@ -65,8 +65,6 @@ RuntimeEnvironment* runtimeInit(Config* maybeConfig) {
     runtimeEnv->config = config;
     log_info("created runtime environment");
 
-    eventInit(runtimeEnv);
-
     log_info("runtimeInit returning");
     return runtimeEnv;
 }

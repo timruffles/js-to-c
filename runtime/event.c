@@ -12,27 +12,22 @@ typedef struct {
     FunctionArguments args;
 } TimerCallback;
 
-void eventInit(RuntimeEnvironment* rt) {
-    uv_loop_init(&rt->eventLoop);
-}
-
 void eventLoop() {
-    RuntimeEnvironment* rt = runtimeGet();
-    uv_run(&rt->eventLoop, UV_RUN_DEFAULT);
-    uv_loop_close(&rt->eventLoop);
+    log_info("starting event loop");
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+    uv_loop_close(uv_default_loop());
 }
 
 static void timerRun(uv_timer_t* handle) {
+    log_info("timer run");
     TimerCallback* tcb = handle->data;
     runtimeRunCallback(tcb->fn, tcb->args);
 }
 
 void eventTimeout(JsValue* fn, FunctionArguments args, uint64_t ms) {
-    RuntimeEnvironment* rt = runtimeGet();
-    
     uv_timer_t* handle;
     ensureCallocBytes(handle, sizeof(uv_timer_t));
-    uv_timer_init(&rt->eventLoop, handle);
+    uv_timer_init(uv_default_loop(), handle);
 
     TimerCallback* callback;
     ensureCallocBytes(callback, sizeof(TimerCallback));

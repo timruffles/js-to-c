@@ -1,7 +1,6 @@
 # Todos
 
 Next action: 
-- keep working on atomic problem - `./scripts/test-by-name 'garbage in loop'`
 - need to fill in more of the language as it makes writing tests hard, TODOs in other tests aren't clear
   enough (note to self: read the skipped tests)
 
@@ -26,9 +25,8 @@ Next action:
   - at the mo free list fragments in a way that'd be trivial to defrag while processing (as lots of it is likely continugous)
   - currently will fail to allocate N bytes if there is plenty of space left, as long as all of the free chunks are < N big
 - event system
-    - promises (nice n simple, no need to do IO)
-    - timers
     - input/output events
+    - ? promises (nice n simple, no need to do IO)
 
 ## Dones
 

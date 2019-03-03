@@ -42,5 +42,5 @@ GetRuntimeLibs() {
 }
 
 LibuvDylib() {
-  echo /usr/local/Cellar/libuv/1.22.0/lib/libuv.dylib
+  echo /usr/local/Cellar/libuv/1.26.0/lib/libuv.dylib
 }

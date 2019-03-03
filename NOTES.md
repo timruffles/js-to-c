@@ -1,5 +1,14 @@
 # Notes
 
+## 3 Mar 2019
+
+Aync IO was surprisingly easy! The groundwork was really all the implementation of functions. `event.c` is ~40 lines of code.
+
+
+- *when I used the default loop! For some reason I couldn't store a loop struct in a struct, got bad access. Meh.
+
+
+
 ## 2 Mar 2019
 
 There's still lots to do, but the big remaining thing I've not even started is event based IO. Once that's in we have something that does all the interesting bits of JS:

@@ -37,9 +37,6 @@ typedef struct RuntimeEnvironment {
     bool gcProtectAllocations;
 
     Config* config;
-
-    uv_loop_t eventLoop;
-
 } RuntimeEnvironment;
 
 
