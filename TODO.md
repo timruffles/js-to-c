@@ -1,23 +1,22 @@
 # Todos
 
 Next action: 
+- a compiler optimisation
+  - string concat or addition both good examples
 - need to fill in more of the language as it makes writing tests hard, TODOs in other tests aren't clear
   enough (note to self: read the skipped tests)
 
 ## List
 
+- Number formatting, e.g 1 -> 1, 0.1 -> 0.1, not 1.00000 and 0.10000
+- Arrays
 - Object System
   - debugging - list keys
   - Object.prototype -> prelude
   - method calls - setting this in `obj.method()`
   - real implementation of properties - descriptors etc
-- Arrays
 - varargs: currently stuff like console.log only takes one args
-- functions passing too few arguments
-  - should pass in undefineds
 - warning on missing
-- logical expressions
-- Number formatting, e.g 1 -> 1, 0.1 -> 0.1, not 1.00000 and 0.10000
 - var hoisting
   - variable
   - functions

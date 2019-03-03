@@ -35,8 +35,10 @@ Env *envCreateForCall(Env* parent, JsValue* argumentNames[], uint64_t argCount, 
     for(uint64_t i = 0; i < argCount; i++) {
         log_info("Env name %s", stringGetCString(argumentNames[i]));
         envDeclare(callEnv, argumentNames[i]);
-        JsValue* val = i < suppliedArgumentCount ? argumentValues[i] : getUndefined();
-        envSet(callEnv, argumentNames[i], val);
+
+        if(i < suppliedArgumentCount) {
+            envSet(callEnv, argumentNames[i], argumentValues[i]);
+        }
     }
     log_info("Setup new call env");
     return callEnv;
