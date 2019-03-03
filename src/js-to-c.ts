@@ -30,7 +30,7 @@ import {
     UnaryOperator,
     IfStatement,
     ForStatement,
-    ForInStatement, SimpleLiteral,
+    ForInStatement, SimpleLiteral, UpdateExpression,
 } from 'estree';
 import {CompileTimeState, CompileOptions, LibraryTarget} from "./CompileTimeState";
 
@@ -55,7 +55,10 @@ export type JsIdentifier = string;
 
 export interface CompilerIdentifier {
     id: string
+    type: typeof PredefinedVariableTarget.type
+        | typeof IntermediateVariableTarget.type
 }
+
 
 export class IntermediateVariableTarget implements CompilerIdentifier {
     static readonly type = 'IntermediateVariableTarget';
@@ -68,6 +71,16 @@ export class PredefinedVariableTarget implements CompilerIdentifier {
     readonly type: typeof PredefinedVariableTarget.type = PredefinedVariableTarget.type;
     constructor(readonly id: JsIdentifier) {}
 }
+
+const COMPILER_IDENTIFIER_TYPES = new Set([
+    PredefinedVariableTarget.type,
+    IntermediateVariableTarget.type
+])
+
+export function isCompilerIdentifer(node: CompilerIdentifier | Node): node is CompilerIdentifier {
+    return COMPILER_IDENTIFIER_TYPES.has(node.type)
+}
+
 
 export const ReturnTarget = {
     type: 'ReturnTarget' as 'ReturnTarget',
@@ -104,7 +117,6 @@ const binaryOpToFunction: {[k: string]: string | undefined} = {
 };
 
 const assignmentOpToFunction: {[k: string]: string | undefined} = {
-    // currently implemented compile-side
     "+=": "addOperator",
     "-=": "subtractOperator",
 };
@@ -180,7 +192,7 @@ function getCompilers(): NodeCompilerLookup {
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
         UnaryExpression: compileUnaryExpression,
-        UpdateExpression: unimplemented('UpdateExpression'),
+        UpdateExpression: compileUpdateExpression,
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
         WhileStatement: compileWhileStatement,
@@ -502,6 +514,52 @@ function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState
             ${linkSrc}`;
 }
 
+const updateOperatorsToValue = {
+    '++': 1,
+    '--': -1,
+}
+
+function compileUpdateExpression(node: UpdateExpression, state: CompileTimeState) {
+    // TODO ah crap, the updating is going to be tricky - `a++ vs a[b]++ a[b()]++, a[b()].foo++`
+    // can just reuse/call compileAssignmentExpression?
+    const value = updateOperatorsToValue[node.operator]
+    if(value == null) {
+        throw Error(`Unknown update operator '${node.operator}`)
+    }
+
+    const leftTarget = new IntermediateVariableTarget(state.getNextSymbol('left'))
+
+    // the final result
+    const leftFinalValueTarget = new IntermediateVariableTarget(state.getNextSymbol('result'))
+    // what the expression evaluates too
+    const evaluationTarget = new IntermediateVariableTarget(state.getNextSymbol('evaluation'))
+
+    const protection = state.protectStack();
+
+    const addSrc = `addOperator(${leftTarget.id}, jsValueCreateNumber(${value}));`
+
+    const updateSrc = node.prefix
+        ? `${evaluationTarget.id} = ${leftFinalValueTarget} = ${addSrc}`
+        : `${evaluationTarget.id} = ${leftTarget.id};
+           ${protection.idSrc(evaluationTarget)}
+           ${leftFinalValueTarget} = ${addSrc}
+           ${leftTarget.id} = ${evaluationTarget.id}`
+
+    return `
+        JsValue* ${leftFinalValueTarget.id};
+        JsValue* ${evaluationTarget.id};
+        ${compile(node.argument, state.childStateWithTarget(leftTarget))}
+        gcProtectValue(${leftTarget.id});
+        ${updateSrc}
+        ${compileAssignmentExpression({
+            type: "AssignmentExpression",
+            
+        }, state)}
+        ${protection.endSrc()}
+        ${assignToTarget(evaluationTarget.id, state.target)}
+    `
+}
+
 function compileConditionalExpression(node: ConditionalExpression, state: CompileTimeState) {
     const resultTarget = new PredefinedVariableTarget(state.getNextSymbol('conditionalValue'))
     const testResultTarget = new IntermediateVariableTarget(state.getNextSymbol('conditionalPredicate'));
@@ -741,22 +799,25 @@ function compileProperty(property: Expression, state: CompileTimeState) {
         }));
 }
 
-function compileAssignmentExpression(node: AssignmentExpression, state: CompileTimeState) {
-    const target = node.left;
-    const result = new PredefinedVariableTarget(state.getNextSymbol('result'));
-    switch(target.type) {
+function compileAssignment({left,right,operator, result}:
+   { left: Identifier | MemberExpression; right: Expression | CompilerIdentifier; operator: AssignmentOperator, result: PredefinedVariableTarget },
+                           state: CompileTimeState) {
+
+    const resultSrc = isCompilerIdentifer(right)
+        ? ''
+        : compile(right, state.childState({ target: result }))
+    switch(left.type) {
         case 'Identifier': {
-            if(target.name === 'this') {
+            if(left.name === 'this') {
                 throw new CompileTimeError('Invalid left-hand side in assignment (this)');
             }
 
-            const variable = state.internString(target.name);
-            const update = node.operator === '=' 
-                ? '' 
-                : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(envGet(env, ${variable.id}), ${result.id});`;
+            const variable = state.internString(left.name);
+            const update = operator === '='
+                ? ''
+                : `${result.id} = ${getAssignmentOperatorFunction(operator)}(envGet(env, ${variable.id}), ${result.id});`;
 
-            return `JsValue* ${result.id};
-                    ${compile(node.right, state.childState({ target: result }))}
+            return `${resultSrc}
                     ${update}
                     envSet(env, ${variable.id}, ${result.id});`
         }
@@ -764,27 +825,37 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
             // order of execution - target, prop, value
 
             const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
-            const propertySrc = compileProperty(target.property, state.childState({ target: propertyTarget }));
+            const propertySrc = compileProperty(left.property, state.childState({ target: propertyTarget }));
 
             const assignmentTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
-            const assignmentTargetSrc = compile(target.object, state.childState({ target: assignmentTarget }));
+            const assignmentTargetSrc = compile(left.object, state.childState({ target: assignmentTarget }));
 
-            const update = node.operator === '='
-                ? '' 
-                : `${result.id} = ${getAssignmentOperatorFunction(node.operator)}(objectGet(${assignmentTarget.id}, ${propertyTarget.id}), ${result.id});`;
+            const update = operator === '='
+                ? ''
+                : `${result.id} = ${getAssignmentOperatorFunction(operator)}(objectGet(${assignmentTarget.id}, ${propertyTarget.id}), ${result.id});`;
 
 
             return `JsValue* ${result.id};
                     ${assignmentTargetSrc} // assignment target src
                     ${propertySrc} // property src
-                    ${compile(node.right, state.childState({ target: result }))} // RHS
+                    ${resultSrc}
                     ${update} // any update
                     objectSet(${assignmentTarget.id}, ${propertyTarget.id}, ${result.id}); // obj set`
         }
-        default:
-            return unimplemented(target.type)();
     }
 }
+
+function compileAssignmentExpression(node: AssignmentExpression, state: CompileTimeState) {
+    const {left,right,operator} = node;
+    const result = new PredefinedVariableTarget(state.getNextSymbol('result'));
+    if(left.type !== "Identifier" && left.type !== "MemberExpression") {
+        return unimplemented(left.type)()
+    }
+    return `JsValue* ${result.id};
+            ${compileAssignment({left,right,operator,result},state)}
+    `
+}
+
 
 function compileThrowStatement(node: ThrowStatement, state: CompileTimeState) {
     const errorTarget = new IntermediateVariableTarget(state.getNextSymbol('error'));

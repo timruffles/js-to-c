@@ -42,3 +42,45 @@ console.log(!(10===10.001));
 """
 
 output="true\ntrue\ntrue"
+
+["prefix add"]
+
+example="""
+var a = 42
+console.log(++a);
+console.log(a);
+"""
+
+output="43.000000\n43.000000"
+
+["postfix add"]
+
+example="""
+var a = 42
+console.log(a++);
+console.log(a);
+"""
+
+output="42.000000\n43.000000"
+
+["prefix subtract"]
+
+example="""
+var a = 42
+console.log(--a);
+console.log(a);
+"""
+
+output="41.000000\n41.000000"
+
+["postfix subtract"]
+
+example="""
+var a = 42
+console.log(a--);
+console.log(a);
+"""
+
+output="42.000000\n41.000000"
+
+
