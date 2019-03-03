@@ -3,6 +3,8 @@
 Next action: 
 - a compiler optimisation
   - string concat or addition both good examples
+- CI!
+- a demo site with side-by-side JS and C output
 - need to fill in more of the language as it makes writing tests hard, TODOs in other tests aren't clear
   enough (note to self: read the skipped tests)
 
