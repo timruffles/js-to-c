@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 #include "lib/debug.h"
 #include "language.h"
@@ -46,6 +47,41 @@ static JsValue *const JS_NULL = &(JsValue) {
 static JsValue *const JS_NAN = &(JsValue) {
         .type = NAN_TYPE
 };
+
+static JsValue *const JS_INFINITY = &(JsValue) {
+        .type = NUMBER_TYPE,
+        .value = (union JsValueValue){
+            .number = (double)INFINITY,
+        }
+};
+
+// 1 and 0 are returned from spec operations (ToNumber etc), so useful
+// to allocate once and reference statically
+static JsValue *const JS_ZERO = &(JsValue) {
+    .type = NUMBER_TYPE,
+    .value = (union JsValueValue){
+        .number = 0,
+    }
+};
+
+static JsValue *const JS_ONE = &(JsValue) {
+    .type = NUMBER_TYPE,
+    .value = (union JsValueValue){
+        .number = 1,
+    }
+};
+
+JsValue* getInfinity() {
+    return JS_INFINITY;
+}
+
+JsValue* getOne() {
+    return JS_ONE;
+}
+
+JsValue* getZero() {
+    return JS_ZERO;
+}
 
 JsValue* getUndefined() {
     return JS_UNDEFINED;
@@ -101,7 +137,13 @@ void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
     } else if(value->type == STRING_TYPE) {
         OUTPUT_CONST(stringGetCString(value));
     } else if(value->type == NUMBER_TYPE) {
-        snprintf(outputBuffer, bufferSize, "%f", jsValueNumber(value));
+        if(jsValueNumber(value) == (double)INFINITY) {
+            OUTPUT_CONST("Infinity");
+        } else {
+            snprintf(outputBuffer, bufferSize, "%f", jsValueNumber(value));
+        }
+    } else if(value->type == NAN_TYPE) {
+        OUTPUT_CONST("NaN");
     } else {
         OUTPUT_CONST(FUNCTION_STRING);
     }

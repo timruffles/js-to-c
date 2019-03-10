@@ -29,6 +29,10 @@ Next action:
     - input/output events
     - ? promises (nice n simple, no need to do IO)
 
+## Minor
+
+- `getTrue()`, `getNaN()` etc are wasteful and unnecessary, make constants. 
+
 ## Dones
 
 - The array of pointers to function argument names needs to be heap allocated (or stored somewhere)

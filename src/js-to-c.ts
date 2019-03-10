@@ -2,37 +2,38 @@ import fs from 'fs';
 import {parseScript, Syntax} from "esprima";
 import {
     AssignmentExpression,
-    BinaryExpression,
+    AssignmentOperator,
     BlockStatement,
     CallExpression,
+    CatchClause,
     ConditionalExpression,
+    Expression,
+    ForInStatement,
+    ForStatement,
     FunctionDeclaration,
     Identifier,
+    IfStatement,
     Literal,
+    LogicalExpression,
     MemberExpression,
+    NewExpression,
     Node,
+    ObjectExpression,
     Pattern,
     Program,
     ReturnStatement,
+    SimpleLiteral,
+    ThisExpression,
+    ThrowStatement,
+    TryStatement,
+    UnaryExpression,
+    UnaryOperator,
     VariableDeclaration,
     VariableDeclarator,
     WhileStatement,
-    BinaryOperator,
-    AssignmentOperator,
-    ObjectExpression,
-    Expression,
-    ThrowStatement,
-    CatchClause,
-    TryStatement,
-    ThisExpression,
-    NewExpression,
-    UnaryExpression,
-    UnaryOperator,
-    IfStatement,
-    ForStatement,
-    ForInStatement, SimpleLiteral, LogicalExpression,
 } from 'estree';
-import {CompileTimeState, CompileOptions, LibraryTarget} from "./CompileTimeState";
+import {CompileOptions, CompileTimeState, LibraryTarget} from "./CompileTimeState";
+import {compileBinaryExpression} from "./operators";
 
 
 type NodeCompiler = (n: any, s: CompileTimeState) => string;
@@ -49,6 +50,15 @@ export class InternedString {
    get reference() {
        return `${this.id} /* ${this.value} */`
    }
+}
+
+// we intern numeric literals to reduce allocations
+export class InternedNumber {
+    constructor(public readonly id: string, public readonly value: number) {}
+
+    get reference() {
+        return `${this.id} /* ${this.value} */`
+    }
 }
 
 export type JsIdentifier = string;
@@ -70,6 +80,10 @@ export class PredefinedVariableTarget implements CompilerIdentifier {
     static readonly type = 'PredefinedVariableTarget';
     readonly type: typeof PredefinedVariableTarget.type = PredefinedVariableTarget.type;
     constructor(readonly id: JsIdentifier) {}
+
+    get definition() {
+        return `JsValue* ${this.id};`
+    }
 }
 
 export const ReturnTarget = {
@@ -95,18 +109,6 @@ const unaryOpToFunction: {[k: string]: string | undefined} = {
     "!": "notOperator",
     "typeof": "typeofOperator",
 }
-
-const binaryOpToFunction: {[k: string]: string | undefined} = {
-    ">": "GTOperator",
-    ">=": "GTEOperator",
-    "<": "LTOperator",
-    "<=": "LTEOperator",
-    "+": "addOperator",
-    "-": "subtractOperator",
-    "*": "multiplyOperator",
-    "===": "strictEqualOperator",
-    "instanceof": "objectInstanceof",
-};
 
 const assignmentOpToFunction: {[k: string]: string | undefined} = {
     // currently implemented compile-side
@@ -139,7 +141,7 @@ export function compileString(src: string, compileOptions: CompileOptions) {
     return compile(ast, new CompileTimeState(compileOptions));
 }
 
-function compile(ast: Node, state: CompileTimeState): string {
+export function compile(ast: Node, state: CompileTimeState): string {
     return lookup[ast.type](ast, state);
 }
 
@@ -151,15 +153,12 @@ function compileLogicalExpression(node: LogicalExpression, state: CompileTimeSta
     const returnSetup = state.withManualReturn(state.getNextSymbol('evaluation'));
 
     const leftTarget = new IntermediateVariableTarget(state.getNextSymbol('lhs'));
-    const leftSrc = compile(node.left, returnSetup.state.childState({
-        target: leftTarget,
-    }));
+    const leftSrc = compile(node.left, returnSetup.state.childStateWithTarget(leftTarget))
 
     const rightSrc = compile(node.right, returnSetup.state);
 
     const shortCircuit = node.operator === '&&' ? 'false' : 'true'
 
-    const returnSrc = 'returnSrc' in returnSetup ? returnSetup.returnSrc : ''
 
     return `/* ${node.operator} */
             ${leftSrc}
@@ -168,7 +167,7 @@ function compileLogicalExpression(node: LogicalExpression, state: CompileTimeSta
             } else {
                 ${rightSrc};
             }
-            ${returnSrc}`
+            ${returnSetup.returnSrc}`
 
 }
 
@@ -256,8 +255,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
 
     const body = joinNodeOutput(node.body.map(n => compile(n, state)));
 
-    const internedStrings = Object.values(state.interned);
-    const interned = compileInternedStrings(internedStrings);
+    const interned = compileInternedInitializers(state)
 
     return `
         #include <stdio.h>
@@ -273,6 +271,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/exceptions.h"
         #include "../../runtime/lib/debug.h"
         #include "../../runtime/event.h"
+        #include "../../runtime/operations.h"
 
         
         ${interned}
@@ -284,7 +283,7 @@ function compileProgram(node: Program, state: CompileTimeState) {
             eventLoop();
         }
         
-        ${compileInternInitialisation(internedStrings)}
+        ${compileInternInitialisation(state)}
         
         ${state.outputTarget.type === 'Library' ? bodyForLibrary(state.outputTarget) : bodyForMain()}
 `
@@ -321,20 +320,28 @@ function bodyForMain() {
 }
 
 
-function compileInternedStrings(interned: InternedString[]): string {
-    return joinNodeOutput(interned.map(({id}) => (
+function compileInternedInitializers(state: CompileTimeState): string {
+    const init: {id:string}[] = [
+        ...state.getInternedNumbers(),
+        ...state.getInternedStrings(),
+    ];
+    return joinNodeOutput(init.map(({id}) => (
         `static JsValue* ${id};`
     )));
 }
 
-function compileInternInitialisation(interned: InternedString[]): string {
-    const initialisers = joinNodeOutput(interned.map(({id, value}) => (
+function compileInternInitialisation(state: CompileTimeState): string {
+    const stringInitializers = joinNodeOutput(state.getInternedStrings().map(({id, value}) => (
         `${id} = stringFromLiteral("${value.replace(/"/g, '"')}");`
+    )));
+    const numberInitializers = joinNodeOutput(state.getInternedNumbers().map(({id, value}) => (
+        `${id} = jsValueCreateNumber(${value});`
     )));
 
     return `static void initialiseInternedStrings() {
         gcStartProtectAllocations();
-        ${initialisers}
+        ${stringInitializers}
+        ${numberInitializers}
         gcStopProtectAllocations();
     }`;
 }
@@ -373,7 +380,7 @@ function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeS
 
 
 // used by any node that evaluates to a value to assign that value to the target
-function assignToTarget(cExpression: string, target: CompileTarget) {
+export function assignToTarget(cExpression: string, target: CompileTarget) {
     switch(target.type) {
         case 'SideEffectTarget':
             return `${cExpression};`;
@@ -525,26 +532,6 @@ function compileUnaryExpression(node: UnaryExpression, state: CompileTimeState) 
 
 }
 
-function compileBinaryExpression(node: BinaryExpression, state: CompileTimeState) {
-    const targetLeft = new IntermediateVariableTarget(state.getNextSymbol('left'))
-    const targetRight = new IntermediateVariableTarget(state.getNextSymbol('right'))
-
-    const leftSrc = compile(node.left, state.childState({
-        target: targetLeft,
-    }));
-    const rightSrc = compile(node.right, state.childState({
-        target: targetRight,
-    }));
-
-    const operatorFn = getBinaryOperatorFunction(node.operator);
-
-    const linkSrc = assignToTarget(`${operatorFn}(${targetLeft.id}, ${targetRight.id})`, state.target);
-
-    return `${leftSrc}
-            ${rightSrc}
-            ${linkSrc}`;
-}
-
 function compileConditionalExpression(node: ConditionalExpression, state: CompileTimeState) {
     const resultTarget = new PredefinedVariableTarget(state.getNextSymbol('conditionalValue'))
     const testResultTarget = new IntermediateVariableTarget(state.getNextSymbol('conditionalPredicate'));
@@ -608,7 +595,7 @@ function compileBlockStatement(node: BlockStatement, state: CompileTimeState) {
 
 function compileReturnStatement(node: ReturnStatement, state: CompileTimeState) {
     if(!node.argument) {
-        return `return getUndefined()`;
+        return `return getUndefined();`;
     }
     const returnTarget = new PredefinedVariableTarget(state.getNextSymbol('return'));
     const argumentSrc = compile(node.argument, state.childState({
@@ -883,14 +870,6 @@ function compileIfStatement(node: IfStatement, state: CompileTimeState) {
 
 function getUnaryOperatorFunction(operator: UnaryOperator): string {
     const operatorFn = unaryOpToFunction[operator];
-    if(!operatorFn) {
-        throw Error(`unimplemented operator '${operator}'`)
-    }
-    return operatorFn;
-}
-
-function getBinaryOperatorFunction(operator: BinaryOperator): string {
-    const operatorFn = binaryOpToFunction[operator];
     if(!operatorFn) {
         throw Error(`unimplemented operator '${operator}'`)
     }

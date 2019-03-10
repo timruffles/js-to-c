@@ -1,0 +1,40 @@
+["literal multiplies"]
+
+example = """
+function ten() { return 10 }
+
+console.log(ten() * 5);
+console.log(8 * ten());
+"""
+
+output="50.000000\n80.000000"
+
+["literal divides"]
+
+example = """
+function ten() { return 10 }
+
+console.log(ten() / 2);
+console.log(30 / ten());
+"""
+
+output="5.000000\n3.000000"
+
+["literal divides - cases"]
+
+example = """
+function getNull() { return null }
+function getNaN() { return NaN }
+function getUndefined() { return }
+
+console.log(10 / getNull());
+console.log(10 / (1>0));
+console.log(10 / (0>1));
+console.log((0>1) / 10);
+console.log(getNaN() / 10);
+console.log(10 / getUndefined());
+console.log(getUndefined() / 10);
+"""
+
+output="Infinity\n10.000000\nInfinity\n0.000000\nNaN\nNaN\nNaN"
+

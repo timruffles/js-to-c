@@ -1,4 +1,11 @@
-import {CompilerIdentifier, CompileTarget, InternedString, PredefinedVariableTarget, SideEffectTarget} from "./js-to-c";
+import {
+    CompilerIdentifier,
+    CompileTarget,
+    InternedNumber,
+    InternedString,
+    PredefinedVariableTarget,
+    SideEffectTarget
+} from "./js-to-c";
 
 /**
  * The body of a JS function, ready to be linked with correct env etc
@@ -42,7 +49,8 @@ export class CompileTimeState {
     // shared between all state objects for a given compilation
     functions: JsFunctionBody[] = [];
     // our intern string pool
-    interned: { [k: string]: InternedString } = {};
+    private internedStrings: { [k: string]: InternedString } = {};
+    private internedNumbers = new Map<number, InternedNumber>()
     private counter = {id: 0};
 
     target: CompileTarget = SideEffectTarget;
@@ -76,10 +84,10 @@ export class CompileTimeState {
     }
 
     internString(str: string) {
-        if (!(str in this.interned)) {
-            this.interned[str] = new InternedString(this.getNextSymbol('interned'), str);
+        if (!(str in this.internedStrings)) {
+            this.internedStrings[str] = new InternedString(this.getNextSymbol('interned'), str);
         }
-        return this.interned[str];
+        return this.internedStrings[str];
     }
 
     getSymbolForId(prefix: string, id: number) {
@@ -101,23 +109,36 @@ export class CompileTimeState {
      *
      * This returns a new child state that either points at the original, or a predefined
      */
-    withManualReturn(symbol: string): { state: CompileTimeState } | { returnSrc: string, state: CompileTimeState } {
+    withManualReturn(symbol: string): { returnSrc: string, state: CompileTimeState } {
         if (this.target.type !== "ReturnTarget") {
-            return {state: this}
+            return {state: this, returnSrc: ''}
         }
 
         const target = new PredefinedVariableTarget(symbol)
 
         return {
             returnSrc: `return ${target.id};`,
-            state: this.childState({
-                target,
-            }),
+            state: this.childStateWithTarget(target),
         }
     }
 
     protectStack() {
         return new ProtectionStack()
+    }
+
+    internedNumber(value: number): InternedNumber {
+        if(!this.internedNumbers.has(value)) {
+            this.internedNumbers.set(value, new InternedNumber(this.getNextSymbol('internedNumber'), value))
+        }
+        return this.internedNumbers.get(value)!
+    }
+
+    getInternedStrings() {
+        return Object.values(this.internedStrings)
+    }
+
+    getInternedNumbers() {
+        return [...this.internedNumbers.values()]
     }
 }
 

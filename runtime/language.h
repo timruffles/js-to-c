@@ -61,6 +61,10 @@ bool isTruthy(JsValue*);
 
 JsValue* getUndefined(void);
 JsValue* getNull(void);
+
+JsValue* getOne(void);
+JsValue* getZero(void);
+JsValue* getInfinity(void);
 JsValue* getNaN(void);
 
 JsValue* getTrue(void);
