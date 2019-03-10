@@ -2,10 +2,10 @@
 ["if example"]
 
 example = """
-  if (Math.random() > 0.5) {
+if (Math.random() > 0.5) {
     console.log('heads');
-  } else {
+} else {
     console.log('tails');
-  }
+}
 """
 
