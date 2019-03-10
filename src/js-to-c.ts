@@ -214,7 +214,9 @@ function getCompilers(): NodeCompilerLookup {
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
         WhileStatement: compileWhileStatement,
-        WithStatement: unimplemented('WithStatement'),
+
+        // Leaving out - strict mode
+        WithStatement: notInStrictMode('WithStatement'),
 
         // ES6+
         ArrayPattern: unimplemented('ArrayPattern'),
@@ -490,6 +492,12 @@ function ensureSupportedTarget(node: Pattern): SupportedAssignmentTarget {
 function unimplemented(node: string) {
     return function () {
         throw Error(`unimplemented ${node}`);
+    }
+}
+
+function notInStrictMode(node: string) {
+    return function () {
+        throw Error(`${node} in invalid in strict mode`);
     }
 }
 
