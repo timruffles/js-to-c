@@ -37,4 +37,19 @@ console.log(i)
 
 output="5.000000"
 
+["for loop - no test"]
+
+example = """
+for(var i = 0;; i+=1) {
+  if(i > 2) {
+    break;
+  }
+}
+console.log(i)
+"""
+
+output="3.000000"
+
+
+
 

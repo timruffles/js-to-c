@@ -640,7 +640,7 @@ function compileForStatement(node: ForStatement, state: CompileTimeState) {
         ? compile(node.test, state.childState({
             target: testVariable
         }))
-        : `<ignored>`;
+        : `// no for test`;
     const testBranchSrc = node.test
         ? `if (!isTruthy(${testVariable.id})) {
             break;
