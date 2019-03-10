@@ -8,10 +8,6 @@
 #include "strings.h"
 #include "gc.h"
 
-// Because... why not? Not user mutable so easier to debug
-static const char TRUE_VALUE = 'Y';
-static const char FALSE_VALUE = 'N';
-
 // string representations
 static char TRUE_STRING[] = "true";
 static char FALSE_STRING[] = "false";
@@ -20,9 +16,7 @@ static char FUNCTION_STRING[] = "[Function ...]";
 
 union JsValueValue {
    double number;
-   const char boolean;
    void* pointer;
-   GcObject* objectPointer;
 };
 
 typedef struct JsValue {
@@ -34,16 +28,10 @@ GcObjectReflection gcObjectReflectType(int type);
 
 static JsValue *const TRUE = &(JsValue) {
         .type = BOOLEAN_TYPE,
-        .value = {
-                .boolean = TRUE_VALUE
-        }
 };
 
 static JsValue *const FALSE = &(JsValue) {
         .type = BOOLEAN_TYPE,
-        .value = {
-                .boolean = FALSE_VALUE
-        }
 };
 
 // use pointer equality to check for these values
@@ -105,7 +93,7 @@ void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
     } else if(value->type == NULL_TYPE) {
         OUTPUT_CONST("null");
     } else if(value->type == BOOLEAN_TYPE) {
-        OUTPUT_CONST((value->value.boolean) == TRUE_VALUE
+        OUTPUT_CONST(value == getTrue()
             ? TRUE_STRING
             : FALSE_STRING);
     } else if(value->type == OBJECT_TYPE) {
