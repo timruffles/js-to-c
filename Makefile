@@ -14,7 +14,10 @@ clean:
 	rm -rf out/* js-build/*
 
 
-
 .PHONY: install
 install:
-	npm install
+	npm install && cd runtime && make libs
+
+.PHONY: test
+test: install
+	npm test && cd runtime && make test

@@ -75,9 +75,11 @@ Dependencies:
 
 - clang
 - Make
-- libuv (`brew`)
+- CMake (for libuv)
 
-I'm trying to limit my focus to learning about compilation, so I've made no attempt to make this cross platform.
+I'm trying to limit my focus to learning about compilation, so I've made no attempt to make this cross platform. It shouldn't be too tricky, libuv is the big dependency and it's cross platform.
+
+    make install
 
 ### Developing
 

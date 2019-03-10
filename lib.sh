@@ -42,5 +42,5 @@ GetRuntimeLibs() {
 }
 
 LibuvDylib() {
-  echo /usr/local/Cellar/libuv/1.26.0/lib/libuv.dylib
+  echo ./runtime/vendor/libuv-1.26.0/out/cmake/libuv.dylib
 }
