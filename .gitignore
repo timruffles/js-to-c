@@ -1,8 +1,8 @@
 out
 test/fixtures
 js-build
-
-
-# for tags
 node_modules
+
 tags
+
+public/build
