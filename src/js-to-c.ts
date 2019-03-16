@@ -294,7 +294,7 @@ function bodyForLibrary({ name, header }: LibraryTarget) {
     #include "${header}"
     
     extern void ${name}LibraryInit() {
-        initialiseInternedStrings();
+        initialiseInternedValues();
         RuntimeEnvironment* runtime = runtimeGet();
         
         log_info("Initializing JS library '${name}'");
@@ -308,7 +308,7 @@ function bodyForMain() {
 
     int main() {
         RuntimeEnvironment* runtime = runtimeInit(NULL);
-        initialiseInternedStrings();
+        initialiseInternedValues();
 
         preludeLibraryInit();
         
@@ -338,7 +338,7 @@ function compileInternInitialisation(state: CompileTimeState): string {
         `${id} = jsValueCreateNumber(${value});`
     )));
 
-    return `static void initialiseInternedStrings() {
+    return `static void initialiseInternedValues() {
         gcStartProtectAllocations();
         ${stringInitializers}
         ${numberInitializers}
@@ -698,7 +698,7 @@ function compileLiteral(node: Literal, state: CompileTimeState) {
         if(typeof node.value === 'string') {
             return internString(node.value, state)
         } else if(typeof node.value === 'number') {
-            return `jsValueCreateNumber(${node.value})`
+            return state.internedNumber(node.value).reference
         } else if(node.value === null) {
             return `getNull()`
         } else {

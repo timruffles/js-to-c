@@ -138,7 +138,7 @@ export class CompileTimeState {
     }
 
     getInternedNumbers() {
-        return [...this.internedNumbers.values()]
+        return Array.from(this.internedNumbers.values())
     }
 }
 
