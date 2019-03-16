@@ -10,6 +10,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "codemirror": "5.44.0"
+    "browserify": "16.2.3",
+    "codemirror": "5.44.0",
+    "tslib": "1.9.3"
+  },
+  "devDependencies": {
+    "@types/codemirror": "0.0.72",
+    "browser-sync": "2.26.3"
   }
 }
