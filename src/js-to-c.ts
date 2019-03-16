@@ -280,7 +280,6 @@ function compileProgram(node: Program, state: CompileTimeState) {
         
         static void userProgram(Env* env) {
             ${body};
-            eventLoop();
         }
         
         ${compileInternInitialisation(state)}
@@ -314,6 +313,7 @@ function bodyForMain() {
         
         log_info("Running user program");
         userProgram(runtime->globalEnv);
+        eventLoop();
         return 0;
     }
     `;
