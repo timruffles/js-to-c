@@ -28,7 +28,7 @@ var a = new A;
 console.log(a.data);
 """
 
-output = "12.000000"
+output = "12"
 
 ["function prototype property"]
 

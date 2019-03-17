@@ -15,4 +15,4 @@ function fact(n) {
 console.log(fact(5));
 """
 
-output = "120.000000"
+output = "120"

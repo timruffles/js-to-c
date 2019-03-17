@@ -9,7 +9,7 @@ for(var i = 0; i < a.length; a += 1) {
 }
 """
 
-output="1.000000\n2.000000\n3.000000\n4.000000"
+output="1\n2\n3\n4"
 
 ["array setting/getting"]
 
@@ -39,4 +39,4 @@ a[100] = "A"
 console.log(a.length);
 """
 
-output="0.000000\n100.000000"
+output="0\n100"

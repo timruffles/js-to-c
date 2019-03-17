@@ -8,4 +8,4 @@ while(i < 5) {
 console.log(i)
 """
 
-output="5.000000"
+output="5"

@@ -33,4 +33,4 @@ while(i < 1000) {
 console.log(i)
 """
 
-output="1000.000000"
+output="1000"

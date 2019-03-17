@@ -61,7 +61,7 @@ console.log('lhs' && 'rhs');
 console.log(0 && 'rhs');
 """
 
-output="false\nrhs\n\nfalse\nrhs\n0.000000"
+output="false\nrhs\n\nfalse\nrhs\n0"
 
 ["logical and - short circuiting"]
 
@@ -90,7 +90,7 @@ function one() {
 console.log(one());
 """
 
-output="0.000000"
+output="0"
 
 ["ternary"]
 

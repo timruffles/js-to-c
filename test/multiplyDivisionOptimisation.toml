@@ -7,7 +7,7 @@ console.log(ten() * 5);
 console.log(8 * ten());
 """
 
-output="50.000000\n80.000000"
+output="50\n80"
 
 ["literal divides"]
 
@@ -18,7 +18,7 @@ console.log(ten() / 2);
 console.log(30 / ten());
 """
 
-output="5.000000\n3.000000"
+output="5\n3"
 
 ["literal divides - cases"]
 
@@ -36,5 +36,5 @@ console.log(10 / getUndefined());
 console.log(getUndefined() / 10);
 """
 
-output="Infinity\n10.000000\nInfinity\n0.000000\nNaN\nNaN\nNaN"
+output="Infinity\n10\nInfinity\n0\nNaN\nNaN\nNaN"
 

@@ -170,4 +170,4 @@ try {
 }
 """
 
-output="1000.000000\nit worked"
+output="1000\nit worked"
