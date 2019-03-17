@@ -35,8 +35,8 @@ typedef struct JsObject {
     FunctionRecord* callInternal;
     PutInternalFunction* putInternal;
 
-    // spill-over for type-specific storage (smelly - could this be refactored?)
-    void* typeSpecific;
+    uint64_t arrayLength;
+
 } JsObject;
 
 /**
@@ -67,12 +67,13 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
 }
 
 
-ObjectValueCreation objectCreateArray() {
+ObjectValueCreation objectCreateArray(uint64_t length) {
     // TODO set prototype
     JsObject *obj;
     JsValue *val;
     jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->putInternal = arrayPutInternal;
+    obj->arrayLength = length;
     return (ObjectValueCreation) {
         .value = val,
         .object = obj,
@@ -122,8 +123,7 @@ static JsValue* coerceForObjectReadWrite(JsValue* raw, const char* const verb, J
 // used from compiled code
 JsValue* objectGet(JsValue *rawVal, JsValue *name) {
     JsValue* val = coerceForObjectReadWrite(rawVal, "read", name);
-    log_info("Getting %s", stringGetCString(name));
-    JsValue* found = objectLookup(val, name);
+    JsValue* found = objectLookup(val, stringGetCString(jsValueToString(name)));
     return found == NULL
       ? getUndefined()
       : found;
@@ -181,15 +181,14 @@ ForOwnIterator objectForOwnPropertiesNext(ForOwnIterator iterator) {
 
 
 // returns NULL or pointer to JsValue*
-JsValue* objectLookup(JsValue *val, JsValue *name) {
-    const char* cString = stringGetCString(name);
-
+JsValue* objectLookup(JsValue *val, char* name) {
+    log_info("Getting %s", name);
     // starting with object, and going up prototype chain, find a matching
     // property
     JsValue* target = val;
     while(1) {
         JsObject* object = jsValuePointer(target);
-        PropertyDescriptor* descriptor = findProperty(object->properties, cString);
+        PropertyDescriptor* descriptor = findProperty(object->properties, name);
         if(descriptor != NULL) {
             return descriptor->value;
         }
@@ -216,20 +215,19 @@ static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
 }
 
 // used from compiled code
-JsValue* objectSet(JsValue* rawVal, JsValue* name, JsValue* value) {
+JsValue* objectSet(JsValue* rawVal, JsValue* rawName, JsValue* value) {
     // TODO - could be optimised - could pass literals through etc for faster array init
-    log_info("Setting %s in %s at %p", stringGetCString(name), jsValueReflect(rawVal).name, rawVal);
-    JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", name);
+    JsValue* nameString = jsValueToString(rawName);
+    log_info("Setting %s in %s at %p", stringGetCString(nameString), jsValueReflect(rawVal).name, rawVal);
+    JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", nameString);
     JsObject* object = jsValuePointer(objectVal);
-    // this should be using the JS string value
-    const char* nameString = stringGetCString(name);
 
     log_info("looking in %p for props", object->properties);
-    PropertyDescriptor *descriptor = findProperty(object->properties, nameString);
+    PropertyDescriptor *descriptor = findProperty(object->properties, stringGetCString(nameString));
 
     if(descriptor == NULL) {
         descriptor = propertyCreate();
-        descriptor->name = name;
+        descriptor->name = nameString;
         appendProperty(object, descriptor);
     }
 
@@ -245,22 +243,9 @@ JsValue* objectEnvGetParent(JsValue* env) {
     return ((JsObject*)jsValuePointer(env))->prototype;
 }
 
-GcObject* objectValueTypeStruct(JsValue* v) {
-    precondition(jsValueType(v) == OBJECT_TYPE, "must be called on obj");
-    return ((JsObject*)jsValuePointer(v))->typeSpecific;
-}
-
-GcObject* objectTypeStruct(JsObject* o) {
-    return o->typeSpecific;
-}
-
 void objectGcTraverse(JsValue* value, GcCallback* cb) {
     JsObject* object = jsValuePointer(value);
     cb(object);
-
-    if(object->typeSpecific != NULL) {
-        cb(object->typeSpecific);
-    }
 
     if(object->prototype != NULL) {
         cb(object->prototype);

@@ -35,5 +35,3 @@ ToNumberResult jsValueToNumber(JsValue* value) {
             return (ToNumberResult){};
     }
 }
-
-

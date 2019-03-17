@@ -26,7 +26,7 @@ GcObject* objectTypeStruct(JsObject* object);
 GcObject* objectValueTypeStruct(JsValue* value);
 
 // used internally by environments to model envs as objects
-JsValue* objectLookup(JsValue* object, JsValue* property);
+JsValue* objectLookup(JsValue* object, char* property);
 JsValue* objectInternalOwnProperty(JsValue* value, JsValue* property);
 JsValue* objectEnvGetParent(JsValue* env);
 char* objectDebug(JsValue* env);
@@ -51,4 +51,4 @@ typedef struct ObjectValueCreation {
     JsObject* object;
 } ObjectValueCreation;
 
-ObjectValueCreation objectCreateArray(void);
+ObjectValueCreation objectCreateArray(uint64_t length);

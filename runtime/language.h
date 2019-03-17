@@ -8,7 +8,6 @@
 #define jsValueCreatePointer(V,VT,R,RT,RS) R = gcAllocate(RS, RT); V = _jsValueCreatePointer(VT, R);
 
 #define TO_JS_BOOLEAN(X) ((X) ? getTrue() : getFalse())
-#define DEBUG_VALUE_N(M, X, O) char* op##O = calloc(1, 1024); jsValueToCString(X, op##O, 1000); printf(M, op##O);
 #define DEBUG_JS_VAL(X) log_info("value type:%s address:%p", gcObjectReflect((void*)(X)).name, X)
 
 
@@ -82,7 +81,7 @@ void* jsValuePointer(JsValue* value);
 void jsValuePointerSet(JsValue* val, void* ptr);
 bool jsValueIsPrimitive(JsValue* value);
 
-void jsValueToCString(JsValue*, char* buf, uint64_t bufSize);
+JsValue* jsValueToString(JsValue*);
 
 JsValueType jsValueType(JsValue* value);
 

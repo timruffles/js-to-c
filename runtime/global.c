@@ -16,9 +16,6 @@
 
 static FILE* outStream;
 
-#define ONE_MIBI 1048576
-static char outputBuffer[ONE_MIBI];
-
 static FILE* getOutStream() {
     if(outStream == NULL) {
         return fopen("/dev/stdout", "w");
@@ -45,9 +42,8 @@ JsValue* consoleLog(Env* env) {
     FILE* stream = getOutStream();
     assert(stream != NULL);
 
-    // TODO use proper ToString operation
-    jsValueToCString(envGet(env, stringFromLiteral("arg0")), outputBuffer, sizeof(outputBuffer));
-    ensureWrite(outputBuffer, stream);
+    JsValue* str = jsValueToString(envGet(env, stringFromLiteral("arg0")));
+    ensureWrite(stringGetCString(str), stream);
     ensureWrite("\n", stream);
     fflush(stream);
 

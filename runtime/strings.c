@@ -32,9 +32,6 @@ const char* stringGetCString(JsValue* value) {
     return getCString(jsValuePointer(value));
 }
 
-/**
- * Note: for compiler interned strings, must be called while protecting allocations
- */
 JsValue* stringCreateFromInternedString(const char* const interned, uint64_t logicalLength) {
 
     StringData* jsString;

@@ -44,9 +44,10 @@ Env *envCreateForCall(Env* parent, JsValue* argumentNames[], uint64_t argCount, 
     return callEnv;
 }
 
+// could be optimised - passed interned C string directly
 JsValue* envGet(Env *env, JsValue *name) {
     precondition(jsValueType(name) == STRING_TYPE, "Attempted to lookup non-string in env");
-    JsValue* found = objectLookup(env, name);
+    JsValue* found = objectLookup(env, stringGetCString(name));
     if(found == NULL) {
         log_info("Looked up undeclared variable '%s'", stringGetCString(name));
         exceptionsThrowReferenceError(

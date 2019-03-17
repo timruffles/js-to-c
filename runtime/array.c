@@ -13,12 +13,7 @@ typedef struct ArrayDetails {
 } ArrayDetails;
 
 JsValue* arrayCreate(uint64_t length) {
-  ObjectValueCreation cr = objectCreateArray();
-  ArrayDetails* ad = gcAllocate(sizeof(ArrayDetails));
-  *ad = (ArrayDetails) {
-      .length = length,
-  };
-  ((ArrayDetails*)objectTypeStruct(cr.object)) = ad;
+  ObjectValueCreation cr = objectCreateArray(length);
   return cr.value;
 }
 
@@ -26,7 +21,6 @@ JsValue* arrayCreate(uint64_t length) {
 void arrayInitialiseIndex(JsValue* array, JsValue* index, JsValue* val) {
     objectSet(array, index, val);
 }
-
 
 JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value) {
     return getNull();

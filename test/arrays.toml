@@ -3,13 +3,12 @@
 
 example = """
 var a = [1,2,3];
-a.push(4)
 for(var i = 0; i < a.length; a += 1) {
   console.log(a[i])
 }
 """
 
-output="1\n2\n3\n4"
+output="1\n2\n3"
 
 ["array setting/getting"]
 

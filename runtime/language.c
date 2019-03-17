@@ -9,11 +9,6 @@
 #include "strings.h"
 #include "gc.h"
 
-// string representations
-static char TRUE_STRING[] = "true";
-static char FALSE_STRING[] = "false";
-static char OBJECT_STRING[] = "[Object object]";
-static char FUNCTION_STRING[] = "[Function ...]";
 
 union JsValueValue {
    double number;
@@ -122,30 +117,32 @@ JsValue *_jsValueCreatePointer(JsValueType type, void* pointer) {
     return val;
 }
 
-#define OUTPUT_CONST(X) snprintf(outputBuffer, bufferSize, X);
-void jsValueToCString(JsValue* value, char* outputBuffer, uint64_t bufferSize) {
+// ToString operation - https://www.ecma-international.org/ecma-262/5.1/#sec-9.8
+JsValue* jsValueToString(JsValue* value) {
+    // TODO Really stringifiers for each type should request memory from gc as they know they need it (e.g Array.toString())
+    // TODO all the static strings should be allocated once
     if(value->type == UNDEFINED_TYPE) {
-        OUTPUT_CONST("undefined");
+        return stringFromLiteral("undefined");
     } else if(value->type == NULL_TYPE) {
-        OUTPUT_CONST("null");
+        return stringFromLiteral("null");
     } else if(value->type == BOOLEAN_TYPE) {
-        OUTPUT_CONST(value == getTrue()
-            ? TRUE_STRING
-            : FALSE_STRING);
+        return value == getTrue()
+            ? stringFromLiteral("true")
+            : stringFromLiteral("false");
     } else if(value->type == OBJECT_TYPE) {
-        OUTPUT_CONST(OBJECT_STRING);
+        return stringFromLiteral("[Object object]");
     } else if(value->type == STRING_TYPE) {
-        OUTPUT_CONST(stringGetCString(value));
+        return value;
     } else if(value->type == NUMBER_TYPE) {
         if(jsValueNumber(value) == (double)INFINITY) {
-            OUTPUT_CONST("Infinity");
+            return stringFromLiteral("Infinity");
         } else {
-            snprintf(outputBuffer, bufferSize, "%f", jsValueNumber(value));
+            return stringCreateFromTemplate("%g", jsValueNumber(value));
         }
     } else if(value->type == NAN_TYPE) {
-        OUTPUT_CONST("NaN");
+        return stringFromLiteral("NaN");
     } else {
-        OUTPUT_CONST(FUNCTION_STRING);
+        return stringFromLiteral("[Function ...]");
     }
 }
 
@@ -266,3 +263,5 @@ GcObjectReflection gcObjectReflectType(int type) {
 GcObjectReflection gcObjectReflect(GcObject* object) {
     return gcObjectReflectType(object->type);
 }
+
+
