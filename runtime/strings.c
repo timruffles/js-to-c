@@ -22,13 +22,13 @@ static bool isInterned(StringData* jsString) {
     return jsString->internedString != NULL;
 }
 
-static const char* getCString(StringData* jsString) {
-    return isInterned(jsString)
+static char* getCString(StringData* jsString) {
+    return (char*)(isInterned(jsString)
         ? jsString->internedString
-        : jsString->heapString;
+        : jsString->heapString);
 }
 
-const char* stringGetCString(JsValue* value) {
+char* stringGetCString(JsValue* value) {
     return getCString(jsValuePointer(value));
 }
 

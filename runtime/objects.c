@@ -20,7 +20,8 @@ typedef struct PropertyDescriptor {
     PropertyDescriptor* nextProperty;
 } PropertyDescriptor;
 
-typedef JsValue* (PutInternalFunction)(JsValue* t, JsValue* k, JsValue* v);
+typedef JsValue* (PutInternalFunction)(JsValue* o, JsValue* k, JsValue* v);
+typedef JsValue* (GetInternalFunction)(JsValue* o, JsValue* k);
 
 typedef struct JsObject {
     GcHeader;
@@ -34,6 +35,7 @@ typedef struct JsObject {
     // determines if this is callable - i.e [[Call]] internal slot
     FunctionRecord* callInternal;
     PutInternalFunction* putInternal;
+    GetInternalFunction* getInternal;
 
     uint64_t arrayLength;
 
@@ -47,13 +49,15 @@ JsValue* objectCreatePlain() {
     JsObject *obj;
     JsValue *val;
     jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
+    obj->putInternal = objectPut;
+    obj->getInternal = objectGetInternal;
     return val;
 }
 
 JsValue* objectCreate(JsValue* prototype) {
-    JsValue *obj = objectCreatePlain();
-    OBJECT_VALUE(obj)->prototype = prototype;
-    return obj;
+    JsValue *val = objectCreatePlain();
+    OBJECT_VALUE(val)->prototype = prototype;
+    return val;
 }
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
@@ -63,6 +67,8 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
     jsValueCreatePointer(val, FUNCTION_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->callInternal = fr;
     JS_SET_LITERAL(val, "prototype", objectCreatePlain());
+    obj->putInternal = objectPut;
+    obj->getInternal = objectGetInternal;
     return val;
 }
 
@@ -73,6 +79,7 @@ ObjectValueCreation objectCreateArray(uint64_t length) {
     JsValue *val;
     jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->putInternal = arrayPutInternal;
+    obj->getInternal = arrayGetInternal;
     obj->arrayLength = length;
     return (ObjectValueCreation) {
         .value = val,
@@ -120,13 +127,11 @@ static JsValue* coerceForObjectReadWrite(JsValue* raw, const char* const verb, J
 }
 
 
-// used from compiled code
+// dynamic object get - called  from compiled code with a value of unknown type
 JsValue* objectGet(JsValue *rawVal, JsValue *name) {
-    JsValue* val = coerceForObjectReadWrite(rawVal, "read", name);
-    JsValue* found = objectLookup(val, stringGetCString(jsValueToString(name)));
-    return found == NULL
-      ? getUndefined()
-      : found;
+    JsValue* nameString = jsValueToString(name);
+    JsValue* val = coerceForObjectReadWrite(rawVal, "read", nameString);
+    return OBJECT_VALUE(val)->getInternal(val, name);
 }
 
 FunctionRecord* objectGetCallInternal(JsValue *val) {
@@ -220,8 +225,11 @@ JsValue* objectSet(JsValue* rawVal, JsValue* rawName, JsValue* value) {
     JsValue* nameString = jsValueToString(rawName);
     log_info("Setting %s in %s at %p", stringGetCString(nameString), jsValueReflect(rawVal).name, rawVal);
     JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", nameString);
-    JsObject* object = jsValuePointer(objectVal);
+    return OBJECT_VALUE(objectVal)->putInternal(objectVal, nameString, value);
+}
 
+JsValue* objectPut(JsValue* objectV, JsValue* nameString, JsValue* value) {
+    JsObject* object = OBJECT_VALUE(objectV);
     log_info("looking in %p for props", object->properties);
     PropertyDescriptor *descriptor = findProperty(object->properties, stringGetCString(nameString));
 
@@ -234,6 +242,13 @@ JsValue* objectSet(JsValue* rawVal, JsValue* rawName, JsValue* value) {
     descriptor->value = value;
 
     return value;
+}
+
+JsValue* objectGetInternal(JsValue* object, JsValue* nameString) {
+    JsValue* found = objectLookup(object, stringGetCString(nameString));
+    return found == NULL
+      ? getUndefined()
+      : found;
 }
 
 /**
@@ -318,5 +333,10 @@ JsValue* objectNewOperation(JsValue* function, JsValue* argumentValues[], uint64
 
 void objectDestroy() {
     // NOOP
+}
+
+// called only from array.c
+JsValue* objectArrayLength(JsValue* arrayVal) {
+    return jsValueCreateNumber((double)OBJECT_VALUE(arrayVal)->arrayLength);
 }
 

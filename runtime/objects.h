@@ -21,6 +21,10 @@ JsValue* objectGet(JsValue* object, JsValue* property);
 JsValue* objectSet(JsValue* object, JsValue* property, JsValue* value);
 void objectDestroy(JsValue* object);
 
+// lower-level, monomorphic get/put functions, e.g Array vs Object
+JsValue* objectPut(JsValue* object, JsValue* property, JsValue* value);
+JsValue* objectGetInternal(JsValue* object, JsValue* property);
+
 // note: smelly
 GcObject* objectTypeStruct(JsObject* object);
 GcObject* objectValueTypeStruct(JsValue* value);
@@ -52,3 +56,4 @@ typedef struct ObjectValueCreation {
 } ObjectValueCreation;
 
 ObjectValueCreation objectCreateArray(uint64_t length);
+JsValue* objectArrayLength(JsValue*);

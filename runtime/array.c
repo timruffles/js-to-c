@@ -1,8 +1,10 @@
 #include <stdint.h>
+#include <string.h>
 
 #include "language.h"
 #include "gc.h"
 #include "array.h"
+#include "strings.h"
 #include "objects.h"
 #include "_memory.h"
 
@@ -24,4 +26,13 @@ void arrayInitialiseIndex(JsValue* array, JsValue* index, JsValue* val) {
 
 JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value) {
     return getNull();
+}
+
+JsValue* arrayGetInternal(JsValue* object, JsValue* nameString) {
+    char* prop = stringGetCString(nameString);
+    if(strcmp(prop, "length") == 0) {
+        return objectArrayLength(object);
+    } else {
+        return objectGetInternal(object, nameString);
+    }
 }

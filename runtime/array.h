@@ -11,3 +11,4 @@ JsValue* arrayCreate(uint64_t count);
 void arrayInitialiseIndex(JsValue* array, JsValue* index, JsValue* val);
 
 JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value);
+JsValue* arrayGetInternal(JsValue* ar, JsValue* key);
