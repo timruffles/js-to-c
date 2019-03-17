@@ -71,7 +71,7 @@ export class CompileTimeState {
                    target,
                }: {
         target: CompileTarget,
-    }) {
+    }): CompileTimeState {
         const child = Object.create(this);
         Object.assign(child, {
             target,
@@ -79,7 +79,7 @@ export class CompileTimeState {
         return child;
     }
 
-    childStateWithTarget(target: CompileTarget) {
+    childStateWithTarget(target: CompileTarget): CompileTimeState {
         return this.childState({target})
     }
 
@@ -140,6 +140,7 @@ export class CompileTimeState {
     getInternedNumbers() {
         return Array.from(this.internedNumbers.values())
     }
+
 }
 
 export class ProtectionStack {

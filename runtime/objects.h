@@ -21,6 +21,10 @@ JsValue* objectGet(JsValue* object, JsValue* property);
 JsValue* objectSet(JsValue* object, JsValue* property, JsValue* value);
 void objectDestroy(JsValue* object);
 
+// note: smelly
+GcObject* objectTypeStruct(JsObject* object);
+GcObject* objectValueTypeStruct(JsValue* value);
+
 // used internally by environments to model envs as objects
 JsValue* objectLookup(JsValue* object, JsValue* property);
 JsValue* objectInternalOwnProperty(JsValue* value, JsValue* property);
@@ -42,4 +46,9 @@ typedef struct ForOwnIterator {
 ForOwnIterator objectForOwnPropertiesIterator(JsValue* value);
 ForOwnIterator objectForOwnPropertiesNext(ForOwnIterator iterator);
 
+typedef struct ObjectValueCreation {
+    JsValue* value;
+    JsObject* object;
+} ObjectValueCreation;
 
+ObjectValueCreation objectCreateArray(void);

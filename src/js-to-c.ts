@@ -1,6 +1,7 @@
 import fs from 'fs';
 import {parseScript, Syntax} from "esprima";
 import {
+    ArrayExpression,
     AssignmentExpression,
     AssignmentOperator,
     BlockStatement,
@@ -173,13 +174,12 @@ function compileLogicalExpression(node: LogicalExpression, state: CompileTimeSta
 
 function getCompilers(): NodeCompilerLookup {
     return {
-        ArrayExpression: unimplemented('ArrayExpression'),
+        ArrayExpression: compileArrayExpression,
         AssignmentExpression: compileAssignmentExpression,
         BinaryExpression: compileBinaryExpression,
         BlockStatement: compileBlockStatement,
         BreakStatement: always('break;\n'),
         CallExpression: compileCallExpression,
-        CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
         ConditionalExpression: compileConditionalExpression,
         ContinueStatement: always('continue;\n'),
         DebuggerStatement: unimplemented('DebuggerStatement'),
@@ -213,6 +213,9 @@ function getCompilers(): NodeCompilerLookup {
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
         WhileStatement: compileWhileStatement,
+
+        // Sub-expressions
+        CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
 
         // Leaving out - strict mode
         WithStatement: notInStrictMode('WithStatement'),
@@ -262,6 +265,8 @@ function compileProgram(node: Program, state: CompileTimeState) {
         #include "../../runtime/environments.h"
         #include "../../runtime/strings.h"
         #include "../../runtime/objects.h"
+        #include "../../runtime/_memory.h"
+        #include "../../runtime/array.h"
         #include "../../runtime/language.h"
         #include "../../runtime/operators.h"
         #include "../../runtime/global.h"
@@ -379,18 +384,24 @@ function compileVariableDeclarator(node: VariableDeclarator, state: CompileTimeS
 }
 
 
+function exhaustive<R>(fn: () => R): R {
+    return fn()
+}
+
 // used by any node that evaluates to a value to assign that value to the target
-export function assignToTarget(cExpression: string, target: CompileTarget) {
-    switch(target.type) {
-        case 'SideEffectTarget':
-            return `${cExpression};`;
-        case IntermediateVariableTarget.type:
-            return `JsValue* ${target.id} = (${cExpression});`;
-        case PredefinedVariableTarget.type:
-            return `${target.id} = (${cExpression});`;
-        case 'ReturnTarget':
-            return `return (${cExpression});`;
-    }
+export function assignToTarget(cExpression: string, target: CompileTarget): string {
+    return exhaustive(() => {
+        switch(target.type) {
+            case 'SideEffectTarget':
+                return `${cExpression};`;
+            case IntermediateVariableTarget.type:
+                return `JsValue* ${target.id} = (${cExpression});`;
+            case PredefinedVariableTarget.type:
+                return `${target.id} = (${cExpression});`;
+            case 'ReturnTarget':
+                return `return (${cExpression});`;
+        }
+    })
 }
 
 /**
@@ -769,6 +780,42 @@ function compileProperty(property: Expression, state: CompileTimeState) {
         : compile(property, state.childState({
            target: state.target,
         }));
+}
+
+function compileArrayExpression(node: ArrayExpression, state: CompileTimeState) {
+    if(node.elements.length === 0) {
+        return assignToTarget(`arrayCreate(0)`, state.target)
+    }
+
+    const arrayTarget = new IntermediateVariableTarget(state.getNextSymbol('array'));
+    const arrayCreateSrc = assignToTarget(`arrayCreate(${node.elements.length})`, arrayTarget)
+
+    const protect = state.protectStack()
+
+    const elementsSrc = node.elements.map((element, index) => {
+        // currently arrays are implemented as objects, so all indicies are strings
+        const ii = state.internString(index.toString()).reference
+        if(element === null) {
+            return `arrayInitialiseIndex(${arrayTarget.id}, ${ii}, getNull());`
+        }
+
+        const valueTarget = new IntermediateVariableTarget(state.getNextSymbol('value'));
+        return `${compile(element, state.childState({ target: valueTarget }))}
+            ${protect.idSrc(valueTarget)}
+            arrayInitialiseIndex(${arrayTarget.id}, ${ii}, ${valueTarget.id});`
+    }).join('\n')
+
+    // runtime/array.c requires a JsValue for each array key, may as well preallocate to speed up literal initialisation
+    for(let i = 0; i < node.elements.length; i++) {
+        state.internedNumber(i)
+    }
+
+    return `${arrayCreateSrc}
+            ${protect.idSrc(arrayTarget)}
+            ${elementsSrc}
+            ${protect.endSrc()}
+            ${assignToTarget(arrayTarget.id, state.target)}
+            `
 }
 
 function compileAssignmentExpression(node: AssignmentExpression, state: CompileTimeState) {

@@ -5,6 +5,7 @@
 #include "functions.h"
 #include "gc.h"
 #include "lib/debug.h"
+#include "array.h"
 
 #define OBJECT_VALUE(V) ((JsObject*)jsValuePointer(V))
 
@@ -19,6 +20,8 @@ typedef struct PropertyDescriptor {
     PropertyDescriptor* nextProperty;
 } PropertyDescriptor;
 
+typedef JsValue* (PutInternalFunction)(JsValue* t, JsValue* k, JsValue* v);
+
 typedef struct JsObject {
     GcHeader;
 
@@ -30,6 +33,10 @@ typedef struct JsObject {
 
     // determines if this is callable - i.e [[Call]] internal slot
     FunctionRecord* callInternal;
+    PutInternalFunction* putInternal;
+
+    // spill-over for type-specific storage (smelly - could this be refactored?)
+    void* typeSpecific;
 } JsObject;
 
 /**
@@ -50,13 +57,26 @@ JsValue* objectCreate(JsValue* prototype) {
 }
 
 JsValue* objectCreateFunction(FunctionRecord* fr) {
-    // TODO set function prototype
+    // TODO set prototype
     JsObject *obj;
     JsValue *val;
     jsValueCreatePointer(val, FUNCTION_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->callInternal = fr;
     JS_SET_LITERAL(val, "prototype", objectCreatePlain());
     return val;
+}
+
+
+ObjectValueCreation objectCreateArray() {
+    // TODO set prototype
+    JsObject *obj;
+    JsValue *val;
+    jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
+    obj->putInternal = arrayPutInternal;
+    return (ObjectValueCreation) {
+        .value = val,
+        .object = obj,
+    };
 }
 
 // https://www.ecma-international.org/ecma-262/5.1/#sec-9.9
@@ -197,6 +217,7 @@ static void appendProperty(JsObject* object, PropertyDescriptor* pd) {
 
 // used from compiled code
 JsValue* objectSet(JsValue* rawVal, JsValue* name, JsValue* value) {
+    // TODO - could be optimised - could pass literals through etc for faster array init
     log_info("Setting %s in %s at %p", stringGetCString(name), jsValueReflect(rawVal).name, rawVal);
     JsValue* objectVal = coerceForObjectReadWrite(rawVal, "set", name);
     JsObject* object = jsValuePointer(objectVal);
@@ -224,9 +245,22 @@ JsValue* objectEnvGetParent(JsValue* env) {
     return ((JsObject*)jsValuePointer(env))->prototype;
 }
 
+GcObject* objectValueTypeStruct(JsValue* v) {
+    precondition(jsValueType(v) == OBJECT_TYPE, "must be called on obj");
+    return ((JsObject*)jsValuePointer(v))->typeSpecific;
+}
+
+GcObject* objectTypeStruct(JsObject* o) {
+    return o->typeSpecific;
+}
+
 void objectGcTraverse(JsValue* value, GcCallback* cb) {
     JsObject* object = jsValuePointer(value);
     cb(object);
+
+    if(object->typeSpecific != NULL) {
+        cb(object->typeSpecific);
+    }
 
     if(object->prototype != NULL) {
         cb(object->prototype);

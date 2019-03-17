@@ -1,0 +1,42 @@
+
+["array literals"]
+
+example = """
+var a = [1,2,3];
+a.push(4)
+for(var i = 0; i < a.length; a += 1) {
+  console.log(a[i])
+}
+"""
+
+output="1.000000\n2.000000\n3.000000\n4.000000"
+
+["array setting/getting"]
+
+example = """
+var a = ["Z"];
+console.log(a[0])
+
+a[0] = "A"
+console.log(a[0])
+
+a['0'] = "B"
+console.log(a[0])
+
+a[100] = "C"
+console.log(a[100])
+"""
+
+output="Z\nA\nB\nC"
+
+["array length"]
+
+example = """
+var a = [];
+console.log(a.length);
+
+a[100] = "A"
+console.log(a.length);
+"""
+
+output="0.000000\n100.000000"

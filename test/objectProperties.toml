@@ -55,3 +55,11 @@ console.log(a.testK);
 output = "testV"
 
 
+["missing properties"]
+
+example = """
+var a = {}
+console.log(a.thingy);
+"""
+
+output = "undefined"

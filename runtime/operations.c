@@ -1,5 +1,6 @@
 #include "operations.h"
 #include "language.h"
+#include "lib/debug.h"
 
 // Relates to ToNumber() in spec
 // https://www.ecma-international.org/ecma-262/5.1/#sec-9.3
@@ -29,8 +30,9 @@ ToNumberResult jsValueToNumber(JsValue* value) {
                 };
             }
         default:
-            // FIXME
-            1+1;
+            fail("Must implement jsValueNumber for %s", jsValueReflect(value).name);
+            // placeholder
+            return (ToNumberResult){};
     }
 }
 
