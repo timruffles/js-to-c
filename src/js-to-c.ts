@@ -478,8 +478,7 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
         target: objectTarget,
     }));
 
-    // TODO identifier here is strange - would expect it to be property?
-    const propertySrc = compileProperty(node.property, state.childState({ target: propertyTarget }));
+    const propertySrc = compileProperty(node.property, node.computed, state.childState({ target: propertyTarget }));
 
     const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
     return `${objectSrc}
@@ -774,8 +773,8 @@ function compileObjectExpression(node: ObjectExpression, state: CompileTimeState
             ${objectSrc}`
 }
 
-function compileProperty(property: Expression, state: CompileTimeState) {
-    return property.type === 'Identifier'
+function compileProperty(property: Expression, computed: boolean, state: CompileTimeState) {
+    return property.type === 'Identifier' && !computed
         ? assignToTarget(internString(property.name, state), state.target)
         : compile(property, state.childState({
            target: state.target,
@@ -841,7 +840,7 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
             // order of execution - target, prop, value
 
             const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
-            const propertySrc = compileProperty(target.property, state.childState({ target: propertyTarget }));
+            const propertySrc = compileProperty(target.property, target.computed, state.childState({ target: propertyTarget }));
 
             const assignmentTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
             const assignmentTargetSrc = compile(target.object, state.childState({ target: assignmentTarget }));
