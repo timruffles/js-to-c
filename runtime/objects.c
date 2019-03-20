@@ -340,11 +340,16 @@ void objectDestroy() {
 
 // called only from array.c
 JsValue* objectArrayLength(JsValue* arrayVal) {
-    uint64_t l = OBJECT_VALUE(arrayVal)->arrayLength;
     return jsValueCreateNumber((double)OBJECT_VALUE(arrayVal)->arrayLength);
 }
 
 uint64_t objectGetArrayLength(JsValue* arrayVal) {
     return OBJECT_VALUE(arrayVal)->arrayLength;
+}
+
+void objectArrayBumpLength(JsValue* arrayVal, int64_t potentialNewLength) {
+    if(potentialNewLength > 0 && potentialNewLength > OBJECT_VALUE(arrayVal)->arrayLength) {
+        OBJECT_VALUE(arrayVal)->arrayLength = potentialNewLength;
+    }
 }
 

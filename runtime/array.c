@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <errno.h>
 
 #include "language.h"
 #include "gc.h"
@@ -25,7 +26,20 @@ void arrayInitialiseIndex(JsValue* array, JsValue* index, JsValue* val) {
 }
 
 JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value) {
-    // TODO length special case
+    char* prop = stringGetCString(key);
+    if(strcmp(prop, "length") == 0) {
+        // TODO
+        return getUndefined();
+    }
+
+    // TODO - overflow etc
+    char* terminator;
+    errno = 0;
+    int64_t potentialNewLength = strtoll(prop, &terminator, 10);
+    if(errno == 0) {
+        objectArrayBumpLength(ar, potentialNewLength);
+    }
+
     return objectPut(ar, key, value);
 }
 
