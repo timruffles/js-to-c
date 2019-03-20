@@ -244,7 +244,7 @@ GcObjectReflection gcObjectReflectType(int type) {
         REFLECT(OBJECT_TYPE, "object");
         REFLECT(STRING_TYPE, "string");
         REFLECT(FUNCTION_TYPE, "function");
-        REFLECT(NAN_TYPE, "number");
+        REFLECT(NAN_TYPE, "nan");
 
         REFLECT(STRING_VALUE_TYPE, "stringValue");
         REFLECT(OBJECT_VALUE_TYPE, "objectValue");

@@ -25,10 +25,12 @@ void arrayInitialiseIndex(JsValue* array, JsValue* index, JsValue* val) {
 }
 
 JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value) {
-    return getNull();
+    // TODO length special case
+    return objectPut(ar, key, value);
 }
 
 JsValue* arrayGetInternal(JsValue* object, JsValue* nameString) {
+    // intern length
     char* prop = stringGetCString(nameString);
     if(strcmp(prop, "length") == 0) {
         return objectArrayLength(object);

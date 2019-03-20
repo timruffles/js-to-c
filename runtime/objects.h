@@ -57,3 +57,4 @@ typedef struct ObjectValueCreation {
 
 ObjectValueCreation objectCreateArray(uint64_t length);
 JsValue* objectArrayLength(JsValue*);
+uint64_t objectGetArrayLength(JsValue*);

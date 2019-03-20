@@ -20,7 +20,9 @@ typedef struct PropertyDescriptor {
     PropertyDescriptor* nextProperty;
 } PropertyDescriptor;
 
+// will be called with JsValue and property already ToString'd
 typedef JsValue* (PutInternalFunction)(JsValue* o, JsValue* k, JsValue* v);
+// will be called with JsValue and property already ToString'd
 typedef JsValue* (GetInternalFunction)(JsValue* o, JsValue* k);
 
 typedef struct JsObject {
@@ -66,9 +68,10 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
     JsValue *val;
     jsValueCreatePointer(val, FUNCTION_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
     obj->callInternal = fr;
-    JS_SET_LITERAL(val, "prototype", objectCreatePlain());
     obj->putInternal = objectPut;
     obj->getInternal = objectGetInternal;
+
+    JS_SET_LITERAL(val, "prototype", objectCreatePlain());
     return val;
 }
 
@@ -131,7 +134,7 @@ static JsValue* coerceForObjectReadWrite(JsValue* raw, const char* const verb, J
 JsValue* objectGet(JsValue *rawVal, JsValue *name) {
     JsValue* nameString = jsValueToString(name);
     JsValue* val = coerceForObjectReadWrite(rawVal, "read", nameString);
-    return OBJECT_VALUE(val)->getInternal(val, name);
+    return OBJECT_VALUE(val)->getInternal(val, nameString);
 }
 
 FunctionRecord* objectGetCallInternal(JsValue *val) {
@@ -337,6 +340,11 @@ void objectDestroy() {
 
 // called only from array.c
 JsValue* objectArrayLength(JsValue* arrayVal) {
+    uint64_t l = OBJECT_VALUE(arrayVal)->arrayLength;
     return jsValueCreateNumber((double)OBJECT_VALUE(arrayVal)->arrayLength);
+}
+
+uint64_t objectGetArrayLength(JsValue* arrayVal) {
+    return OBJECT_VALUE(arrayVal)->arrayLength;
 }
 
