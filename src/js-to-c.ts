@@ -425,9 +425,26 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
     const calleeTarget = new IntermediateVariableTarget(state.getSymbolForId('callee', id));
     const argsArrayVar = state.getSymbolForId('args', id);
 
-    const calleeSrc = compile(node.callee, state.childState({
-        target: calleeTarget
-    }));
+    const {calleeSrc, thisSrc} = exhaustive(() => {
+        switch(node.callee.type) {
+            case "ThisExpression":
+                return {
+                    calleeSrc: compile(node.callee, state.childStateWithTarget(calleeTarget)),
+                    thisSrc: `envGet(env, stringFromLiteral("this"))`,
+                }
+            case "MemberExpression":
+                const expr = prepareMemberExpression(node.callee, state.childStateWithTarget(calleeTarget))
+                return {
+                    calleeSrc: expr.source,
+                    thisSrc: expr.objectTarget.id,
+                }
+            default:
+                return {
+                    calleeSrc: compile(node.callee, state.childStateWithTarget(calleeTarget)),
+                    thisSrc: calleeTarget.id,
+                }
+        }
+    })
 
     const argsWithTargets = node.arguments.map((argNode, i): {target: PredefinedVariableTarget, expression: string} => {
         const callVar = state.getSymbolForId(`call${id}Arg`, i);
@@ -455,7 +472,7 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
 
     const isNew = node.type === 'NewExpression';
     const runtimeOperation = isNew ? 'objectNewOperation' : 'functionRunWithArguments';
-    const thisArgumentSrc = isNew ? '' : ',NULL';
+    const thisArgumentSrc = isNew ? '' : `,${thisSrc}`;
 
     return `${argsDefinitionsSrc}
             ${calleeSrc}
@@ -471,6 +488,10 @@ function compileCallExpression(node: CallExpression, state: CompileTimeState) {
 }
 
 function compileMemberExpression(node: MemberExpression, state: CompileTimeState) {
+    return prepareMemberExpression(node, state).source
+}
+
+function prepareMemberExpression(node: MemberExpression, state: CompileTimeState) {
     const objectTarget = new IntermediateVariableTarget(state.getNextSymbol('object'));
     const propertyTarget = new IntermediateVariableTarget(state.getNextSymbol('property'));
 
@@ -481,9 +502,13 @@ function compileMemberExpression(node: MemberExpression, state: CompileTimeState
     const propertySrc = compileProperty(node.property, node.computed, state.childState({ target: propertyTarget }));
 
     const resultSrc = assignToTarget(`objectGet(${objectTarget.id}, ${propertyTarget.id})`, state.target);
-    return `${objectSrc}
+    return {
+        source: `${objectSrc}
             ${propertySrc}
-            ${resultSrc}`
+            ${resultSrc}`,
+        objectTarget,
+        propertyTarget,
+    }
 }
 
 function compileIdentifier(node: Identifier, state: CompileTimeState) {

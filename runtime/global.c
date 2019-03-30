@@ -50,6 +50,11 @@ JsValue* consoleLog(Env* env) {
     return getUndefined();
 }
 
+static JsValue* arrayGlobal(Env* env) {
+    // TODO #varargs
+    return objectCreateArray(0).value;
+}
+
 static JsValue* setTimeout(Env* env) {
     JsValue* fn = envGet(env, stringFromLiteral("fn"));
     if(jsValueType(fn) != FUNCTION_TYPE) {
@@ -110,6 +115,8 @@ JsValue* createGlobalObject() {
     log_info("log fn %p env %p", mathRandomJsv, globalEnv);
     JS_SET_LITERAL(math, "random", mathRandomJsv);
 
+    JsValue* arrayConstructor = functionCreate(arrayGlobal, NULL, 0, globalEnv);
+    JS_SET_LITERAL(global, "Array", arrayConstructor);
 
     // Global identifiers
     JS_SET_LITERAL(global, "NaN", getNaN());

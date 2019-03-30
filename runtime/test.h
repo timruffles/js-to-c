@@ -6,9 +6,10 @@
 
 #define test(T) printf("%s...\n", #T); (T)(); printf(#T" passed\n");
 
-#define assertFloatEqual(A,B) { double a_f_e_result = fabs(A - B); assert(a_f_e_result < 0.000001); }
-#define refuteFloatEqual(A,B) { double a_f_e_result = fabs(A - B); assert(a_f_e_result > 0.000001); }
-#define assertEqual(A,B,F) { if(A != B) { log_err("Expected "#F" == " #F, A,B); assert(0); } }
+#define assertJsNumberEqual(A,B) { assertFloatEqual(jsValueNumber(A), jsValueNumber(B)) }
+#define assertFloatEqual(A,B) { double a_f_e_result = fabs(A - B); precondition(a_f_e_result < 0.000001, "expected %g %g to equal", A, B); }
+#define refuteFloatEqual(A,B) { double a_f_e_result = fabs(A - B); precondition(a_f_e_result > 0.000001, "expected floats not to equal"); }
+#define assertEqual(A,B,F) { precondition(A == B, "Expected "#F" == " #F, A, B); }
 
 #define assertStringEqual(A,B) { int r = strcmp(A,B) == 0; if(!r) { log_err("Expected \"%s\" == \"%s\"", A, B); assert(0); } }
 #define assertJsStringValue(J,S) assertStringEqual(stringGetCString(J), S)

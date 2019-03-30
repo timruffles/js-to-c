@@ -49,6 +49,9 @@ out/exceptions_test: exceptions.test.c $(source_with_headers)
 out/operations_test: operations.c operations.h operations.test.c
 	$(CC) $(CLANG_OPTS) $(all_deps) operations.test.c -o $@
 
+out/array_test: array.c array.h array.test.c
+	$(CC) $(CLANG_OPTS) $(all_deps) array.test.c -o $@
+
 
 # special case tests with fewer dependencies
 

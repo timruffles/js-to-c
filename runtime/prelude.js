@@ -6,3 +6,14 @@ function Error(message) {
 Error.prototype = {
     name: "Error",
 };
+
+function arrayPush(x) {
+    var l = this.length
+    this[l] = x
+    return l
+}
+
+Array.prototype = {
+    length: 0,
+    push: arrayPush,
+};

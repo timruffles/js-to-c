@@ -34,8 +34,23 @@ example = """
 var a = [];
 console.log(a.length);
 
+a[0] = "A"
+console.log(a.length);
+
 a[100] = "A"
 console.log(a.length);
 """
 
-output="0\n100"
+output="0\n1\n101"
+
+["array push"]
+
+example = """
+var a = [];
+
+a.push('spoon')
+console.log(a.length);
+console.log(a[0]);
+"""
+
+output="1\nspoon"

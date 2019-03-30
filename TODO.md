@@ -7,7 +7,6 @@ Next action:
 
 ## List
 
-- Number formatting, e.g 1 -> 1, 0.1 -> 0.1, not 1.00000 and 0.10000
 - Arrays
 - Object System
   - debugging - list keys

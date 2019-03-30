@@ -1,4 +1,5 @@
 #include "language.h"
+#include "runtime.h"
 #include "objects.h"
 #include "exceptions.h"
 #include "strings.h"
@@ -77,10 +78,13 @@ JsValue* objectCreateFunction(FunctionRecord* fr) {
 
 
 ObjectValueCreation objectCreateArray(uint64_t length) {
+    RuntimeEnvironment* rt = runtimeGet();
     // TODO set prototype
     JsObject *obj;
     JsValue *val;
     jsValueCreatePointer(val, OBJECT_TYPE, obj, OBJECT_VALUE_TYPE, sizeof(JsObject));
+
+    obj->prototype = JS_GET(JS_GET(rt->global, "Array"), "prototype");
     obj->putInternal = arrayPutInternal;
     obj->getInternal = arrayGetInternal;
     obj->arrayLength = length;
@@ -347,9 +351,9 @@ uint64_t objectGetArrayLength(JsValue* arrayVal) {
     return OBJECT_VALUE(arrayVal)->arrayLength;
 }
 
-void objectArrayBumpLength(JsValue* arrayVal, int64_t potentialNewLength) {
-    if(potentialNewLength > 0 && potentialNewLength > OBJECT_VALUE(arrayVal)->arrayLength) {
-        OBJECT_VALUE(arrayVal)->arrayLength = potentialNewLength;
+void objectArrayBumpLength(JsValue* arrayVal, int64_t index) {
+    if(index >= 0 && index >= OBJECT_VALUE(arrayVal)->arrayLength) {
+        OBJECT_VALUE(arrayVal)->arrayLength = index + 1;
     }
 }
 

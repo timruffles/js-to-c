@@ -3,6 +3,7 @@
 #include <errno.h>
 
 #include "language.h"
+#include "lib/debug.h"
 #include "gc.h"
 #include "array.h"
 #include "strings.h"
@@ -35,9 +36,10 @@ JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value) {
     // TODO - overflow etc
     char* terminator;
     errno = 0;
-    int64_t potentialNewLength = strtoll(prop, &terminator, 10);
+    int64_t index = strtoll(prop, &terminator, 10);
+    log_info("array set %s %i", prop, index);
     if(errno == 0) {
-        objectArrayBumpLength(ar, potentialNewLength);
+        objectArrayBumpLength(ar, index);
     }
 
     return objectPut(ar, key, value);
