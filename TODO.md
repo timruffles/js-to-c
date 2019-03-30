@@ -11,7 +11,6 @@ Next action:
 - Object System
   - debugging - list keys
   - Object.prototype -> prelude
-  - method calls - setting this in `obj.method()`
   - real implementation of properties - descriptors etc
 - varargs: currently stuff like console.log only takes one args
 - var hoisting
