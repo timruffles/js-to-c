@@ -1,0 +1,25 @@
+["switch statement"]
+
+example = """
+var v = 42
+
+switch(v) {
+  case "thing":
+    console.log("thing")
+    break;
+  case "42":
+    console.log("'42'")
+    break;
+  default:
+    console.log('default')
+  case 12:
+  case 42:
+    console.log("the answer");
+    break;
+  case true:
+    console.log(true)
+    break;
+}
+"""
+
+output="the answer"

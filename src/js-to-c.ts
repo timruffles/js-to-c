@@ -3,7 +3,7 @@ import {parseScript, Syntax} from "esprima";
 import {
     ArrayExpression,
     AssignmentExpression,
-    AssignmentOperator,
+    AssignmentOperator, BaseNode,
     BlockStatement,
     CallExpression,
     CatchClause,
@@ -23,7 +23,7 @@ import {
     Pattern,
     Program,
     ReturnStatement,
-    SimpleLiteral,
+    SimpleLiteral, Statement, SwitchCase, SwitchStatement,
     ThisExpression,
     ThrowStatement,
     TryStatement,
@@ -32,7 +32,7 @@ import {
     VariableDeclaration,
     VariableDeclarator,
     WhileStatement,
-} from 'estree';
+} from 'estree'
 import {CompileOptions, CompileTimeState, LibraryTarget} from "./CompileTimeState";
 import {compileBinaryExpression} from "./operators";
 
@@ -172,6 +172,7 @@ function compileLogicalExpression(node: LogicalExpression, state: CompileTimeSta
 
 }
 
+
 function getCompilers(): NodeCompilerLookup {
     return {
         ArrayExpression: compileArrayExpression,
@@ -203,8 +204,7 @@ function getCompilers(): NodeCompilerLookup {
         Property: unimplemented('Property'),
         ReturnStatement: compileReturnStatement,
         SequenceExpression: unimplemented('SequenceExpression'),
-        SwitchCase: unimplemented('SwitchCase'),
-        SwitchStatement: unimplemented('SwitchStatement'),
+        SwitchStatement: compileSwitchStatement,
         ThisExpression: compileThisExpression,
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
@@ -216,6 +216,7 @@ function getCompilers(): NodeCompilerLookup {
 
         // Sub-expressions
         CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
+        SwitchCase: unimplemented('SwitchCase'), // NOTE: handled in SwitchStatement
 
         // Leaving out - strict mode
         WithStatement: notInStrictMode('WithStatement'),
@@ -962,3 +963,117 @@ function compileNewExpression(node: NewExpression, state: CompileTimeState) {
 function compileThisExpression(_node: ThisExpression, state: CompileTimeState) {
     return assignToTarget(`envGet(env, stringFromLiteral("this"))`, state.target);
 }
+
+export interface SwitchTestCase extends BaseNode {
+    type: "SwitchCase";
+    test: Expression;
+    consequent: Array<Statement>;
+}
+
+export interface SwitchDefaultCase extends BaseNode {
+    type: "SwitchCase";
+    consequent: Array<Statement>;
+}
+
+function isDefaultClause(e: SwitchCase): e is SwitchDefaultCase {
+   return !e.test
+}
+
+
+function compileSwitchStatement(node: SwitchStatement, state: CompileTimeState) {
+    /**
+     * Strategy:
+     * - Compiles to a do {} while block to support `break`
+     * - Uses gotos to jump to consequent if a switch case evaluates true
+     */
+    const discriminantTarget = new IntermediateVariableTarget(state.getNextSymbol('discriminant'))
+    const discriminantSrc = compile(node.discriminant, state.childStateWithTarget(discriminantTarget))
+    const runDefault = new PredefinedVariableTarget(state.getNextSymbol('runDefault'))
+
+    const protect = state.protectStack()
+
+    const nonDefaults: SwitchTestCase[] = []
+    const defaults: SwitchDefaultCase[] = []
+    for(const cs of node.cases) {
+        if(isDefaultClause(cs)) {
+            defaults.push(cs)
+        } else {
+            nonDefaults.push(cs)
+        }
+    }
+
+    const casesSrc: string[] = []
+    let currentConsequent = state.getNextSymbol('consequent')
+    for(const cs of nonDefaults) {
+        const consequentSrc = cs.consequent
+            // guard entry to consequent unless jumping directly to it
+            ? `goto after_${currentConsequent};
+               ${currentConsequent}:;
+               ${mapCompile(cs.consequent, state.childStateWithTarget(SideEffectTarget))}
+               after_${currentConsequent}:;`
+            : ''
+
+        const testValueTarget = new IntermediateVariableTarget(state.getNextSymbol('caseValue'))
+        const valueSrc = compile(cs.test, state.childStateWithTarget(testValueTarget))
+
+        const caseSrc =`
+            if(strictEqualOperator(${discriminantTarget.id}, ${testValueTarget.id})) {
+                ${runDefault} = false;
+                goto ${currentConsequent};
+            }
+        `
+        casesSrc.push(`${valueSrc}
+                ${caseSrc}
+                ${consequentSrc}`)
+
+        if(cs.consequent) {
+            currentConsequent = state.getNextSymbol('consequent')
+        }
+    }
+
+    // multiple defaults is an early error, just ignore the possibility
+    const defaultSrc = defaults.map(d =>
+        mapCompile(d.consequent, state.childStateWithTarget(SideEffectTarget))
+    ).join('')
+
+    return `
+        do {
+            bool ${runDefault} = true;
+            ${discriminantSrc}
+            ${protect.idSrc(discriminantTarget)}
+            ${casesSrc.join("\n")}
+            
+            if(!${runDefault}) {
+                break;
+            }
+            ${defaultSrc}
+        } while(1)
+        ${protect.endSrc()}
+    `
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

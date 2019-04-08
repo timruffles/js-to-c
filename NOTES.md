@@ -1,4 +1,35 @@
 # Notes
+## 8 Apr 2019
+
+Switch statments: doing them without gotos would create a lot of nesting:
+
+   `
+   consequentARun = false
+   firstTestSrc
+   
+   if firstTest
+    consequentARun = true
+   else if !consequent
+    secondTestSrc
+
+    if secondTest
+      consequentARun = true
+   else if !consequentARun
+    thrirdTestSrc
+   
+   if consequentARun
+     consequentSrc
+   switchConsA:
+
+There's a really weird bit of the ES5 spec - if we have
+  
+    case x:
+    //...
+    default:
+    //...
+    case y:
+
+we do x, y, then default. Fine, but then we have a loop provided to do y again? In ES6 it's even weirder, the spec seeems to demand we do just that. However test programs don't seem to..
 
 ## 3 Mar 2019
 
