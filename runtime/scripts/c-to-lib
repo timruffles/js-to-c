@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# compiles a C file output by jsc into a dynamic library, e.g for prelude
+
+set -euo pipefail
+
+runtimePath=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )/..
+
+main() {
+    local cTarget=$1
+    local out=$2
+    clang -dynamiclib --config ${runtimePath}/clangopts.cfg ${runtimePath}/out/runtime.dylib $cTarget -o $out
+}
+
+main $@

@@ -1,7 +1,10 @@
 # Todos
 
-Next action: 
+Next action:
 - CI!
+    - fix compilation up a bit
+        - clean up
+        - should executables be static?
 - need to fill in more of the language as it makes writing tests hard, TODOs in other tests aren't clear
   enough (note to self: read the skipped tests)
 

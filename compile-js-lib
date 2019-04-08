@@ -9,12 +9,14 @@ set -euo pipefail
 
 source lib.sh
 
+__dirname=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+
 main() {
     mkdir -p out/compiled
     local name=$1
     local js=$2
     local out=$3
-    local cTarget=out/compiled/${name}.c
+    local cTarget=${__dirname}/out/compiled/${name}.c
     JSC_OUTPUT_LIBRARY=$name JSC_LIBRARY_HEADER=../../runtime/prelude.h JsToC $js > $cTarget
     CToLib $cTarget $out
 }

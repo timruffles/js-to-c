@@ -44,7 +44,7 @@ void objectGcTraverse(JsValue* value, GcCallback* cb);
 
 typedef struct ForOwnIterator {
     JsValue* property;
-    const bool done;
+    bool done;
     void* next;
 } ForOwnIterator;
 ForOwnIterator objectForOwnPropertiesIterator(JsValue* value);

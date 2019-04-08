@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# compiles a C file output by jsc into an executable file
+
+set -euo pipefail
+
+runtimePath=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )/..
+
+main() {
+    local cTarget=$1
+    local exe=$2
+    clang --config ${runtimePath}/clangopts.cfg $cTarget ${runtimePath}/out/runtime.dylib ${runtimePath}/../out/prelude.dylib -o $exe
+}
+
+
+main $@

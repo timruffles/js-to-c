@@ -1,23 +1,30 @@
 js-build/js-to-c.js: src/*.ts
 	tsc
 
-out/runtime.dylib: runtime/*.c
-	./runtime/scripts/compile-dylib
-
-out/prelude.dylib: js-build/js-to-c.js runtime/prelude.js out/runtime.dylib
+out/prelude.dylib: js-build/js-to-c.js runtime/prelude.js
 	./compile-js-lib prelude runtime/prelude.js out/prelude.dylib
 
-build: js-build/js-to-c.js out/runtime.dylib out/prelude.dylib
+build: js-build/js-to-c.js out/prelude.dylib
+
+out/ci-docker-container: .
+	cd actions/ci && docker build -t jsc-ci . && cd - && touch $@
+
+.PHONY: ci-run
+ci-run: out/ci-docker-container
+	docker run -e GITHUB_WORKSPACE=/github/workspace -v `pwd`:/github/workspace jsc-ci
+
+.PHONY: ci
+ci: install build test
+	echo
 
 .PHONY: clean
 clean:
 	rm -rf out/* js-build/*
-
 
 .PHONY: install
 install:
 	npm install && cd runtime && make libs
 
 .PHONY: test
-test: install
-	npm test && cd runtime && make test
+test:
+	cd runtime && make test && cd .. && npm test

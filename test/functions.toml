@@ -49,3 +49,24 @@ function main() {
 
 output = "1764"
 todo="implement function declaration hoisting"
+
+["functions expressions"]
+
+example = """
+
+
+console.log((function() { return 42 })())
+
+var a = {
+    thing: function() { return 43 },
+}
+console.log(a.thing())
+
+function cb(f) {
+  return f()
+}
+
+console.log(cb(function() { return 42 }))
+"""
+
+output = "42\n43\n44"

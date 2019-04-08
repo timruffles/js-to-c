@@ -1,20 +1,25 @@
 # TODO would be good to move this duplication out into lib.sh
 all_source_including_tests=$(wildcard *.h *.c)
 source_files=$(filter-out %.test.c %.h, $(all_source_including_tests))
-all_deps=$(source_files)  vendor/libuv-1.26.0/out/cmake/libuv.dylib
+all_deps=$(source_files)
 source_with_headers=$(filter-out %.test.c, $(all_source_including_tests))
 all_tests=$(filter %.test.c, $(all_source_including_tests))
-libuv="vendor/libuv-1.26.0/out/cmake/libuv.dylib"
+libuv="vendor/libuv-1.26.0/out/cmake"
 
 CC=clang
-CLANG_OPTS=-std=c11 -O0 -g -Weverything -Wno-format-security -Wno-format-pedantic -Wno-float-equal -Wno-padded -Wno-gnu-folding-constant -Wno-gnu-folding-constant -Wno-missing-noreturn
+CLANG_OPTS=--config ./clangopts.cfg
 
+clean:
+	git clean --force -X vendor/libuv-1.26.0/out && git clean --force -X ./out
 
-$(libuv): vendor/libuv-1.26.0
+$(libuv)/CMakeFiles: vendor/libuv-1.26.0
 	cd vendor/libuv-1.26.0 && mkdir -p out/cmake ; cd out/cmake ; cmake -DBUILD_TESTING=ON ../.. && make all
 
 .PHONY: libs
-libs: $(libuv)
+libs: $(libuv)/CMakeFiles
+
+out/runtime.dylib:
+	$(CC) -dynamiclib $(CLANG_OPTS) $(all_deps) -o $@
 
 out/environments_test: environments.test.c $(source_with_headers)
 	$(CC) $(CLANG_OPTS) $(all_deps) environments.test.c -o $@
@@ -57,7 +62,6 @@ out/array_test: array.c array.h array.test.c
 
 out/_freelist_test: _freelist.c _freelist.h _freelist.test.c
 	$(CC) $(CLANG_OPTS) _freelist.c _freelist.test.c -o $@
-
 
 # manually ordered for dependencies - i.e objects aren't going to work if we can't allocate
 # or have reliable strings
