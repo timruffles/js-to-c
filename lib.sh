@@ -8,8 +8,13 @@ CToExec() {
     ${__dirname}/runtime/scripts/c-to-exec $1 $2
 }
 
-CToLib() {
-    ${__dirname}/runtime/scripts/c-to-lib $1 $2
-}
+if [[ uname == "Darwin" ]]; then
+    _DLLEXT=dylib
+else
+    _DLLEXT=so
+fi
 
+DllExt() {
+    echo $_DLLEXT
+}
 

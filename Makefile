@@ -1,10 +1,16 @@
+ifeq ($(shell uname),Darwin)
+    DLLEXT := dylib
+else
+    DLLEXT := so
+endif
+
+build: js-build/js-to-c.js out/libprelude.$(DLLEXT)
+
 js-build/js-to-c.js: src/*.ts
 	tsc
 
-out/prelude.dylib: js-build/js-to-c.js runtime/prelude.js
-	./compile-js-lib prelude runtime/prelude.js out/prelude.dylib
-
-build: js-build/js-to-c.js out/prelude.dylib
+out/libprelude.$(DLLEXT): js-build/js-to-c.js runtime/prelude.js
+	./compile-js-lib prelude runtime/prelude.js $@
 
 out/ci-docker-container: .
 	cd actions/ci && docker build -t jsc-ci . && cd - && touch $@

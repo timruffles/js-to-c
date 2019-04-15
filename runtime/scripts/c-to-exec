@@ -9,7 +9,11 @@ runtimePath=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )/..
 main() {
     local cTarget=$1
     local exe=$2
-    clang --config ${runtimePath}/clangopts.cfg $cTarget ${runtimePath}/out/runtime.dylib ${runtimePath}/../out/prelude.dylib -o $exe
+    clang --config ${runtimePath}/clangopts.cfg\
+          -l prelude -L ${runtimePath}/out\
+          -l runtime -L ${runtimePath}/../out\
+          -Wl,-rpath,${runtimePath}/out,-rpath,${runtimePath}/../out\
+          $cTarget -o $exe
 }
 
 

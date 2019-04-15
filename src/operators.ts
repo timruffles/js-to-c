@@ -2,7 +2,6 @@ import {BinaryExpression, BinaryOperator, Literal, Node} from "estree";
 import {CompileTimeState} from "./CompileTimeState";
 import {assignToTarget, compile, IntermediateVariableTarget, PredefinedVariableTarget} from "./js-to-c";
 
-
 const binaryOpToFunction: { [k: string]: string | undefined } = {
     ">": "GTOperator",
     ">=": "GTEOperator",

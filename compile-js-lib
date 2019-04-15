@@ -10,6 +10,7 @@ set -euo pipefail
 source lib.sh
 
 __dirname=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+runtimePath=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )/runtime
 
 main() {
     mkdir -p out/compiled
@@ -18,7 +19,11 @@ main() {
     local out=$3
     local cTarget=${__dirname}/out/compiled/${name}.c
     JSC_OUTPUT_LIBRARY=$name JSC_LIBRARY_HEADER=../../runtime/prelude.h JsToC $js > $cTarget
-    CToLib $cTarget $out
+    clang -dynamiclib\
+          --config ${runtimePath}/clangopts.cfg\
+          -l runtime\
+          -L ${runtimePath}/out\
+          $cTarget -o $out
 }
 
 main $@

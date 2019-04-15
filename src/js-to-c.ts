@@ -122,7 +122,8 @@ const compileExpressionStatement: NodeCompiler = (node, state) => compile(node.e
 const lookup = getCompilers();
 
 if(require.main === module) {
-    main();
+    // allow circular deps to resolve in CommonJS
+    process.nextTick(main)
 }
 
 function main() {

@@ -6,8 +6,17 @@ source_with_headers=$(filter-out %.test.c, $(all_source_including_tests))
 all_tests=$(filter %.test.c, $(all_source_including_tests))
 libuv="vendor/libuv-1.26.0/out/cmake"
 
+ifeq ($(shell uname),Darwin)
+    DLLEXT := dylib
+else
+    DLLEXT := so
+endif
+
+
 CC=clang
 CLANG_OPTS=--config ./clangopts.cfg
+
+build: out/libruntime.$(DLLEXT)
 
 clean:
 	git clean --force -X vendor/libuv-1.26.0/out && git clean --force -X ./out
@@ -18,7 +27,7 @@ $(libuv)/CMakeFiles: vendor/libuv-1.26.0
 .PHONY: libs
 libs: $(libuv)/CMakeFiles
 
-out/runtime.dylib:
+out/libruntime.$(DLLEXT): $(libuv)/CMakeFiles
 	$(CC) -dynamiclib $(CLANG_OPTS) $(all_deps) -o $@
 
 out/environments_test: environments.test.c $(source_with_headers)
