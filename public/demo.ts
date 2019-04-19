@@ -12,7 +12,7 @@ function main() {
     const editorEl = getEl('.editor')
     const outputEl = getEl('.output')
 
-    const initialCode = `// write JS here
+    const initialCode = `// write strict mode ES5 JavaScript here 
 for(var i = 0; i < 5; i++) {
   console.log('Hi C!')
 }`
