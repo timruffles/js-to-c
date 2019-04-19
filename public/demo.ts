@@ -27,8 +27,10 @@ function countDown(n) {
 var counter = countDown(3)
 console.log(counter())
 
-// control flow is a blast
+// spot the compiler optimisation in this multiply 👀
 var theAnswer = Math.ceil(Math.random() * 42)
+
+// control flow is a blast
 switch(theAnswer) {
     case "we're all just, like, vibrations man":
         console.error("unlikely")
