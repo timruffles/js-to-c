@@ -11,7 +11,7 @@ import {
     Expression,
     ForInStatement,
     ForStatement,
-    FunctionDeclaration,
+    FunctionDeclaration, FunctionExpression,
     Identifier,
     IfStatement,
     Literal,
@@ -190,7 +190,7 @@ function getCompilers(): NodeCompilerLookup {
         ForInStatement: compileForInStatement,
         ForStatement: compileForStatement,
         FunctionDeclaration: compileFunctionDeclaration,
-        FunctionExpression: unimplemented('FunctionExpression'),
+        FunctionExpression: compileFunctionExpression,
         Identifier: compileIdentifier,
         IfStatement: compileIfStatement,
         LabeledStatement: unimplemented('LabeledStatement'),
@@ -623,6 +623,33 @@ function compileFunctionDeclaration(node: FunctionDeclaration, state: CompileTim
             JsValue* ${fnName} = ${internString(name, state)};
             envDeclare(env, ${fnName});
             envSet(env, ${fnName}, functionCreate(${functionId}, ${argsArrayName}, ${argCount}, env));`
+}
+
+function compileFunctionExpression(node: FunctionExpression, state: CompileTimeState) {
+    const functionId = state.getNextSymbol(node.id ? node.id.name : 'anonFunction');
+    const argumentNames = node.params.map(getIdentifierName);
+    const argumentNamesSrc = argumentNames
+        .map(s => internString(s, state))
+        .join(", ");
+    const argsArrayName = `${functionId}_args`;
+    const argCount = node.params.length
+
+    const ensureUndefined = `\nreturn getUndefined();`;
+    const bodySrc = `log_info("User function ${functionId}");` + compile(node.body, state) + ensureUndefined;
+
+    // TODO this will need topographic sorting
+    state.functions.push(createCFunction(functionId, bodySrc));
+
+    const argsArraySrc = argumentNames.length > 0
+        ? `JsValue* ${argsArrayName}[] = {${argumentNamesSrc}};`
+        : `JsValue** ${argsArrayName} = NULL;`
+
+    return `${argsArraySrc}
+            ${assignToTarget(
+                `functionCreate(${functionId}, ${argsArrayName}, ${argCount}, env)`,
+                state.target
+            )}`
+
 }
 
 function compileBlockStatement(node: BlockStatement, state: CompileTimeState) {

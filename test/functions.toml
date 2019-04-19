@@ -49,3 +49,19 @@ function main() {
 
 output = "1764"
 todo="implement function declaration hoisting"
+
+["function expressions"]
+
+example = """
+var addOne = function(a) {return a+1}
+var obj = {
+    addTwo: function(a) { return a+ 2}
+}
+var addThree;
+addThree = function(a) { return a + 3}
+console.log(addOne(7))
+console.log(obj.addTwo(10))
+console.log(addThree(20))
+"""
+
+output = "8\n12\n23"
