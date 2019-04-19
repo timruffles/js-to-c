@@ -12,11 +12,18 @@ function main() {
     const editorEl = getEl('.editor')
     const outputEl = getEl('.output')
 
-    const initialCode = `// write JS here\nfor(var i = 0; i < 5; i+=1) { console.log('Hi C!') }`
+    const initialCode = `// write JS here
+for(var i = 0; i < 5; i++) {
+  console.log('Hi C!')
+}`
 
     const compile = () => {
-        const compiled = compileString(editor.getValue(), {})
-        output.setValue(`// compiled C output\n${compiled}`)
+        try {
+            const compiled = compileString(editor.getValue(), {})
+            output.setValue(`// compiled C output\n${compiled}`)
+        } catch (e) {
+            output.setValue(`// You hit an error!\n// N.B JSC only supports ES5 strict mode code, so let, fat arrows, classes etc are not supported\n${e.stack}`)
+        }
     }
 
     const output = CodeMirror(outputEl, {

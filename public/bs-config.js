@@ -21,14 +21,13 @@ module.exports = {
     "watchEvents": [
         "change"
     ],
-    "watch": false,
+    "watch": "..",
     "ignore": [],
     "single": false,
     "watchOptions": {
         "ignoreInitial": true
     },
-    "server": {
-    },
+    "server": "..",
     "proxy": false,
     "port": 3000,
     "serveStatic": [],
