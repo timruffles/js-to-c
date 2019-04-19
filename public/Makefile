@@ -6,3 +6,7 @@ build/demo.built.js: *.ts ../src/*.ts
 .PHONY: watch
 watch:
 	ls ../src/*.ts *.ts | entr make
+
+.PHONY: deploy
+deploy:
+	git checkout --orphan gh-pages && git add --force build && git add . node_modules/codemirror && git commit -m "deploy" && git push -f origin head:gh-pages
