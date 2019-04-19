@@ -15,7 +15,30 @@ function main() {
     const initialCode = `// write strict mode ES5 JavaScript here 
 for(var i = 0; i < 5; i++) {
   console.log('Hi C!')
-}`
+}
+
+function countDown(n) {
+   return function() {
+     return n-- <= 0 ? "done" : n
+   }
+}
+
+var counter = countDown(3)
+console.log(counter())
+
+var theAnswer = Math.ceil(Math.random() * 42)
+switch(theAnswer) {
+    case "we're all just, like, vibrations man":
+        console.error("unlikely")
+        break;
+    case 42:
+        console.log("okay, that's progress");
+        break;
+    default:
+        console.log("look, life just isn't like that okay?");
+        break;
+}
+`
 
     const compile = () => {
         try {
