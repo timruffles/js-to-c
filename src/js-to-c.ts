@@ -28,7 +28,7 @@ import {
     ThrowStatement,
     TryStatement,
     UnaryExpression,
-    UnaryOperator,
+    UnaryOperator, UpdateExpression,
     VariableDeclaration,
     VariableDeclarator,
     WhileStatement,
@@ -173,6 +173,27 @@ function compileLogicalExpression(node: LogicalExpression, state: CompileTimeSta
 }
 
 
+function compileUpdateExpression(node: UpdateExpression, state: CompileTimeState) {
+    const value = node.operator === '++' ? 1 : -1
+    const evaluatedTo = new IntermediateVariableTarget(state.getNextSymbol('eval'))
+    const updateSrc = compileAssignmentExpression({
+       type: 'AssignmentExpression',
+       operator: '+=',
+       left: node.argument as any,
+       right: {
+           type: 'Literal',
+           value,
+       }
+    }, state.childStateWithTarget(evaluatedTo))
+    const finalSrc = node.prefix
+        ? evaluatedTo.id
+        // in post-fix case, calculate the value we had before
+        : `addOperator(${evaluatedTo.id}, jsValueCreateNumber(${-value}))`
+    return `${updateSrc}
+            ${assignToTarget(finalSrc, state.target)}
+    `
+}
+
 function getCompilers(): NodeCompilerLookup {
     return {
         ArrayExpression: compileArrayExpression,
@@ -201,7 +222,6 @@ function getCompilers(): NodeCompilerLookup {
         NewExpression: compileNewExpression,
         ObjectExpression: compileObjectExpression,
         Program: compileProgram,
-        Property: unimplemented('Property'),
         ReturnStatement: compileReturnStatement,
         SequenceExpression: unimplemented('SequenceExpression'),
         SwitchStatement: compileSwitchStatement,
@@ -209,7 +229,7 @@ function getCompilers(): NodeCompilerLookup {
         ThrowStatement: compileThrowStatement,
         TryStatement: compileTryStatement,
         UnaryExpression: compileUnaryExpression,
-        UpdateExpression: unimplemented('UpdateExpression'),
+        UpdateExpression: compileUpdateExpression,
         VariableDeclaration: compileVariableDeclaration,
         VariableDeclarator: compileVariableDeclarator,
         WhileStatement: compileWhileStatement,
@@ -217,6 +237,7 @@ function getCompilers(): NodeCompilerLookup {
         // Sub-expressions
         CatchClause: unimplemented('CatchClause'), // NOTE: handled in TryStatement
         SwitchCase: unimplemented('SwitchCase'), // NOTE: handled in SwitchStatement
+        Property: unimplemented('Property'),
 
         // Leaving out - strict mode
         WithStatement: notInStrictMode('WithStatement'),
@@ -873,6 +894,14 @@ function compileArrayExpression(node: ArrayExpression, state: CompileTimeState) 
 function compileAssignmentExpression(node: AssignmentExpression, state: CompileTimeState) {
     const target = node.left;
     const result = new PredefinedVariableTarget(state.getNextSymbol('result'));
+
+    // TODO - add pre/post fix logic
+    // - standard = prefix, so we end up with the assigned value
+    // - postfix, e.g ++, end up with initial value
+    // so postfix we need to either:
+    // - capture initial value
+    // - or, recaluate it at cost of extra op
+
     switch(target.type) {
         case 'Identifier': {
             if(target.name === 'this') {
@@ -887,7 +916,8 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
             return `JsValue* ${result.id};
                     ${compile(node.right, state.childState({ target: result }))}
                     ${update}
-                    envSet(env, ${variable.id}, ${result.id});`
+                    envSet(env, ${variable.id}, ${result.id});
+                    ${assignToTarget(result.id, state.target)}`
         }
         case 'MemberExpression': {
             // order of execution - target, prop, value
@@ -908,7 +938,8 @@ function compileAssignmentExpression(node: AssignmentExpression, state: CompileT
                     ${propertySrc} // property src
                     ${compile(node.right, state.childState({ target: result }))} // RHS
                     ${update} // any update
-                    objectSet(${assignmentTarget.id}, ${propertyTarget.id}, ${result.id}); // obj set`
+                    objectSet(${assignmentTarget.id}, ${propertyTarget.id}, ${result.id}); // obj set
+                    ${assignToTarget(result.id, state.target)}`
         }
         default:
             return unimplemented(target.type)();

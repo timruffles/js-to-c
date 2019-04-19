@@ -112,3 +112,55 @@ console.log(10 > 15 ? "fail" : "ok");
 """
 
 output="ok\nok\nok"
+
+["prefix add"]
+
+example="""
+var a = 42
+console.log(++a);
+console.log(a);
+"""
+
+output="43\n43"
+
+["postfix add"]
+
+example="""
+var a = 42
+console.log(a++);
+console.log(a);
+"""
+
+output="42\n43"
+
+["prefix subtract"]
+
+example="""
+var a = 42
+console.log(--a);
+console.log(a);
+"""
+
+
+output="41\n41"
+
+["postfix subtract"]
+
+example="""
+var a = 42
+console.log(a--);
+console.log(a);
+"""
+
+output="42\n41"
+
+["update as expression"]
+
+example="""
+var a = 42
+var b = a += 45
+console.log(a)
+console.log(b)
+"""
+
+output="87\n87"
