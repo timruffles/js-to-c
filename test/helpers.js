@@ -23,7 +23,7 @@ exports.compile = function(file) {
 
 exports.link = function(cFile) {
     const binPath = pathInFixtures(path.basename(cFile, '.c'));
-    execSync(`${__dirname}/../link-c ${cFile} ${binPath}`);
+    execSync(`${__dirname}/../runtime/scripts/c-to-exec ${cFile} ${binPath}`);
     return binPath;
 }
 
