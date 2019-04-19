@@ -33,7 +33,7 @@ static void ensureWrite(char* output, FILE* stream) {
     assert(written == toWrite);
 }
 
-static JsValue* mathRandom(Env* env) {
+static JsValue* mathRandom(Env* _env) {
     return jsValueCreateNumber(rand() / (double)RAND_MAX);
 }
 

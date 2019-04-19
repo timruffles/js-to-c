@@ -37,9 +37,8 @@ JsValue* arrayPutInternal(JsValue* ar, JsValue* key, JsValue* value) {
     char* terminator;
     errno = 0;
     int64_t index = strtoll(prop, &terminator, 10);
-    log_info("array set %s %i", prop, index);
-    if(errno == 0) {
-        objectArrayBumpLength(ar, index);
+    if(errno == 0 && index >= 0) {
+        objectArrayBumpLength(ar, (uint64_t)index);
     }
 
     return objectPut(ar, key, value);

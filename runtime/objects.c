@@ -351,7 +351,7 @@ uint64_t objectGetArrayLength(JsValue* arrayVal) {
     return OBJECT_VALUE(arrayVal)->arrayLength;
 }
 
-void objectArrayBumpLength(JsValue* arrayVal, int64_t index) {
+void objectArrayBumpLength(JsValue* arrayVal, uint64_t index) {
     if(index >= 0 && index >= OBJECT_VALUE(arrayVal)->arrayLength) {
         OBJECT_VALUE(arrayVal)->arrayLength = index + 1;
     }

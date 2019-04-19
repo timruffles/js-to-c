@@ -31,7 +31,9 @@ ToNumberResult jsValueToNumber(JsValue* value) {
             }
         default:
             fail("Must implement jsValueNumber for %s", jsValueReflect(value).name);
-            // placeholder
-            return (ToNumberResult){};
+            // placeholder, fail exits
+            return (ToNumberResult){
+                .isNaN = true
+            };
     }
 }
