@@ -9,4 +9,4 @@ watch:
 
 .PHONY: deploy
 deploy:
-	git checkout --orphan gh-pages && git add --force build && git add . node_modules/codemirror && git commit -m "deploy" && git push -f origin head:gh-pages
+	git branch -D gh-pages || : && git checkout --orphan gh-pages && make && git add --force build node_modules/codemirror && git add . && git commit -m "deploy" && git push -f origin head:gh-pages
