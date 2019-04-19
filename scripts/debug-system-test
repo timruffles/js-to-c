@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# debug run a test executable
+# usage: 
+#   ./scripts/debug-system-test ./test/fixtures/some-thing.c
+
+test=$1
+output=${test/.c/} 
+
+./link-c $test $output && lldb -S ./test/lldb.conf -o run ${output}

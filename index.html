@@ -1,0 +1,63 @@
+<!doctype html>
+<head>
+    <meta charset="utf8"/>
+    <title>JS to C demo</title>
+
+    <link rel="stylesheet" href="public/node_modules/codemirror/lib/codemirror.css" />
+    <style>
+        html, body {
+            display: flex;
+            height: 100%;
+            flex: 1;
+            font-family: sans-serif;
+        }
+        .main, .code {
+            display: flex;
+            flex: 1;
+        }
+        .main {
+            flex-direction: column;
+        }
+        .editor, .output {
+            flex: 1;
+        }
+        .output {
+            width: 50%;
+            border-left: 1px solid #ccc;
+            padding-left: 1em;
+        }
+        .code {
+            flex-direction: row;
+        }
+
+        .CodeMirror {
+            height: auto;
+        }
+
+        h1 {
+            font-size: 1em;
+            font-weight: normal;
+            display: inline;
+        }
+
+        header {
+            margin-bottom: 1ex;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <header>
+            <h1><a href="https://github.com/timruffles/js-to-c/">JS to C</a></h1>
+            <span>
+                by <a href="https://timr.co">Tim Ruffles</a>, see my blog for the <a href="https://timr.co">dev log</a>.
+            </span>
+        </header>
+        <div class="code">
+            <div class="editor"></div>
+            <div class="output"></div>
+        </div>
+    </div>
+
+    <script defer src="public/build/demo.built.js"></script>
+</body>

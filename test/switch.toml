@@ -1,0 +1,74 @@
+["switch statement"]
+
+example = """
+var v = 42
+
+switch(v) {
+  case "thing":
+    console.log("thing")
+    break;
+  case "42":
+    console.log("'42'")
+    break;
+  default:
+    console.log('default')
+  case 12:
+  case 42:
+    console.log("the answer");
+    break;
+  case true:
+    console.log(true)
+    break;
+}
+"""
+
+output="the answer"
+
+["switch default"]
+
+example = """
+var v = 99
+
+switch(v) {
+  case "thing":
+    console.log("thing")
+    break;
+  case "42":
+    console.log("'42'")
+    break;
+  default:
+    console.log('default')
+  case 12:
+  case 42:
+    console.log("the answer");
+    break;
+  case true:
+    console.log(true)
+    break;
+}
+"""
+
+output="default"
+
+["switch empty"]
+
+example = """
+var v = 99
+switch(v) {}
+console.log('ok')
+"""
+
+output="ok"
+
+["switch no consequent"]
+
+example = """
+var v = 99
+switch(v) {
+    case 99:
+
+}
+console.log('ok')
+"""
+
+output="ok"

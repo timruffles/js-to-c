@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# takes compiled C output, and turns into executable
+
+set -euo pipefail
+
+source lib.sh
+
+main() {
+    local target=${2:-/tmp/js-c-comp-run}
+    CToExec $1 $target
+    $target
+}
+
+main $@

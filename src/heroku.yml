@@ -1,0 +1,5 @@
+build:
+    docker:
+        web: compile-server/server.Dockerfile
+run:
+    web: node index

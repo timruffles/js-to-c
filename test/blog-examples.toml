@@ -1,0 +1,32 @@
+
+["if example"]
+
+example = """
+if (Math.random() > 0.5) {
+    console.log('heads');
+} else {
+
+    console.log('tails');
+}
+"""
+
+["primitives"]
+
+
+example = """
+var num1 = 42.7
+var num2 = 17 + num1
+var num3 = true * num2
+var val = (num3 > 5) === true
+"""
+
+["preallocation"]
+
+
+example = """
+var obj = {
+    foo: "bar",
+}
+var objName = "obj"
+console.log(global[obj]);
+"""

@@ -1,0 +1,18 @@
+["hello world"] 
+
+example = """
+console.log("hello world");
+"""
+
+output="hello world"
+
+["factorial"] 
+
+example = """
+function fact(n) {
+    return n < 3 ? n : n * fact(n - 1);
+}
+console.log(fact(5));
+"""
+
+output = "120"

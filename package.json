@@ -1,0 +1,31 @@
+{
+  "name": "js-to-c",
+  "version": "1.0.0",
+  "description": "",
+  "main": "js-build/js-to-c.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "nodemon --ext ts -w src/ --exec 'make js-build/js-to-c.js && ./scripts/compiler-smoke-test '",
+    "setup": "tsc",
+    "test:update": "node test/update.js",
+    "test": "make clean build && npm run -s test:update && mocha"
+  },
+  "keywords": [],
+  "author": "Tim Ruffles <timruffles@googlemail.com>",
+  "license": "AGPL",
+  "dependencies": {
+    "esprima": "4.0.0",
+    "toml": "2.3.3",
+    "typescript": "2.9.2"
+  },
+  "devDependencies": {
+    "@types/esprima": "4.0.2",
+    "@types/estree": "0.0.39",
+    "@types/node": "10.5.2",
+    "chai": "4.1.2",
+    "mocha": "5.2.0",
+    "nodemon": "1.18.3"
+  }
+}

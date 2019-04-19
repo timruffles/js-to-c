@@ -1,0 +1,6 @@
+["concat"]
+
+example="console.log('a' + 'b')"
+
+todo="string concat"
+output="ab"

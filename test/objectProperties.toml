@@ -1,0 +1,65 @@
+["simple object properties"]
+
+example = """
+var a = {
+    one: "oneVal",
+};
+console.log(a.one);
+"""
+
+output = "oneVal"
+
+["numeric object keys"]
+
+example = """
+var a = {
+    2: "2Val",
+};
+console.log(a[2]);
+"""
+
+
+output = "2Val"
+
+todo="Implement Object.toString, Number.toString() etc"
+
+["setting properties"]
+
+example = """
+var a = {};
+a.testK = 'testV';
+console.log(a.testK);
+"""
+
+output = "testV"
+
+["setting properties multiple times"]
+
+example = """
+var a = {};
+a.testK = 'testV';
+a.testK = 'secondValue';
+console.log(a.testK);
+"""
+
+output = "secondValue"
+
+["functions are objects"]
+
+example = """
+function a() {}
+a.testK = 'testV';
+console.log(a.testK);
+"""
+
+output = "testV"
+
+
+["missing properties"]
+
+example = """
+var a = {}
+console.log(a.thingy);
+"""
+
+output = "undefined"

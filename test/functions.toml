@@ -1,0 +1,67 @@
+["functions with constant expressions"]
+
+example = """
+function meaningOfLifeSquared() {
+    return 42 * 42;
+}
+
+console.log(meaningOfLifeSquared());
+"""
+
+output = "1764"
+
+["simple call"]
+example = """
+function add(a,b) {
+    return a + b;
+}
+
+console.log(add(10, 5));
+"""
+
+output = "15"
+
+["calls with too few arguments pass undefined"]
+
+example = """
+function one(a) {
+    return a;
+}
+
+console.log(one() === undefined);
+"""
+
+output = "true"
+
+["hoisting function declarations"]
+
+example = """
+main();
+
+function main() {
+    console.log(meaningOfLifeSquared());
+
+    function meaningOfLifeSquared() {
+        return 42 * 42;
+    }
+}
+"""
+
+output = "1764"
+todo="implement function declaration hoisting"
+
+["function expressions"]
+
+example = """
+var addOne = function(a) {return a+1}
+var obj = {
+    addTwo: function(a) { return a+ 2}
+}
+var addThree;
+addThree = function(a) { return a + 3}
+console.log(addOne(7))
+console.log(obj.addTwo(10))
+console.log(addThree(20))
+"""
+
+output = "8\n12\n23"

@@ -1,0 +1,173 @@
+["global exceptions"]
+
+example="""
+throw new Error("BOOM");
+"""
+
+expectJsException="Error: BOOM"
+
+["call stacks"]
+
+todo="implement stack traces"
+
+example="""
+function A() {
+  B();
+}
+
+function B() {
+  throw new Error("B threw");
+}
+
+A();
+"""
+
+errorOutMatch="Error: B threw[\s\\n]+at B[\s\\n]+at A"
+expectJsException='Error: B threw'
+
+
+["catching"]
+
+example="""
+function A() {
+    try {
+      B();
+    } catch(e) {
+      return 'A caught';
+    }
+}
+
+function B() {
+  throw new Error("B threw");
+}
+
+console.log(A());
+"""
+
+output="A caught"
+
+["throwing errors"]
+
+example="""
+function A() {
+    try {
+      B();
+    } catch(e) {
+      return e.message;
+    }
+}
+
+function B() {
+  throw new Error("B threw");
+}
+
+console.log(A());
+"""
+
+output="B threw"
+
+["rethrowing errors"]
+
+example="""
+try {
+    try {
+      throw new Error("A");
+    } catch(e) {
+      throw new Error("B"); 
+    }
+} catch(e) {
+    console.log(e.message);
+}
+"""
+
+output="B"
+
+["calling non function"]
+
+example="""
+var A = '';
+A();
+"""
+
+expectJsException="Uncaught TypeError: 'string' is not a function"
+
+["reference error"]
+
+example="""
+A();
+"""
+
+expectJsException="Uncaught ReferenceError: A is not defined"
+
+
+["dereference undefined"]
+
+
+example="""
+var A;
+A.thingy;
+"""
+
+expectJsException="Uncaught TypeError: Cannot read property 'thingy' of undefined"
+
+["Error works identically without 'new'"]
+
+todo='spec compliance work'
+
+example="""
+function A() {
+    try {
+      B();
+    } catch(e) {
+      return e.message;
+    }
+}
+
+function B() {
+  throw Error("B threw");
+}
+
+console.log(A());
+"""
+
+output="B threw"
+
+
+["exceptions and GC - torture test"]
+
+
+example="""
+function t() { throw Error("boom") }
+function makeGarbage() {
+  // silly loop to make loads of garbage objects
+  var r = 0
+  for(var i = 0; i < 100; i += 1) {
+    r = ({ a: 10 }).a + r
+  }
+  return r
+}
+
+try {
+  var x
+  var y
+
+  function doThing() {
+      y = "result: " + makeGarbage() + t()
+  }
+
+  try {
+      x = makeGarbage()
+      // not really necessary to do this in a fn, just want to make
+      // this as akward as possible
+      doThing()
+  } catch(e) {
+      y = y === undefined ? "it worked" : "FAIL:" + y
+      throw new Error("x")
+  }
+} catch(e) {
+  console.log(x)
+  console.log(y)
+}
+"""
+
+output="1000\nit worked"

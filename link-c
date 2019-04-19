@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# links compiled JS to create an executable program
+
+set -euo pipefail
+
+source lib.sh
+
+main() {
+    local cFile=$1
+    local exe=$2
+    CToExec $cFile $exe
+}
+
+main $@
