@@ -1017,8 +1017,8 @@ function compileSwitchStatement(node: SwitchStatement, state: CompileTimeState) 
         const valueSrc = compile(cs.test, state.childStateWithTarget(testValueTarget))
 
         const caseSrc =`
-            if(strictEqualOperator(${discriminantTarget.id}, ${testValueTarget.id})) {
-                ${runDefault} = false;
+            if(getTrue() == strictEqualOperator(${discriminantTarget.id}, ${testValueTarget.id})) {
+                ${runDefault.id} = false;
                 goto ${currentConsequent};
             }
         `
@@ -1038,16 +1038,18 @@ function compileSwitchStatement(node: SwitchStatement, state: CompileTimeState) 
 
     return `
         do {
-            bool ${runDefault} = true;
+            bool ${runDefault.id} = true;
             ${discriminantSrc}
             ${protect.idSrc(discriminantTarget)}
             ${casesSrc.join("\n")}
             
-            if(!${runDefault}) {
+            if(!${runDefault.id}) {
                 break;
             }
             ${defaultSrc}
-        } while(1)
+            
+            break;
+        } while(1);
         ${protect.endSrc()}
     `
 }
