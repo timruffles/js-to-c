@@ -17,6 +17,7 @@ for(var i = 0; i < 5; i++) {
   console.log('Hi C!')
 }
 
+// wonder how closures work? 👀
 function countDown(n) {
    return function() {
      return n-- <= 0 ? "done" : n
@@ -26,6 +27,7 @@ function countDown(n) {
 var counter = countDown(3)
 console.log(counter())
 
+// control flow is a blast
 var theAnswer = Math.ceil(Math.random() * 42)
 switch(theAnswer) {
     case "we're all just, like, vibrations man":
