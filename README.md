@@ -1,6 +1,12 @@
 # JS to C 
 
-A compiled implementation of [ES5](https://www.ecma-international.org/ecma-262/5.1/#sec-11.6.1), targetting C.
+A compiled implementation of [ES5](https://www.ecma-international.org/ecma-262/5.1/#sec-11.6.1), targetting C. I've finished the project as it now supports the parts of the language I found most interesting for a compiled implementation:
+
+- ✅ closures
+- ✅ garbage collection
+- ✅ exceptions
+- ✅ event based IO
+- ✅ object system - prototypes etc 
 
 Read my [notes](NOTES.md) for a rough dev notes, or read more polished write ups on [my blog](https://timr.co).
 
@@ -102,7 +108,7 @@ The runtime is built into a dynamic library to avoid recompiling. There's also a
 
 Files prefixed `_` are private to the runtime and should not be relied on.
 
-## Potential issues
+## Potential issues
 
 `grep` for `HMM` to see potential problems I'm leaving alone for now as they seem tricky to solve properly/I'm unsure they'll be a problem in practice. Good place to look if weird bugs occur.
 
